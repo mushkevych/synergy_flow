@@ -1,5 +1,8 @@
 __author__ = 'Bohdan Mushkevych'
 
+from datetime import datetime
+
+from db.model.step import Step
 from db.dao.step_dao import StepDao
 
 
@@ -21,13 +24,17 @@ class FlowGraphNode(object):
         self.logger = Logger(log_file, self.name)
         self.step_dao = StepDao(self.logger)
 
-    def reset_db_state(self):
-        """ erase any existing records for given Step. Write new one instead """
-        pass
+    def update_db(self):
+        step = Step()
+        step.created_at = datetime.utcnow()
+        step.started_at = datetime.utcnow()
+        step.flow_name = self.context.flow.flow_name
+        step.related_flow = self.context.flow
+        self.step_dao.update(Step())
+
 
     def run(self, context, execution_cluster):
         self.set_context(context, execution_cluster)
-        self.reset_db_state()
 
         self.step_instance = self.step_class()
         self.step_instance.do_pre()

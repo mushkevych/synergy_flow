@@ -3,11 +3,10 @@ __author__ = 'Bohdan Mushkevych'
 import time
 import concurrent.futures
 
+from db.dao.flow_dao import FlowDao
 from flow.flow_graph import FlowGraph
 from synergy.system.data_logging import get_logger
 from workers.emr_cluster import EmrCluster
-
-NUMBER_OF_CLUSTERS = 2
 
 
 def launch_cluster(logger, cluster_name):
@@ -34,25 +33,28 @@ def trigger_step_exec(logger, context, step_name, flow_graph, step_to_cluster):
 
 
 class ExecutionEngine(object):
-    """ Synergy Driver for mapreduce job:
-        - spawning multiple AWS EMR Clusters
-        - multiple Pig steps, some of whom are interdependent """
+    """ Engine that triggers and supervises execution of the flow:
+        - spawning multiple Execution Clusters (such as AWS EMR)
+        - assigns execution steps to the clusters and monitor their progress
+        - tracks dependencies and terminate execution should the Flow Critical Path fail """
 
-    def __init__(self, process_name, flow):
+    def __init__(self, process_name, flow_graph):
         self.logger = get_logger(process_name)
-        self.flow = flow
+        self.flow_graph = flow_graph
+        self.flow_dao = FlowDao(self.logger)
 
+        # list of execution clusters (such as AWS EMR) available for processing
         self.execution_clusters = list()
 
         # keeps track of steps assigned for execution on clusters
         # format {step_name: execution_cluster}
         self.step_to_cluster = dict()
 
-    def spawn_clusters(self):
+    def spawn_clusters(self, number_of_clusters):
         self.logger.info('spawning clusters...')
-        with concurrent.futures.ThreadPoolExecutor(max_workers=NUMBER_OF_CLUSTERS) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=number_of_clusters) as executor:
             future_to_emr = [executor.submit(launch_cluster, self.logger, 'EmrComputingCluster-{0}'.format(i))
-                             for i in range(NUMBER_OF_CLUSTERS)]
+                             for i in range(number_of_clusters)]
             for future in concurrent.futures.as_completed(future_to_emr):
                 try:
                     emr_cluster = future.result()
@@ -62,12 +64,12 @@ class ExecutionEngine(object):
 
     def run_engine(self, context):
         self.logger.info('starting engine...')
-        with concurrent.futures.ThreadPoolExecutor(max_workers=2 * NUMBER_OF_CLUSTERS) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2 * context.number_of_clusters) as executor:
 
             # Start the Pig Step and mark each future with the execution_cluster
             future_to_step = {executor.submit(trigger_step_exec, self.logger, context, step_name,
-                                              self.flow, self.step_to_cluster): step_name
-                              for step_name in self.flow}
+                                              self.flow_graph, self.step_to_cluster): step_name
+                              for step_name in self.flow_graph}
 
             for future in concurrent.futures.as_completed(future_to_step):
                 step_name = future_to_step[future]
@@ -88,12 +90,15 @@ class ExecutionEngine(object):
         self.logger.info('starting EmrDriver: {')
 
         try:
-            self.spawn_clusters()
+            self.flow_graph.start(context)
+            self.spawn_clusters(context.number_of_clusters)
             for cluster in self.execution_clusters:
                 context.cluster_queue.put(cluster)
             self.run_engine(context)
+            self.flow_graph.succeed(context)
         except Exception:
             self.logger.error('Exception on starting EmrDriver', exc_info=True)
+            self.flow_graph.failed(context)
         finally:
             # TODO: do not terminate failed cluster to be able to retrieve and analyze the processing errors
             for cluster in self.execution_clusters:
