@@ -1,4 +1,3 @@
-
 __author__ = 'Bohdan Mushkevych'
 
 import os
@@ -10,30 +9,27 @@ import boto.s3
 import boto.s3.key
 import psycopg2
 from boto.exception import S3ResponseError
-from synergy.conf import settings
 from flow.abstract_action import AbstractAction
+from flow.abstract_cluster import AbstractCluster
 
 
 class ExportAction(AbstractAction):
-    def __init__(self, logger, timeperiod, table_name):
-        self.logger = logger
-        self.timeperiod = str(timeperiod)
+    def __init__(self, table_name, kwargs=None):
+        super(ExportAction, self).__init__('postgres->s3 export action', kwargs)
+
         self.table_name = table_name
         self.tempdir_copying = tempfile.mkdtemp()
 
         try:
-            self.s3_connection = boto.connect_s3(settings.settings['aws_access_key_id'],
-                                                 settings.settings['aws_secret_access_key'])
-            self.s3_bucket = self.s3_connection.get_bucket(settings.settings['aws_copperlight_s3_bucket'])
+            self.s3_connection = boto.connect_s3(self.settings['aws_access_key_id'],
+                                                 self.settings['aws_secret_access_key'])
+            self.s3_bucket = self.s3_connection.get_bucket(self.settings['aws_copperlight_s3_bucket'])
         except S3ResponseError as e:
             self.logger.error('AWS Credentials are NOT valid. Terminating.', exc_info=True)
             self.__del__()
             raise ValueError(e)
 
-    def __del__(self):
-        self._clean_up()
-
-    def _clean_up(self):
+    def cleanup(self):
         """ method verifies if temporary folder exists and removes it (and nested content) """
         if self.tempdir_copying:
             self.logger.info('Cleaning up {0}'.format(self.tempdir_copying))
@@ -47,25 +43,25 @@ class ExportAction(AbstractAction):
     def table_to_file(self):
         """ method connects to the remote PostgreSQL and copies requested table into a local file """
         self.logger.info('Executing COPY_TO command for {0}.{1}\n.'
-                         .format(settings.settings['aws_redshift_db'], self.table_name))
+                         .format(self.settings['aws_redshift_db'], self.table_name))
 
-        with psycopg2.connect(host=settings.settings['aws_postgres_host'],
-                              database=settings.settings['aws_postgres_db'],
-                              user=settings.settings['aws_postgres_user'],
-                              password=settings.settings['aws_postgres_password'],
-                              port=settings.settings['aws_postgres_port']) as conn:
+        with psycopg2.connect(host=self.settings['aws_postgres_host'],
+                              database=self.settings['aws_postgres_db'],
+                              user=self.settings['aws_postgres_user'],
+                              password=self.settings['aws_postgres_password'],
+                              port=self.settings['aws_postgres_port']) as conn:
             with conn.cursor() as cursor:
                 try:
                     f = self.get_file()
                     # http://initd.org/psycopg/docs/cursor.html#cursor.copy_to
                     cursor.copy_to(file=f, table=self.table_name, sep=',', null='null')
                     self.logger.info('SUCCESS for {0}.{1} COPY_TO command. Status message: {2}'
-                                     .format(settings.settings['aws_redshift_db'], self.table_name,
+                                     .format(self.settings['aws_redshift_db'], self.table_name,
                                              cursor.statusmessage))
                     return f
                 except Exception:
                     self.logger.error('FAILURE for {0}.{1} COPY command.'
-                                      .format(settings.settings['aws_redshift_db'], self.table_name), exc_info=True)
+                                      .format(self.settings['aws_redshift_db'], self.table_name), exc_info=True)
                     return None
 
     def file_to_s3(self, file_uri):
@@ -77,8 +73,32 @@ class ExportAction(AbstractAction):
         s3_key.key = self.timeperiod + '/' + self.table_name + '.csv'
         s3_key.set_contents_from_file(fp=file_uri, rewind=True)
 
-    def do(self, context):
+    def do(self, context, execution_cluster):
+        self.set_context(context)
+
         file_uri = self.table_to_file()
         if not file_uri:
             raise UserWarning('Table {0} was not exported. Aborting the action'.format(self.table_name))
         self.file_to_s3(file_uri)
+
+
+class PigAction(AbstractAction):
+    def __init__(self, table_name, uri_script, kwargs=None):
+        super(PigAction, self).__init__('EMR Pig Action', kwargs)
+        self.table_name = table_name
+        self.uri_script = uri_script
+
+    def do(self, context, execution_cluster):
+        self.set_context(context)
+        assert isinstance(execution_cluster, AbstractCluster)
+
+        is_successful = execution_cluster.run_pig_step(
+            uri_script=os.path.join(context.settings['s3_pig_lib_path'], self.uri_script),
+            table_name=self.table_name,
+            s3_input_path='s3://synergy',
+            s3_output_path=context.settings['s3_output_bucket'])
+        if not is_successful:
+            raise UserWarning('Pig Action failed on {0}'.format(self.uri_script))
+
+    def cleanup(self):
+        pass

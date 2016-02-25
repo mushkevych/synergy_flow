@@ -2,59 +2,67 @@ __author__ = 'Bohdan Mushkevych'
 
 from datetime import datetime
 
-from db.model.step import Step
+from db.model.step import Step, STATE_REQUESTED, STATE_INVALID, STATE_IN_PROGRESS, STATE_PROCESSED
 from db.dao.step_dao import StepDao
+from flow.execution_context import ContextDriven
 
 
-class FlowGraphNode(object):
-    def __init__(self, name, step_class, dependent_on_names):
+class FlowGraphNode(ContextDriven):
+    def __init__(self, name, dependent_on_names, step_instantiable):
+        super(FlowGraphNode, self).__init__(name)
+
         self.name = name
-        self.step_class = step_class
         self.dependent_on_names = dependent_on_names
-        self.step_instance = None
-        self.execution_cluster = None
+        self.step_instantiable = step_instantiable
         self.step_dao = None
-        self.logger = None
+        self.step = None
 
-    def set_context(self, context, execution_cluster):
-        self.context = context
-        self.execution_cluster = execution_cluster
-
-        log_file = os.path.join(context.settings['log_directory'], '{0}.log'.format(self.name))
-        self.logger = Logger(log_file, self.name)
+    def set_context(self, context):
+        super(FlowGraphNode, self).set_context(context)
         self.step_dao = StepDao(self.logger)
 
-    def update_db(self):
-        step = Step()
-        step.created_at = datetime.utcnow()
-        step.started_at = datetime.utcnow()
-        step.flow_name = self.context.flow.flow_name
-        step.related_flow = self.context.flow
-        self.step_dao.update(Step())
+    def mark_start(self):
+        """ performs step start-up, such as db and context updates """
+        self.step = Step()
+        self.step.created_at = datetime.utcnow()
+        self.step.started_at = datetime.utcnow()
+        self.step.flow_name = self.context.flow.flow_name
+        self.step.timeperiod = self.context.timeperiod
+        self.step.related_flow = self.context.flow_id
+        self.step.state = STATE_REQUESTED
+        self.step_dao.update(self.step)
 
+    def mark_failure(self):
+        """ perform step post-failure activities, such as db update """
+        self.step.finished_at = datetime.utcnow()
+        self.step.state = STATE_INVALID
+        self.step_dao.update(self.step)
+
+    def mark_success(self):
+        """ perform activities in case of the step successful completion """
+        self.step.finished_at = datetime.utcnow()
+        self.step.state = STATE_PROCESSED
+        self.step_dao.update(self.step)
 
     def run(self, context, execution_cluster):
-        self.set_context(context, execution_cluster)
+        self.set_context(context)
+        self.mark_start()
 
-        self.step_instance = self.step_class()
-        self.step_instance.do_pre()
-        if not self.step_instance.is_pre_completed:
-            return self.step_instance.is_complete
+        step_instance = self.step_instantiable.instantiate()
+        step_instance.do_pre(context, execution_cluster)
+        if not step_instance.is_pre_completed:
+            self.mark_failure()
+            return False
 
+        step_instance.do_main(context, execution_cluster)
+        if not step_instance.is_pre_completed:
+            self.mark_failure()
+            return False
 
-        try:
-            step_state = execution_cluster.run_pig_step(
-                os.path.join(context.settings.settings['s3_pig_lib_path'], self.step_instance.pig_script),
-                table_name=step_name,
-                s3_input_path='s3://synergy',
-                s3_output_path=context.settings.settings['s3_output_bucket'])
-            self.step_instance.is_pig_completed = True if step_state else False
-        except Exception:
-            self.logger.error('Exception on step for {0} table'.format(step_name), exc_info=True)
-            self.step_instance.is_pig_completed = False
+        step_instance.do_post(context, execution_cluster)
+        if not step_instance.is_complete:
+            self.mark_failure()
+            return False
 
-        if not self.step_instance.is_pig_completed:
-            return self.step_instance.is_complete
-
-        self.step_instance.do_post()
-        return self.step_instance.is_complete
+        self.mark_success()
+        return step_instance.is_complete

@@ -3,9 +3,7 @@ __author__ = 'Bohdan Mushkevych'
 import time
 import concurrent.futures
 
-from db.dao.flow_dao import FlowDao
 from flow.flow_graph import FlowGraph
-from synergy.system.data_logging import get_logger
 from workers.emr_cluster import EmrCluster
 
 
@@ -38,10 +36,9 @@ class ExecutionEngine(object):
         - assigns execution steps to the clusters and monitor their progress
         - tracks dependencies and terminate execution should the Flow Critical Path fail """
 
-    def __init__(self, process_name, flow_graph):
-        self.logger = get_logger(process_name)
+    def __init__(self, logger, flow_graph):
+        self.logger = logger
         self.flow_graph = flow_graph
-        self.flow_dao = FlowDao(self.logger)
 
         # list of execution clusters (such as AWS EMR) available for processing
         self.execution_clusters = list()
@@ -90,15 +87,15 @@ class ExecutionEngine(object):
         self.logger.info('starting EmrDriver: {')
 
         try:
-            self.flow_graph.start(context)
+            self.flow_graph.mark_start(context)
             self.spawn_clusters(context.number_of_clusters)
             for cluster in self.execution_clusters:
                 context.cluster_queue.put(cluster)
             self.run_engine(context)
-            self.flow_graph.succeed(context)
+            self.flow_graph.mark_success(context)
         except Exception:
             self.logger.error('Exception on starting EmrDriver', exc_info=True)
-            self.flow_graph.failed(context)
+            self.flow_graph.mark_failure(context)
         finally:
             # TODO: do not terminate failed cluster to be able to retrieve and analyze the processing errors
             for cluster in self.execution_clusters:
