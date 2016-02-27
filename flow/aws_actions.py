@@ -99,6 +99,3 @@ class PigAction(AbstractAction):
             s3_output_path=context.settings['s3_output_bucket'])
         if not is_successful:
             raise UserWarning('Pig Action failed on {0}'.format(self.uri_script))
-
-    def cleanup(self):
-        pass

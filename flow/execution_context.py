@@ -1,22 +1,18 @@
 __author__ = 'Bohdan Mushkevych'
 
 import os
-from Queue import Queue
 from synergy.system.data_logging import Logger
 
 
 class ExecutionContext(object):
-    def __init__(self, timeperiod, settings, number_of_clusters=2, flow_graph=None, flow=None):
+    def __init__(self, timeperiod, settings, number_of_clusters=2, flow_graph=None, flow_model=None):
         assert isinstance(settings, dict)
 
         self.timeperiod = timeperiod
         self.settings = settings
         self.number_of_clusters = number_of_clusters
         self._flow_graph = flow_graph
-        self._flow = flow
-
-        # multi-threading queue
-        self.cluster_queue = Queue()
+        self._flow_model = flow_model
 
     @property
     def flow_graph(self):
@@ -27,16 +23,16 @@ class ExecutionContext(object):
         self._flow_graph = value
 
     @property
-    def flow(self):
-        return self._flow
+    def flow_model(self):
+        return self._flow_model
 
-    @flow.setter
-    def flow(self, value):
-        self._flow = value
+    @flow_model.setter
+    def flow_model(self, value):
+        self._flow_model = value
 
     @property
     def flow_id(self):
-        return self._flow.db_id
+        return self._flow_model.db_id
 
 
 class ContextDriven(object):

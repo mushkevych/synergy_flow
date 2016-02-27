@@ -18,4 +18,4 @@ class AbstractAction(ContextDriven):
         raise NotImplementedError('method do must be implemented by {0}'.format(self.__class__.__name__))
 
     def cleanup(self):
-        raise NotImplementedError('method cleanup must be implemented by {0}'.format(self.__class__.__name__))
+        pass

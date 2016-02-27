@@ -17,3 +17,6 @@ class AbstractCluster(object):
 
     def run_shell_command(self, uri_script, **kwargs):
         pass
+
+    def launch(self):
+        pass
