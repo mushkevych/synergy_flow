@@ -8,12 +8,12 @@ from flow.execution_context import ContextDriven
 
 
 class FlowGraphNode(ContextDriven):
-    def __init__(self, name, dependent_on_names, step_instantiable):
+    def __init__(self, name, dependent_on_names, step_instance):
         super(FlowGraphNode, self).__init__(name)
 
         self.name = name
         self.dependent_on_names = dependent_on_names
-        self.step_instantiable = step_instantiable
+        self.step_instance = step_instance
         self.step_dao = None
         self.step_model = None
 
@@ -53,21 +53,20 @@ class FlowGraphNode(ContextDriven):
         self.set_context(context)
         self.mark_start()
 
-        step_instance = self.step_instantiable.instantiate()
-        step_instance.do_pre(context, execution_cluster)
-        if not step_instance.is_pre_completed:
+        self.step_instance.do_pre(context, execution_cluster)
+        if not self.step_instance.is_pre_completed:
             self.mark_failure()
             return False
 
-        step_instance.do_main(context, execution_cluster)
-        if not step_instance.is_pre_completed:
+        self.step_instance.do_main(context, execution_cluster)
+        if not self.step_instance.is_pre_completed:
             self.mark_failure()
             return False
 
-        step_instance.do_post(context, execution_cluster)
-        if not step_instance.is_complete:
+        self.step_instance.do_post(context, execution_cluster)
+        if not self.step_instance.is_complete:
             self.mark_failure()
             return False
 
         self.mark_success()
-        return step_instance.is_complete
+        return self.step_instance.is_complete

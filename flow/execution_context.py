@@ -4,6 +4,13 @@ import os
 from synergy.system.data_logging import Logger
 
 
+def get_logger(log_tag, context):
+    log_file = os.path.join(context.settings['log_directory'], '{0}.log'.format(log_tag))
+    append_to_console = context.settings['under_test'],
+    redirect_stdstream = not context.settings['under_test']
+    return Logger(log_file, log_tag, append_to_console, redirect_stdstream)
+
+
 class ExecutionContext(object):
     def __init__(self, timeperiod, settings, number_of_clusters=2, flow_graph=None, flow_model=None):
         assert isinstance(settings, dict)
@@ -36,7 +43,10 @@ class ExecutionContext(object):
 
 
 class ContextDriven(object):
-    def __init__(self, log_tag):
+    def __init__(self, log_tag=None):
+        if log_tag is None:
+            log_tag = self.__class__.__name__
+
         self.log_tag = log_tag
         self.context = None
         self.timeperiod = None
@@ -49,8 +59,4 @@ class ContextDriven(object):
         self.context = context
         self.timeperiod = context.timeperiod
         self.settings = context.settings
-
-        log_file = os.path.join(context.settings['log_directory'], '{0}.log'.format(self.__class__.__name__))
-        append_to_console = context.settings['under_test'],
-        redirect_stdstream = not context.settings['under_test']
-        self.logger = Logger(log_file, self.log_tag, append_to_console, redirect_stdstream)
+        self.logger = get_logger(self.log_tag, context)

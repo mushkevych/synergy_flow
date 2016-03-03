@@ -4,8 +4,8 @@ from flow.execution_context import ContextDriven
 
 
 class AbstractAction(ContextDriven):
-    def __init__(self, name, kwargs=None):
-        super(AbstractAction, self).__init__(name)
+    def __init__(self, name, log_tag=None, **kwargs):
+        super(AbstractAction, self).__init__(log_tag)
         self.name = name
         self.kwargs = {} if not kwargs else kwargs
 

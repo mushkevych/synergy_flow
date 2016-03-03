@@ -8,9 +8,10 @@ from db.dao.flow_dao import FlowDao
 from db.model.flow import Flow, STATE_REQUESTED, STATE_INVALID, STATE_PROCESSED
 from flow.flow_graph_node import FlowGraphNode
 from flow.execution_context import ContextDriven
+from flow.execution_step import ExecutionStep
 
 
-class InvalidGraph(Exception):
+class GraphError(Exception):
     pass
 
 
@@ -52,7 +53,7 @@ class FlowGraph(ContextDriven):
             next_step_name = _next_iteration()
             while next_step_name is None:
                 # at this point, there are Steps that are blocked, and we must wait for them to become available
-                time.sleep(5)   # 5 seconds
+                time.sleep(5)  # 5 seconds
                 next_step_name = self.next()
             yield next_step_name
 
@@ -62,7 +63,7 @@ class FlowGraph(ContextDriven):
     def __contains__(self, item):
         return item in self._dict
 
-    def append(self, name, step_klass, dependent_on_names):
+    def append(self, name, dependent_on_names, main_action, pre_actions=None, post_actions=None, **kwargs):
         def _find_non_existant(names):
             non_existent = list()
             for name in names:
@@ -72,16 +73,23 @@ class FlowGraph(ContextDriven):
             return non_existent
 
         if not _find_non_existant(dependent_on_names):
-            raise InvalidGraph('Step {0} from Flow {1} is dependent on a non-existent Step {2}'
-                               .format(name, self.flow_name, dependent_on_names))
+            raise GraphError('Step {0} from Flow {1} is dependent on a non-existent Step {2}'
+                             .format(name, self.flow_name, dependent_on_names))
 
-        node = FlowGraphNode(name, step_klass, dependent_on_names)
+        node = FlowGraphNode(name, dependent_on_names, ExecutionStep(name=name,
+                                                                     main_action=main_action,
+                                                                     pre_actions=pre_actions,
+                                                                     post_actions=post_actions,
+                                                                     kwargs=kwargs))
 
         # link newly inserted node with the dependent_on nodes
         for name in dependent_on_names:
             self[name]._next.append(node)
             node._prev.append(self[name])
         self._dict[name] = node
+
+        # return *self* to allow chained *append*
+        return self
 
     def is_step_unblocked(self, step_name):
         is_unblocked = True

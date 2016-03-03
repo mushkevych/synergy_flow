@@ -1,6 +1,5 @@
 __author__ = 'Bohdan Mushkevych'
 
-from flow.instantiable import Instantiable
 from flow.abstract_action import AbstractAction
 from flow.execution_context import ContextDriven
 
@@ -16,8 +15,8 @@ def validate_action_param(param, klass):
 
 
 class ExecutionStep(ContextDriven):
-    def __init__(self, name, main_action, pre_actions=None, post_actions=None, kwargs=None):
-        super(ExecutionStep, self).__init__(name)
+    def __init__(self, name, main_action, pre_actions=None, post_actions=None, **kwargs):
+        super(ExecutionStep, self).__init__()
 
         if pre_actions is None: pre_actions = []
         if post_actions is None: post_actions = []
@@ -31,10 +30,10 @@ class ExecutionStep(ContextDriven):
         self.is_post_completed = False
 
         self.pre_actions = pre_actions
-        validate_action_param(self.pre_actions, Instantiable)
+        validate_action_param(self.pre_actions, AbstractAction)
 
         self.post_actions = post_actions
-        validate_action_param(self.post_actions, Instantiable)
+        validate_action_param(self.post_actions, AbstractAction)
 
         self.kwargs = kwargs
 
@@ -44,12 +43,8 @@ class ExecutionStep(ContextDriven):
 
     def _do(self, actions, context, execution_cluster):
         is_success = True
-        for action_parameter in actions:
-            assert isinstance(action_parameter, Instantiable)
-
-            action = action_parameter.instantiate()
+        for action in actions:
             assert isinstance(action, AbstractAction)
-
             try:
                 action.do(context, execution_cluster)
             except:

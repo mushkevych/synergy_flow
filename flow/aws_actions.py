@@ -14,7 +14,7 @@ from flow.abstract_cluster import AbstractCluster
 
 
 class ExportAction(AbstractAction):
-    def __init__(self, table_name, kwargs=None):
+    def __init__(self, table_name, **kwargs):
         super(ExportAction, self).__init__('postgres->s3 export action', kwargs)
 
         self.table_name = table_name
@@ -83,9 +83,8 @@ class ExportAction(AbstractAction):
 
 
 class PigAction(AbstractAction):
-    def __init__(self, table_name, uri_script, kwargs=None):
+    def __init__(self, uri_script, **kwargs):
         super(PigAction, self).__init__('EMR Pig Action', kwargs)
-        self.table_name = table_name
         self.uri_script = uri_script
 
     def do(self, context, execution_cluster):
@@ -94,7 +93,6 @@ class PigAction(AbstractAction):
 
         is_successful = execution_cluster.run_pig_step(
             uri_script=os.path.join(context.settings['s3_pig_lib_path'], self.uri_script),
-            table_name=self.table_name,
             s3_input_path='s3://synergy',
             s3_output_path=context.settings['s3_output_bucket'])
         if not is_successful:

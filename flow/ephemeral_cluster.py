@@ -4,8 +4,8 @@ from flow.abstract_cluster import AbstractCluster
 
 
 class EphemeralCluster(AbstractCluster):
-    def __init__(self, name, kwargs=None):
-        super(EphemeralCluster, self).__init__(name, kwargs)
+    def __init__(self, name, context, **kwargs):
+        super(EphemeralCluster, self).__init__(name, context, kwargs)
 
     def run_pig_step(self, uri_script, **kwargs):
         pass
