@@ -1,5 +1,5 @@
 # synergy_flow
-Simple Workflow Engine
+Simple Workflow Engine, capable of running on a local desktop or multiple concurrent EMR clusters
 
 License:
 ---------
