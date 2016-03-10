@@ -12,6 +12,9 @@ def get_logger(log_tag, context):
 
 
 class ExecutionContext(object):
+    """ set of attributes that identify timeperiod to cover during an execution
+        and environment-specific settings, where the flow is run
+    """
     def __init__(self, timeperiod, settings, number_of_clusters=2, flow_graph=None, flow_model=None):
         assert isinstance(settings, dict)
 
@@ -43,6 +46,8 @@ class ExecutionContext(object):
 
 
 class ContextDriven(object):
+    """ common ancestor for all types that require *context*,
+        and perform same set of initialization of it """
     def __init__(self, log_tag=None):
         if log_tag is None:
             log_tag = self.__class__.__name__

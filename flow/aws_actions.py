@@ -14,6 +14,8 @@ from flow.abstract_cluster import AbstractCluster
 
 
 class ExportAction(AbstractAction):
+    """ performs UNLOAD from the selected Postgres DB
+        to the local filesystem and to S3 afterwards """
     def __init__(self, table_name, **kwargs):
         super(ExportAction, self).__init__('postgres->s3 export action', kwargs)
 
@@ -23,7 +25,7 @@ class ExportAction(AbstractAction):
         try:
             self.s3_connection = boto.connect_s3(self.settings['aws_access_key_id'],
                                                  self.settings['aws_secret_access_key'])
-            self.s3_bucket = self.s3_connection.get_bucket(self.settings['aws_copperlight_s3_bucket'])
+            self.s3_bucket = self.s3_connection.get_bucket(self.settings['aws_s3_bucket'])
         except S3ResponseError as e:
             self.logger.error('AWS Credentials are NOT valid. Terminating.', exc_info=True)
             self.__del__()
@@ -83,6 +85,7 @@ class ExportAction(AbstractAction):
 
 
 class PigAction(AbstractAction):
+    """ executes a pig script on the given cluster """
     def __init__(self, uri_script, **kwargs):
         super(PigAction, self).__init__('EMR Pig Action', kwargs)
         self.uri_script = uri_script

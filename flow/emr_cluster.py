@@ -31,8 +31,9 @@ STEP_STATE_INTERRUPTED = 'INTERRUPTED'
 
 
 class EmrCluster(AbstractCluster):
+    """ implementation of the abstract API for the case of AWS EMR """
     def __init__(self, name, context, **kwargs):
-        super(EmrCluster, self).__init__(name, context, kwargs)
+        super(EmrCluster, self).__init__(name, context, kwargs=kwargs)
 
         self.jobflow_id = None  # it is both ClusterId and the JobflowId
 

@@ -8,6 +8,7 @@ from flow.execution_context import ContextDriven
 
 
 class FlowGraphNode(ContextDriven):
+    """ represents a Node in the FlowGraph """
     def __init__(self, name, dependent_on_names, step_instance):
         super(FlowGraphNode, self).__init__(name)
 
@@ -17,8 +18,8 @@ class FlowGraphNode(ContextDriven):
         self.step_dao = None
         self.step_model = None
 
-        # attributes _prev and _next contains FlowGraphNodes that preceeds and follows this node
-        # these are managed by the Flow.append
+        # attributes _prev and _next contains FlowGraphNodes that precedes and follows this node
+        # these are managed by the FlowGraph.append
         self._prev = list()
         self._next = list()
 

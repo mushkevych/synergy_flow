@@ -16,6 +16,7 @@ class GraphError(Exception):
 
 
 class FlowGraph(ContextDriven):
+    """ Graph of interconnected Nodes, each representing an execution step """
     def __init__(self, flow_name):
         super(FlowGraph, self).__init__(flow_name)
         self.flow_name = flow_name
@@ -36,6 +37,10 @@ class FlowGraph(ContextDriven):
         return self.next()
 
     def next(self):
+        """ heart of the Flow: traverses the graph and returns next available Node for processing
+            in case all nodes are blocked - blocks by sleeping
+            in case all nodes have been yielded for processing - throws a StopIteration exeption
+        """
         def _next_iteration():
             if len(self.yielded) == len(self):
                 # all of the nodes have been yielded for processing
@@ -64,6 +69,10 @@ class FlowGraph(ContextDriven):
         return item in self._dict
 
     def append(self, name, dependent_on_names, main_action, pre_actions=None, post_actions=None, **kwargs):
+        """ method appends a new Node to the Graph,
+            validates the input for non-existent references
+            :return self to allow chained *append*
+        """
         def _find_non_existant(names):
             non_existent = list()
             for name in names:

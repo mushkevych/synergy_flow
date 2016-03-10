@@ -4,6 +4,7 @@ from flow.execution_context import ContextDriven
 
 
 class AbstractAction(ContextDriven):
+    """ abstraction for action: API sequence is to *do* and *cleanup* """
     def __init__(self, name, log_tag=None, **kwargs):
         super(AbstractAction, self).__init__(log_tag)
         self.name = name

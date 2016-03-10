@@ -8,6 +8,8 @@ class ClusterError(Exception):
 
 
 class AbstractCluster(object):
+    """ abstraction for action execution environment
+        API sequence is to launch the cluster, perform one or more steps/commands and terminate """
     def __init__(self, name, context, **kwargs):
         assert isinstance(context, ExecutionContext)
 

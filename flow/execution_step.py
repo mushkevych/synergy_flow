@@ -15,6 +15,8 @@ def validate_action_param(param, klass):
 
 
 class ExecutionStep(ContextDriven):
+    """ helper class for the GraphNode, keeping the track of completed actions
+        and providing means to run the step """
     def __init__(self, name, main_action, pre_actions=None, post_actions=None, **kwargs):
         super(ExecutionStep, self).__init__()
 

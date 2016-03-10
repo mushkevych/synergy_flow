@@ -18,6 +18,8 @@ def launch_cluster(logger, context, cluster_name):
 
 
 def parallel_flow_execution(logger, context, execution_cluster, flow_graph):
+    """ function fetches next available GraphNode/Step
+        from the FlowGraph and executes it on the given cluster """
     assert isinstance(flow_graph, FlowGraph)
     for step_name in flow_graph:
         try:
@@ -41,7 +43,7 @@ class ExecutionEngine(object):
         # list of execution clusters (such as AWS EMR) available for processing
         self.execution_clusters = list()
 
-    def spawn_clusters(self, context):
+    def _spawn_clusters(self, context):
         self.logger.info('spawning clusters...')
         with ThreadPoolExecutor(max_workers=context.number_of_clusters) as executor:
             future_to_cluster = [executor.submit(launch_cluster, self.logger, context,
@@ -54,11 +56,12 @@ class ExecutionEngine(object):
                 except Exception as exc:
                     self.logger.error('Cluster launch generated an exception: {0}'.format(exc))
 
-    def run_engine(self, context):
+    def _run_engine(self, context):
         self.logger.info('starting engine...')
         with ThreadPoolExecutor(max_workers=len(self.execution_clusters)) as executor:
 
-            # Start the Pig Step and mark each future with the execution_cluster
+            # Start the GraphNode/Step as soon as the step is unblocked and available for run
+            # each future is marked with the execution_cluster
             future_to_worker = {executor.submit(parallel_flow_execution, self.logger,
                                                 context, cluster, self.flow_graph): cluster
                                 for cluster in self.execution_clusters}
@@ -74,12 +77,17 @@ class ExecutionEngine(object):
                                       .format(cluster, exc))
 
     def run(self, context):
+        """ method executes the flow by:
+            - spawning the clusters
+            - traversing the FlowGraph and assigning
+              steps for concurrent execution (if permitted by the Graph layout)
+        """
         self.logger.info('starting Engine: {')
 
         try:
             self.flow_graph.mark_start(context)
-            self.spawn_clusters(context)
-            self.run_engine(context)
+            self._spawn_clusters(context)
+            self._run_engine(context)
             self.flow_graph.mark_success(context)
         except Exception:
             self.logger.error('Exception on starting Engine', exc_info=True)
