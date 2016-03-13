@@ -12,13 +12,14 @@ def get_logger(log_tag, context):
 
 
 class ExecutionContext(object):
-    """ set of attributes that identify timeperiod to cover during an execution
-        and environment-specific settings, where the flow is run
+    """ set of attributes that identify Flow execution:
+        - timeperiod boundaries of the run
+        - environment-specific settings, where the flow is run
     """
-    def __init__(self, timeperiod, settings, number_of_clusters=2, flow_graph=None, flow_model=None):
+    def __init__(self, start_timeperiod, end_timeperiod, settings, number_of_clusters=2, flow_graph=None, flow_model=None):
         assert isinstance(settings, dict)
 
-        self.timeperiod = timeperiod
+        self.timeperiod = start_timeperiod
         self.settings = settings
         self.number_of_clusters = number_of_clusters
         self._flow_graph = flow_graph

@@ -1,5 +1,6 @@
 __author__ = 'Bohdan Mushkevych'
 
+from conf import flows
 from flow.flow_graph import FlowGraph
 from flow.simple_actions import SleepAction, ShellCommandAction
 from flow.aws_actions import PigAction, ExportAction
@@ -19,3 +20,5 @@ flow_example.append(name='example_step_2',
                     dependent_on_names='example_step_1',
                     main_action=pig_action, pre_actions=export_action,
                     post_actions=[shell_action, sleep_action, export_action])
+
+flows['FLOW_EXAMPLE'] = flow_example

@@ -3,6 +3,7 @@ __author__ = 'Bohdan Mushkevych'
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from flow.flow_graph import FlowGraph
+from flow.abstract_cluster import AbstractCluster
 from flow.emr_cluster import EmrCluster
 from flow.ephemeral_cluster import EphemeralCluster
 
@@ -20,6 +21,7 @@ def launch_cluster(logger, context, cluster_name):
 def parallel_flow_execution(logger, context, execution_cluster, flow_graph):
     """ function fetches next available GraphNode/Step
         from the FlowGraph and executes it on the given cluster """
+    assert isinstance(execution_cluster, AbstractCluster)
     assert isinstance(flow_graph, FlowGraph)
     for step_name in flow_graph:
         try:
@@ -37,6 +39,7 @@ class ExecutionEngine(object):
         - tracks dependencies and terminate execution should the Flow Critical Path fail """
 
     def __init__(self, logger, flow_graph):
+        assert isinstance(flow_graph, FlowGraph)
         self.logger = logger
         self.flow_graph = flow_graph
 
