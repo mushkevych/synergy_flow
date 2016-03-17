@@ -2,9 +2,10 @@ __author__ = 'Bohdan Mushkevych'
 
 from datetime import datetime
 
-from db.model.step import Step, STATE_REQUESTED, STATE_INVALID, STATE_IN_PROGRESS, STATE_PROCESSED
-from db.dao.step_dao import StepDao
-from flow.execution_context import ContextDriven
+from flow.core.execution_context import ContextDriven
+
+from flow.db.model.step import Step, STATE_REQUESTED, STATE_INVALID, STATE_PROCESSED
+from flow.db.dao.step_dao import StepDao
 
 
 class FlowGraphNode(ContextDriven):

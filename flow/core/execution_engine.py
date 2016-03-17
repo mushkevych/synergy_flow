@@ -2,10 +2,11 @@ __author__ = 'Bohdan Mushkevych'
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from flow.flow_graph import FlowGraph
-from flow.abstract_cluster import AbstractCluster
-from flow.emr_cluster import EmrCluster
-from flow.ephemeral_cluster import EphemeralCluster
+from flow.core.abstract_cluster import AbstractCluster
+from flow.core.emr_cluster import EmrCluster
+from flow.core.flow_graph import FlowGraph
+
+from flow.core.ephemeral_cluster import EphemeralCluster
 
 
 def launch_cluster(logger, context, cluster_name):

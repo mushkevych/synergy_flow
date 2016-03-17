@@ -4,11 +4,12 @@ import time
 
 import boto.emr
 from boto.emr.bootstrap_action import BootstrapAction
-from boto.emr.step import PigStep
-from boto.emr.step import InstallPigStep
 from boto.emr.emrobject import ClusterStatus, StepId, JobFlow, JobFlowStepList
+from boto.emr.step import InstallPigStep
+from boto.emr.step import PigStep
 from synergy.conf import settings
-from flow.abstract_cluster import AbstractCluster, ClusterError
+
+from flow.core.abstract_cluster import AbstractCluster, ClusterError
 
 # `http://docs.aws.amazon.com/ElasticMapReduce/latest/DeveloperGuide/ProcessingCycle.html`_
 CLUSTER_STATE_COMPLETED = 'COMPLETED'

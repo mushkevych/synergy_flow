@@ -1,7 +1,7 @@
 __author__ = 'Bohdan Mushkevych'
 
-from flow.abstract_action import AbstractAction
-from flow.execution_context import ContextDriven
+from flow.core.abstract_action import AbstractAction
+from flow.core.execution_context import ContextDriven
 
 
 def validate_action_param(param, klass):

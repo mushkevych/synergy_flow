@@ -18,7 +18,6 @@ Metafile:
 
     /tests/               folder contains unit test
     /flow/                folder contains Synergy Flow egg
-    /db/                  folder contains database components - models, dao, schema
 
 
 Wiki Links

@@ -1,6 +1,6 @@
 __author__ = 'Bohdan Mushkevych'
 
-from flow.abstract_cluster import AbstractCluster
+from flow.core.abstract_cluster import AbstractCluster
 
 
 class EphemeralCluster(AbstractCluster):

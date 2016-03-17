@@ -1,13 +1,13 @@
 __author__ = 'Bohdan Mushkevych'
 
-from conf import flows
+from flow.conf import flows
+from flow.core.execution_context import ExecutionContext
+from flow.core.execution_engine import ExecutionEngine
 from synergy.conf import settings
 from synergy.db.model import unit_of_work
 from synergy.workers.abstract_uow_aware_worker import AbstractUowAwareWorker
 
-from db.model import flow
-from flow.execution_context import ExecutionContext
-from flow.execution_engine import ExecutionEngine
+from flow.db.model import flow
 
 ARGUMENT_FLOW_NAME = 'flow_name'
 

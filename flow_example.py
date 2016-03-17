@@ -1,10 +1,10 @@
 __author__ = 'Bohdan Mushkevych'
 
-from conf import flows
-from flow.flow_graph import FlowGraph
-from flow.simple_actions import SleepAction, ShellCommandAction
-from flow.aws_actions import PigAction, ExportAction
+from flow.conf import flows
+from flow.core.flow_graph import FlowGraph
+from flow.core.simple_actions import SleepAction, ShellCommandAction
 
+from flow.core.aws_actions import PigAction, ExportAction
 
 sleep_action = SleepAction(30)
 shell_action = ShellCommandAction('ls -al')

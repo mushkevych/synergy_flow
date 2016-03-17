@@ -1,6 +1,6 @@
 __author__ = 'Bohdan Mushkevych'
 
-from flow.execution_context import ContextDriven
+from flow.core.execution_context import ContextDriven
 
 
 class AbstractAction(ContextDriven):

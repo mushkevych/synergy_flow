@@ -1,7 +1,8 @@
 __author__ = 'Bohdan Mushkevych'
 
 import time
-from flow.abstract_action import AbstractAction
+
+from flow.core.abstract_action import AbstractAction
 
 
 class SleepAction(AbstractAction):

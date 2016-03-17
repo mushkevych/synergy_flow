@@ -9,8 +9,9 @@ import boto.s3
 import boto.s3.key
 import psycopg2
 from boto.exception import S3ResponseError
-from flow.abstract_action import AbstractAction
-from flow.abstract_cluster import AbstractCluster
+
+from flow.core.abstract_action import AbstractAction
+from flow.core.abstract_cluster import AbstractCluster
 
 
 class ExportAction(AbstractAction):
