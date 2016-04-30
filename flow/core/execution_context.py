@@ -1,7 +1,7 @@
 __author__ = 'Bohdan Mushkevych'
 
 import os
-from synergy.system.data_logging import Logger
+from synergy.system.system_logger import Logger
 
 
 def get_logger(log_tag, context):

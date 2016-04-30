@@ -1,8 +1,8 @@
 from distutils.core import setup
 
 setup(name='synergy_flow',
-      version='0.3',
-      description='Synergy Scheduler',
+      version='0.4',
+      description='Synergy Flow',
       author='Bohdan Mushkevych',
       author_email='mushkevych@gmail.com',
       url='https://github.com/mushkevych/synergy_flow',

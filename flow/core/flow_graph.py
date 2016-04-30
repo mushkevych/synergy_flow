@@ -10,7 +10,7 @@ from flow.core.flow_graph_node import FlowGraphNode
 from flow.db.dao.flow_dao import FlowDao
 from flow.db.dao.step_dao import StepDao
 
-from model.flow import Flow, STATE_REQUESTED, STATE_INVALID, STATE_PROCESSED
+from flow.db.model.flow import Flow, STATE_REQUESTED, STATE_INVALID, STATE_PROCESSED
 
 
 class GraphError(Exception):
@@ -39,9 +39,9 @@ class FlowGraph(ContextDriven):
         return self.next()
 
     def next(self):
-        """ heart of the Flow: traverses the graph and returns next available Node for processing
+        """ heart of the Flow: traverses the graph and returns next available FlowGraphNode.name for processing
             in case all nodes are blocked - blocks by sleeping
-            in case all nodes have been yielded for processing - throws a StopIteration exeption
+            in case all nodes have been yielded for processing - throws a StopIteration exception
         """
         def _next_iteration():
             if len(self.yielded) == len(self):
@@ -75,7 +75,10 @@ class FlowGraph(ContextDriven):
             validates the input for non-existent references
             :return self to allow chained *append*
         """
-        def _find_non_existant(names):
+        assert isinstance(dependent_on_names, list), \
+            'dependent_on_names must be either a list of string or an empty list'
+
+        def _find_non_existent(names):
             non_existent = list()
             for name in names:
                 if name in self:
@@ -83,7 +86,7 @@ class FlowGraph(ContextDriven):
                 non_existent.append(name)
             return non_existent
 
-        if not _find_non_existant(dependent_on_names):
+        if not _find_non_existent(dependent_on_names):
             raise GraphError('Step {0} from Flow {1} is dependent on a non-existent Step {2}'
                              .format(name, self.flow_name, dependent_on_names))
 
