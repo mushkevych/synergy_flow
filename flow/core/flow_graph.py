@@ -22,6 +22,8 @@ class FlowGraph(ContextDriven):
     def __init__(self, flow_name):
         super(FlowGraph, self).__init__(flow_name)
         self.flow_name = flow_name
+
+        # format: {step_name:String -> node:FlowGraphNode}
         self._dict = OrderedDict()
         self.flow_dao = None
         self.yielded = list()
@@ -56,13 +58,12 @@ class FlowGraph(ContextDriven):
                 return name
             return None
 
-        while True:
-            next_step_name = _next_iteration()
-            while next_step_name is None:
-                # at this point, there are Steps that are blocked, and we must wait for them to become available
-                time.sleep(5)  # 5 seconds
-                next_step_name = self.next()
-            yield next_step_name
+        next_step_name = _next_iteration()
+        while next_step_name is None:
+            # at this point, there are Steps that are blocked, and we must wait for them to become available
+            time.sleep(5)  # 5 seconds
+            next_step_name = self.next()
+        return next_step_name
 
     def __eq__(self, other):
         return self._dict == other._dict
@@ -86,7 +87,7 @@ class FlowGraph(ContextDriven):
                 non_existent.append(name)
             return non_existent
 
-        if not _find_non_existent(dependent_on_names):
+        if _find_non_existent(dependent_on_names):
             raise GraphError('Step {0} from Flow {1} is dependent on a non-existent Step {2}'
                              .format(name, self.flow_name, dependent_on_names))
 
@@ -97,9 +98,9 @@ class FlowGraph(ContextDriven):
                                                                      kwargs=kwargs))
 
         # link newly inserted node with the dependent_on nodes
-        for name in dependent_on_names:
-            self[name]._next.append(node)
-            node._prev.append(self[name])
+        for dependent_on_name in dependent_on_names:
+            self[dependent_on_name]._next.append(node)
+            node._prev.append(self[dependent_on_name])
         self._dict[name] = node
 
         # return *self* to allow chained *append*

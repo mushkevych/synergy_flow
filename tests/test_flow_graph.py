@@ -12,6 +12,8 @@ ut_flows.register_flows()
 from synergy.conf import settings
 from flow.conf import flows
 
+from flow.db.model.step import Step
+from flow.db.dao.step_dao import StepDao
 from flow.core.flow_graph import FlowGraph
 from flow.core.flow_graph_node import FlowGraphNode
 from flow.core.execution_context import get_logger, ExecutionContext
@@ -35,16 +37,22 @@ class FlowGraphTest(unittest.TestCase):
         read/write operations on the DB
         as this UT is about testing the iterator logic
         """
-        the_flow = flows.get(ut_flows.UNIT_TEST_FLOW_SIMPLE)
+        the_flow = flows.flows[ut_flows.UNIT_TEST_FLOW_SIMPLE]
         the_flow.set_context(self.context)
 
-    def test_simple_iterator(self):
-        """ method tests happy-flow of the iterator """
-        the_flow = flows.get(ut_flows.UNIT_TEST_FLOW_SIMPLE)
+    @mock.patch('flow.db.dao.step_dao.StepDao')
+    def test_simple_iterator(self, mock_step_dao):
+        """ method tests happy-flow for the iterator """
+        the_flow = flows.flows[ut_flows.UNIT_TEST_FLOW_SIMPLE]
 
         steps_order = list()
-        for step in the_flow:
-            steps_order.append(step)
+        for step_name in the_flow:
+            steps_order.append(step_name)
+            step = the_flow[step_name]
+            assert isinstance(step, FlowGraphNode)
+            step.step_model = mock.create_autospec(Step)
+            step.step_dao = mock.create_autospec(StepDao)
+            step.mark_success()
 
         self.assertListEqual(steps_order, ['step_1', 'step_2', 'step_3', 'step_4', 'step_5'])
 

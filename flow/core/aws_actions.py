@@ -41,7 +41,7 @@ class ExportAction(AbstractAction):
 
     def get_file(self):
         file_uri = os.path.join(self.tempdir_copying, self.table_name + '.csv')
-        return file(file_uri, 'w+')  # writing and reading
+        return open(file_uri, 'w+')  # writing and reading
 
     def table_to_file(self):
         """ method connects to the remote PostgreSQL and copies requested table into a local file """
