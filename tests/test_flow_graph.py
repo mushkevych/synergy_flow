@@ -30,7 +30,7 @@ class FlowGraphTest(unittest.TestCase):
     def tearDown(self):
         pass
 
-    @mock.patch('flow.db.dao.flow_dao.FlowDao')
+    @mock.patch('flow.core.flow_graph.FlowDao')
     def test_set_context(self, mock_flow_dao):
         """
         flow_dao is mocked to prevent performing
@@ -40,18 +40,25 @@ class FlowGraphTest(unittest.TestCase):
         the_flow = flows.flows[ut_flows.UNIT_TEST_FLOW_SIMPLE]
         the_flow.set_context(self.context)
 
-    @mock.patch('flow.db.dao.step_dao.StepDao')
-    def test_simple_iterator(self, mock_step_dao):
+    @mock.patch('flow.core.flow_graph.FlowDao')
+    @mock.patch('flow.core.flow_graph.StepDao')
+    @mock.patch('flow.core.flow_graph_node.StepDao')
+    def test_simple_iterator(self, flow_flow_dao, flow_step_dao, step_step_dao):
         """ method tests happy-flow for the iterator """
         the_flow = flows.flows[ut_flows.UNIT_TEST_FLOW_SIMPLE]
+        the_flow.mark_start(self.context)
 
         steps_order = list()
         for step_name in the_flow:
             steps_order.append(step_name)
             step = the_flow[step_name]
             assert isinstance(step, FlowGraphNode)
-            step.step_model = mock.create_autospec(Step)
-            step.step_dao = mock.create_autospec(StepDao)
+
+            step.set_context(self.context)
+            step.mark_start()
+            step.step_instance.is_pre_completed = True
+            step.step_instance.is_main_completed = True
+            step.step_instance.is_post_completed = True
             step.mark_success()
 
         self.assertListEqual(steps_order, ['step_1', 'step_2', 'step_3', 'step_4', 'step_5'])
