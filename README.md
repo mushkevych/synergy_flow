@@ -1,4 +1,8 @@
 # synergy_flow
+
+[![PyPI version](https://img.shields.io/pypi/v/synergy_flow.svg)](https://pypi.python.org/pypi/synergy_flow)
+[![Build Status](https://travis-ci.org/mushkevych/synergy_flow.svg?branch=master)](https://travis-ci.org/mushkevych/synergy_flow)
+
 Simple Workflow Engine, capable of running on a local desktop or multiple concurrent EMR clusters
 
 License:
