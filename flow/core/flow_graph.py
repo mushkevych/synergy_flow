@@ -51,6 +51,11 @@ class FlowGraph(ContextDriven):
                 raise StopIteration()
 
             for name in self._dict:
+                if self.is_step_failed(name):
+                    # one of the steps has failed
+                    # thus, marking all flow as failed
+                    raise StopIteration()
+
                 if not self.is_step_unblocked(name) or name in self.yielded:
                     continue
 
@@ -107,11 +112,23 @@ class FlowGraph(ContextDriven):
         return self
 
     def is_step_unblocked(self, step_name):
+        """
+        :param step_name: name of the step to inspect
+        :return: True if the step has no pending dependencies and is ready for processing; False otherwise
+        """
         is_unblocked = True
         for prev_node in self[step_name]._prev:
             if prev_node.step_instance and not prev_node.step_instance.is_complete:
                 is_unblocked = False
         return is_unblocked
+
+    def is_step_failed(self, step_name):
+        """
+        :param step_name: name of the step to inspect
+        :return: True if the step has failed (either in STATE_INVALID or STATE_CANCELED); False otherwise
+        """
+        node = self[step_name]
+        return node.step_model and node.step_model.is_failed
 
     def set_context(self, context):
         super(FlowGraph, self).set_context(context)

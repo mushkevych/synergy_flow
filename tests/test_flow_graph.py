@@ -17,14 +17,14 @@ from flow.db.dao.step_dao import StepDao
 from flow.core.flow_graph import FlowGraph
 from flow.core.flow_graph_node import FlowGraphNode
 from flow.core.execution_context import get_logger, ExecutionContext
+from flow.core.ephemeral_cluster import EphemeralCluster
 
 TEST_PRESET_TIMEPERIOD = '2016060107'
-TEST_PRESET_END_TIMEPERIOD = '2016060108'
 
 
 class FlowGraphTest(unittest.TestCase):
     def setUp(self):
-        self.context = ExecutionContext(TEST_PRESET_TIMEPERIOD, TEST_PRESET_END_TIMEPERIOD, settings.settings)
+        self.context = ExecutionContext(TEST_PRESET_TIMEPERIOD, settings.settings)
         self.logger = get_logger('unit_test', self.context)
 
     def tearDown(self):
@@ -38,7 +38,10 @@ class FlowGraphTest(unittest.TestCase):
         as this UT is about testing the iterator logic
         """
         the_flow = flows.flows[ut_flows.UNIT_TEST_FLOW_SIMPLE]
+
+        self.assertIsNone(the_flow.context)
         the_flow.set_context(self.context)
+        self.assertIsNotNone(the_flow.context)
 
     @mock.patch('flow.core.flow_graph.FlowDao')
     @mock.patch('flow.core.flow_graph.StepDao')
@@ -62,6 +65,24 @@ class FlowGraphTest(unittest.TestCase):
             step.mark_success()
 
         self.assertListEqual(steps_order, ['step_1', 'step_2', 'step_3', 'step_4', 'step_5'])
+
+    @mock.patch('flow.core.flow_graph.FlowDao')
+    @mock.patch('flow.core.flow_graph.StepDao')
+    @mock.patch('flow.core.flow_graph_node.StepDao')
+    def test_interrupted_iterator(self, flow_flow_dao, flow_step_dao, step_step_dao):
+        """ method tests iterator interrupted by failed step """
+        the_flow = flows.flows[ut_flows.UNIT_TEST_FLOW_FAILURE]
+        the_flow.mark_start(self.context)
+        ephemeral_cluster = EphemeralCluster('unit test cluster', self.context)
+
+        steps_order = list()
+        for step_name in the_flow:
+            steps_order.append(step_name)
+            step = the_flow[step_name]
+            assert isinstance(step, FlowGraphNode)
+            step.run(self.context, ephemeral_cluster)
+
+        self.assertListEqual(steps_order, ['step_1', 'step_2', 'step_3', 'step_4'])
 
 
 if __name__ == '__main__':

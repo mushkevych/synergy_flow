@@ -5,13 +5,10 @@ from flow.core.execution_context import ContextDriven
 
 
 def validate_action_param(param, klass):
-    if isinstance(param, (tuple, list)):
-        assert all(isinstance(p, klass) for p in param), \
-            'Expected parameters of either {0} or list of {0}. Instead got {1}' \
-                .format(klass.__name__, param.__class__.__name__)
-    else:
-        assert isinstance(param, klass), 'Expected parameters of either {0} or list of {0}. Instead got {1}' \
-            .format(klass.__name__, param.__class__.__name__)
+    assert isinstance(param, (tuple, list)), \
+        'Expected list of {0} or an empty list. Instead got {1}'.format(klass.__name__, param.__class__.__name__)
+    assert all(isinstance(p, klass) for p in param), \
+        'Expected list of {0}. Not all elements of the list were of this type'.format(klass.__name__)
 
 
 class ExecutionStep(ContextDriven):
@@ -49,7 +46,7 @@ class ExecutionStep(ContextDriven):
             assert isinstance(action, AbstractAction)
             try:
                 action.do(context, execution_cluster)
-            except:
+            except Exception as e:
                 is_success = False
                 break
             finally:

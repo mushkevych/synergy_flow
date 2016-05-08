@@ -23,3 +23,23 @@ class ShellCommandAction(AbstractAction):
     def do(self, context, execution_cluster):
         self.set_context(context)
         execution_cluster.run_shell_command(self.shell_command)
+
+
+class IdentityAction(AbstractAction):
+    """ this class is intended to be used by Unit Tests """
+    def __init__(self, **kwargs):
+        super(IdentityAction, self).__init__('Identity Action', kwargs)
+
+    def do(self, context, execution_cluster):
+        self.set_context(context)
+        self.logger.info('identity action: *do* completed')
+
+
+class FailureAction(AbstractAction):
+    """ this class is intended to be used by Unit Tests """
+    def __init__(self, **kwargs):
+        super(FailureAction, self).__init__('Failure Action', kwargs)
+
+    def do(self, context, execution_cluster):
+        self.set_context(context)
+        raise UserWarning('failure action: raising exception')

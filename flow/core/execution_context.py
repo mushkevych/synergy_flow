@@ -8,7 +8,8 @@ def get_logger(log_tag, context):
     log_file = os.path.join(context.settings['log_directory'], '{0}.log'.format(log_tag))
     append_to_console = context.settings['under_test'],
     redirect_stdstream = not context.settings['under_test']
-    return Logger(log_file, log_tag, append_to_console, redirect_stdstream)
+    logger = Logger(log_file, log_tag, append_to_console, redirect_stdstream)
+    return logger.get_logger()
 
 
 class ExecutionContext(object):
@@ -16,10 +17,10 @@ class ExecutionContext(object):
         - timeperiod boundaries of the run
         - environment-specific settings, where the flow is run
     """
-    def __init__(self, start_timeperiod, end_timeperiod, settings, number_of_clusters=2, flow_graph=None, flow_model=None):
+    def __init__(self, timeperiod, settings, number_of_clusters=2, flow_graph=None, flow_model=None):
         assert isinstance(settings, dict)
 
-        self.timeperiod = start_timeperiod
+        self.timeperiod = timeperiod
         self.settings = settings
         self.number_of_clusters = number_of_clusters
         self._flow_graph = flow_graph

@@ -53,3 +53,7 @@ class Step(BaseDocument):
     @property
     def key(self):
         return self.flow_name, self.step_name, self.timeperiod
+
+    @property
+    def is_failed(self):
+        return self.state in [STATE_INVALID, STATE_CANCELED]
