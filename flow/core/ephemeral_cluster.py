@@ -16,12 +16,15 @@ class EphemeralCluster(AbstractCluster):
     def __init__(self, name, context, **kwargs):
         super(EphemeralCluster, self).__init__(name, context, kwargs=kwargs)
 
+    def _run(self, command):
+        return subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
+
     def run_pig_step(self, uri_script, **kwargs):
         step_args = []
         for k, v in kwargs.items():
             step_args.append('-p')
             step_args.append('{0}={1}'.format(k, v))
-        return self.run_shell_command('pig -f {0} {1}'.format(uri_script, ' '.join(step_args)))
+        return self._run('pig -f {0} {1}'.format(uri_script, ' '.join(step_args)))
 
     def run_spark_step(self, uri_script, **kwargs):
         pass
@@ -31,13 +34,10 @@ class EphemeralCluster(AbstractCluster):
         for k, v in kwargs.items():
             step_args.append('-D')
             step_args.append('{0}={1}'.format(k, v))
-        return self.run_shell_command('hadoop jar {0} {1}'.format(uri_script, ' '.join(step_args)))
+        return self._run('hadoop jar {0} {1}'.format(uri_script, ' '.join(step_args)))
 
     def run_shell_command(self, uri_script, **kwargs):
         step_args = []
         for k, v in kwargs.items():
             step_args.append('{0} {1}'.format(k, v))
-
-        return subprocess.check_output('{0} {1}'.format(uri_script, ' '.join(step_args)),
-                                       stderr=subprocess.STDOUT,
-                                       shell=True)
+        return self._run('{0} {1}'.format(uri_script, ' '.join(step_args)))
