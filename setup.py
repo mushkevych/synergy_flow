@@ -22,5 +22,5 @@ setup(name='synergy_flow',
           'Programming Language :: Python :: 2.7',
           'Programming Language :: Python :: 3.4',
       ],
-      requires=['synergy_scheduler', 'synergy_odm', 'mock', 'pymongo', 'boto', 'psycopg2']
+      requires=['synergy_scheduler', 'synergy_odm', 'mock', 'pymongo', 'boto', 'psycopg2', 'subprocess32']
       )
