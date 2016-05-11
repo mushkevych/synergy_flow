@@ -57,12 +57,12 @@ class EmrCluster(AbstractCluster):
         self.logger.info('Pig Script Step {')
         try:
             self.logger.info('Initiating the step...')
-            pig_config_params = []
+            step_args = []
             for k, v in kwargs.items():
-                pig_config_params.append('-p')
-                pig_config_params.append('{0}={1}'.format(k, v))
+                step_args.append('-p')
+                step_args.append('{0}={1}'.format(k, v))
 
-            pig_runner_step = PigStep(name='SynergyPigStep', pig_file=uri_script, pig_args=pig_config_params)
+            pig_runner_step = PigStep(name='SynergyPigStep', pig_file=uri_script, pig_args=step_args)
             step_list = self.conn.add_jobflow_steps(self.jobflow_id, pig_runner_step)
 
             self.logger.info('Step Initiated Successfully. Validating its state...')

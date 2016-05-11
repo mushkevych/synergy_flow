@@ -1,5 +1,6 @@
 __author__ = 'Bohdan Mushkevych'
 
+from os import path
 import unittest
 try:
     # python 2.x
@@ -25,7 +26,11 @@ class EphemeralClusterTest(unittest.TestCase):
         pass
 
     def test_verbose_command(self):
-        ls = self.ephemeral_cluster.run_shell_command('ls -al')
+        command = 'ls -al'
+        if not path.curdir.endswith('tests'):
+            command = 'cd tests; ' + command
+
+        ls = self.ephemeral_cluster.run_shell_command(command)
         for f in ['test_ephemeral_cluster.py', 'test_flow_graph.py', 'ut_flows.py']:
             self.assertTrue(any(f in s for s in ls))
 
