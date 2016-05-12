@@ -27,6 +27,7 @@ class FlowGraphNode(ContextDriven):
     def set_context(self, context):
         super(FlowGraphNode, self).set_context(context)
         self.step_dao = StepDao(self.logger)
+        self.step_instance.set_context(context)
 
     def mark_start(self):
         """ performs step start-up, such as db and context updates """

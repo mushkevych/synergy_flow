@@ -11,10 +11,6 @@ ut_flows.register_flows()
 
 from synergy.conf import settings
 from flow.conf import flows
-
-from flow.db.model.step import Step
-from flow.db.dao.step_dao import StepDao
-from flow.core.flow_graph import FlowGraph
 from flow.core.flow_graph_node import FlowGraphNode
 from flow.core.execution_context import get_logger, ExecutionContext
 from flow.core.ephemeral_cluster import EphemeralCluster

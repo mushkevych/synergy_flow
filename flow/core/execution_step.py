@@ -43,11 +43,11 @@ class ExecutionStep(ContextDriven):
     def _do(self, actions, context, execution_cluster):
         is_success = True
         for action in actions:
-            assert isinstance(action, AbstractAction)
             try:
                 action.do(context, execution_cluster)
             except Exception as e:
                 is_success = False
+                self.logger.error('Execution Error: {0}'.format(e), exc_info=True)
                 break
             finally:
                 action.cleanup()
