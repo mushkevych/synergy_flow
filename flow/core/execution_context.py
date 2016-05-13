@@ -11,6 +11,11 @@ def get_flow_logger(flow_name, settings):
     if flow_name in LOGS:
         return LOGS[flow_name].get_logger()
 
+    # make sure the path exist
+    log_folder = os.path.join(settings['log_directory'], flow_name)
+    if not os.path.exists(log_folder):
+        os.makedirs(log_folder)
+
     log_file = os.path.join(settings['log_directory'], flow_name, '{0}.log'.format(flow_name))
     append_to_console = settings['under_test'],
     redirect_stdstream = not settings['under_test']
