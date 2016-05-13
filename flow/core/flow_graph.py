@@ -134,13 +134,12 @@ class FlowGraph(ContextDriven):
         super(FlowGraph, self).set_context(context)
         self.flow_dao = FlowDao(self.logger)
 
-    def mark_start(self, context):
+    def mark_start(self):
         """ performs flow start-up, such as db and context updates """
-        self.set_context(context)
-
+        assert self.is_context_set is True
         flow_model = Flow()
         flow_model.flow_name = self.flow_name
-        flow_model.timeperiod = context.timeperiod
+        flow_model.timeperiod = self.context.timeperiod
         flow_model.created_at = datetime.utcnow()
         flow_model.started_at = datetime.utcnow()
         flow_model.state = STATE_REQUESTED
@@ -157,16 +156,18 @@ class FlowGraph(ContextDriven):
             pass
         finally:
             self.flow_dao.update(flow_model)
-            context.flow_model = flow_model
+            self.context.flow_model = flow_model
 
-    def mark_failure(self, context):
+    def mark_failure(self):
         """ perform flow post-failure activities, such as db update """
-        context.flow_model.finished_at = datetime.utcnow()
-        context.flow_model.state = STATE_INVALID
-        self.flow_dao.update(context.flow_model)
+        assert self.is_context_set is True
+        self.context.flow_model.finished_at = datetime.utcnow()
+        self.context.flow_model.state = STATE_INVALID
+        self.flow_dao.update(self.context.flow_model)
 
-    def mark_success(self, context):
+    def mark_success(self):
         """ perform activities in case of the flow successful completion """
-        context.flow_model.finished_at = datetime.utcnow()
-        context.flow_model.state = STATE_PROCESSED
-        self.flow_dao.update(context.flow_model)
+        assert self.is_context_set is True
+        self.context.flow_model.finished_at = datetime.utcnow()
+        self.context.flow_model.state = STATE_PROCESSED
+        self.flow_dao.update(self.context.flow_model)

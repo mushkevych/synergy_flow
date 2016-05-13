@@ -4,12 +4,35 @@ import os
 from synergy.system.system_logger import Logger
 
 
-def get_logger(log_tag, context):
-    log_file = os.path.join(context.settings['log_directory'], '{0}.log'.format(log_tag))
+LOGS = dict()
+
+
+def get_flow_logger(flow_name, context):
+    if flow_name in LOGS:
+        return LOGS[flow_name].get_logger()
+
+    log_file = os.path.join(context.settings['log_directory'], flow_name, '{0}.log'.format(flow_name))
     append_to_console = context.settings['under_test'],
     redirect_stdstream = not context.settings['under_test']
-    logger = Logger(log_file, log_tag, append_to_console, redirect_stdstream)
-    return logger.get_logger()
+    LOGS[flow_name] = Logger(log_file, flow_name, append_to_console, redirect_stdstream)
+    return LOGS[flow_name].get_logger()
+
+
+def get_step_logger(flow_name, step_name, context):
+    fqlt = '{0}.{1}'.format(flow_name, step_name)
+    if fqlt in LOGS:
+        return LOGS[fqlt].get_logger()
+
+    log_file = os.path.join(context.settings['log_directory'], flow_name, '{0}.log'.format(step_name))
+    append_to_console = context.settings['under_test'],
+    redirect_stdstream = not context.settings['under_test']
+    LOGS[fqlt] = Logger(log_file, step_name, append_to_console, redirect_stdstream)
+    return LOGS[fqlt].get_logger()
+
+
+def get_action_logger(flow_name, step_name, action_name, context):
+    logger = get_step_logger(flow_name, step_name, context)
+    return logger.get_logger().getChild(action_name)
 
 
 class ExecutionContext(object):
@@ -58,12 +81,11 @@ class ContextDriven(object):
         self.context = None
         self.timeperiod = None
         self.settings = None
-        self.logger = None
+        self.is_context_set = False
 
     def set_context(self, context):
         assert isinstance(context, ExecutionContext)
-
         self.context = context
         self.timeperiod = context.timeperiod
         self.settings = context.settings
-        self.logger = get_logger(self.log_tag, context)
+        self.is_context_set = True

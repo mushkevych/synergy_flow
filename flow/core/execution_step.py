@@ -40,11 +40,12 @@ class ExecutionStep(ContextDriven):
     def is_complete(self):
         return self.is_pre_completed and self.is_main_completed and self.is_post_completed
 
-    def _do(self, actions, context, execution_cluster):
+    def _do(self, actions, execution_cluster):
+        assert self.is_context_set is True
         is_success = True
         for action in actions:
             try:
-                action.do(context, execution_cluster)
+                action.do(self.context, execution_cluster)
             except Exception as e:
                 is_success = False
                 self.logger.error('Execution Error: {0}'.format(e), exc_info=True)
@@ -53,14 +54,14 @@ class ExecutionStep(ContextDriven):
                 action.cleanup()
         return is_success
 
-    def do_pre(self, context, execution_cluster):
-        self.is_pre_completed = self._do(self.pre_actions, context, execution_cluster)
+    def do_pre(self, execution_cluster):
+        self.is_pre_completed = self._do(self.pre_actions, execution_cluster)
         return self.is_pre_completed
 
-    def do_main(self, context, execution_cluster):
-        self.is_main_completed = self._do([self.main_action], context, execution_cluster)
+    def do_main(self, execution_cluster):
+        self.is_main_completed = self._do([self.main_action], execution_cluster)
         return self.is_main_completed
 
-    def do_post(self, context, execution_cluster):
-        self.is_post_completed = self._do(self.post_actions, context, execution_cluster)
+    def do_post(self, execution_cluster):
+        self.is_post_completed = self._do(self.post_actions, execution_cluster)
         return self.is_post_completed

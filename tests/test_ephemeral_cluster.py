@@ -10,7 +10,7 @@ except ImportError:
     import subprocess
 
 from synergy.conf import settings
-from flow.core.execution_context import get_logger, ExecutionContext
+from flow.core.execution_context import get_flow_logger, ExecutionContext
 from flow.core.ephemeral_cluster import EphemeralCluster
 
 TEST_PRESET_TIMEPERIOD = '2016060107'
@@ -19,7 +19,7 @@ TEST_PRESET_TIMEPERIOD = '2016060107'
 class EphemeralClusterTest(unittest.TestCase):
     def setUp(self):
         self.context = ExecutionContext(TEST_PRESET_TIMEPERIOD, settings.settings)
-        self.logger = get_logger('unit_test', self.context)
+        self.logger = get_flow_logger('unit_test', self.context)
         self.ephemeral_cluster = EphemeralCluster('unit test cluster', self.context)
 
     def tearDown(self):

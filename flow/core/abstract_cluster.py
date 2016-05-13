@@ -1,6 +1,6 @@
 __author__ = 'Bohdan Mushkevych'
 
-from flow.core.execution_context import ExecutionContext, get_logger
+from flow.core.execution_context import ExecutionContext, get_flow_logger
 
 
 class ClusterError(Exception):
@@ -15,7 +15,7 @@ class AbstractCluster(object):
 
         self.name = name
         self.context = context
-        self.logger = get_logger(name, context)
+        self.logger = get_flow_logger(name, context)
 
         self.kwargs = {} if not kwargs else kwargs
 

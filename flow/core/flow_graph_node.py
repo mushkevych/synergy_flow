@@ -26,8 +26,8 @@ class FlowGraphNode(ContextDriven):
 
     def set_context(self, context):
         super(FlowGraphNode, self).set_context(context)
-        self.step_dao = StepDao(self.logger)
         self.step_instance.set_context(context)
+        self.step_dao = StepDao(self.logger)
 
     def mark_start(self):
         """ performs step start-up, such as db and context updates """
@@ -52,21 +52,21 @@ class FlowGraphNode(ContextDriven):
         self.step_model.state = STATE_PROCESSED
         self.step_dao.update(self.step_model)
 
-    def run(self, context, execution_cluster):
-        self.set_context(context)
+    def run(self, execution_cluster):
+        assert self.is_context_set is True
         self.mark_start()
 
-        self.step_instance.do_pre(context, execution_cluster)
+        self.step_instance.do_pre(execution_cluster)
         if not self.step_instance.is_pre_completed:
             self.mark_failure()
             return False
 
-        self.step_instance.do_main(context, execution_cluster)
+        self.step_instance.do_main(execution_cluster)
         if not self.step_instance.is_pre_completed:
             self.mark_failure()
             return False
 
-        self.step_instance.do_post(context, execution_cluster)
+        self.step_instance.do_post(execution_cluster)
         if not self.step_instance.is_complete:
             self.mark_failure()
             return False

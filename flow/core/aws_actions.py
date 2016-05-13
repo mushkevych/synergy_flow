@@ -22,7 +22,11 @@ class ExportAction(AbstractAction):
 
         self.table_name = table_name
         self.tempdir_copying = tempfile.mkdtemp()
+        self.s3_connection = None
+        self.s3_bucket = None
 
+    def set_context(self, context):
+        super(ExportAction, self).set_context(context)
         try:
             self.s3_connection = boto.connect_s3(self.settings['aws_access_key_id'],
                                                  self.settings['aws_secret_access_key'])

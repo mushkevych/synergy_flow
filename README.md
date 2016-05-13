@@ -5,6 +5,32 @@
 
 Simple Workflow Engine, capable of running on a local desktop or multiple concurrent EMR clusters
 
+Multithreading and Context:
+---------
+
+SynergyFlow revolves around the concept of Context - a structure of settings, names, credentials specific to the
+environment and time of the Flow execution.
+
+
+Synergy Flow is underneath the multi-threaded application, and thus - all the context are thread-local.
+
+Logging:
+---------
+
+logs are located under the `settings['log_directory']` path and resemble following structure:
+
+    settings['log_directory']/
+        /flow_name/flow_name.log
+        /flow_name/step_name.log
+        /flow_name/...
+        /flow_name/step_name.log
+
+step_name.log file itself is structured as:
+
+    step        LEVEL   message
+    step.action LEVEL   message
+
+
 License:
 ---------
 

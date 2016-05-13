@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from flow.core.abstract_cluster import AbstractCluster
 from flow.core.emr_cluster import EmrCluster
 from flow.core.flow_graph import FlowGraph
-
+from flow.core.execution_context import ExecutionContext
 from flow.core.ephemeral_cluster import EphemeralCluster
 
 
@@ -22,12 +22,14 @@ def launch_cluster(logger, context, cluster_name):
 def parallel_flow_execution(logger, context, execution_cluster, flow_graph):
     """ function fetches next available GraphNode/Step
         from the FlowGraph and executes it on the given cluster """
+    assert isinstance(context, ExecutionContext)
     assert isinstance(execution_cluster, AbstractCluster)
     assert isinstance(flow_graph, FlowGraph)
     for step_name in flow_graph:
         try:
             graph_node = flow_graph[step_name]
-            graph_node.run(context, execution_cluster)
+            graph_node.set_context(context)
+            graph_node.run(execution_cluster)
         except Exception:
             logger.error('Exception during Step {0}'.format(step_name), exc_info=True)
             raise
@@ -89,13 +91,14 @@ class ExecutionEngine(object):
         self.logger.info('starting Engine: {')
 
         try:
-            self.flow_graph.mark_start(context)
+            self.flow_graph.set_context(context)
+            self.flow_graph.mark_start()
             self._spawn_clusters(context)
             self._run_engine(context)
-            self.flow_graph.mark_success(context)
+            self.flow_graph.mark_success()
         except Exception:
             self.logger.error('Exception on starting Engine', exc_info=True)
-            self.flow_graph.mark_failure(context)
+            self.flow_graph.mark_failure()
         finally:
             # TODO: do not terminate failed cluster to be able to retrieve and analyze the processing errors
             for cluster in self.execution_clusters:
