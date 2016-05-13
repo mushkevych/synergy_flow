@@ -7,7 +7,6 @@ from boto.emr.bootstrap_action import BootstrapAction
 from boto.emr.emrobject import ClusterStatus, StepId, JobFlow, JobFlowStepList
 from boto.emr.step import InstallPigStep
 from boto.emr.step import PigStep
-from synergy.conf import settings
 
 from flow.core.abstract_cluster import AbstractCluster, ClusterError
 
@@ -34,14 +33,14 @@ STEP_STATE_INTERRUPTED = 'INTERRUPTED'
 class EmrCluster(AbstractCluster):
     """ implementation of the abstract API for the case of AWS EMR """
     def __init__(self, name, context, **kwargs):
-        super(EmrCluster, self).__init__(name, context, kwargs=kwargs)
+        super(EmrCluster, self).__init__(name, context, kwargs)
 
         self.jobflow_id = None  # it is both ClusterId and the JobflowId
 
         # Setting up boto.emr.connection.EmrConnection
-        self.conn = boto.emr.connect_to_region(region_name=settings.settings['aws_region'],
-                                               aws_access_key_id=settings.settings['aws_access_key_id'],
-                                               aws_secret_access_key=settings.settings['aws_secret_access_key'])
+        self.conn = boto.emr.connect_to_region(region_name=context.settings['aws_region'],
+                                               aws_access_key_id=context.settings['aws_access_key_id'],
+                                               aws_secret_access_key=context.settings['aws_secret_access_key'])
 
     def run_pig_step(self, uri_script, **kwargs):
         """
@@ -116,16 +115,16 @@ class EmrCluster(AbstractCluster):
                 name=self.name,
                 enable_debugging=True,
                 visible_to_all_users=True,
-                log_uri=settings.settings['emr_log_uri'] + '/' + self.name,
+                log_uri=self.context.settings['emr_log_uri'] + '/' + self.name,
                 bootstrap_actions=[hadoop_config_bootstrapper],
-                ec2_keyname=settings.settings['emr_keyname'],
+                ec2_keyname=self.context.settings['emr_keyname'],
                 steps=[pig_install_step],
                 keep_alive=True,
                 action_on_failure='CANCEL_AND_WAIT',
-                master_instance_type=settings.settings['emr_master_type'],
-                slave_instance_type=settings.settings['emr_slave_type'],
-                num_instances=settings.settings['emr_num_instance'],
-                ami_version=settings.settings['emr_ami_version']
+                master_instance_type=self.context.settings['emr_master_type'],
+                slave_instance_type=self.context.settings['emr_slave_type'],
+                num_instances=self.context.settings['emr_num_instance'],
+                ami_version=self.context.settings['emr_ami_version']
             )
 
             # Enable cluster termination protection

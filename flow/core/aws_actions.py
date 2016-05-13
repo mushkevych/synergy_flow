@@ -25,8 +25,8 @@ class ExportAction(AbstractAction):
         self.s3_connection = None
         self.s3_bucket = None
 
-    def set_context(self, context):
-        super(ExportAction, self).set_context(context)
+    def set_context(self, context, step_name=None, **kwargs):
+        super(ExportAction, self).set_context(context, step_name, **kwargs)
         try:
             self.s3_connection = boto.connect_s3(self.settings['aws_access_key_id'],
                                                  self.settings['aws_secret_access_key'])
@@ -80,9 +80,8 @@ class ExportAction(AbstractAction):
         s3_key.key = self.timeperiod + '/' + self.table_name + '.csv'
         s3_key.set_contents_from_file(fp=file_uri, rewind=True)
 
-    def do(self, context, execution_cluster):
-        self.set_context(context)
-
+    def do(self, execution_cluster):
+        assert self.is_context_set is True
         file_uri = self.table_to_file()
         if not file_uri:
             raise UserWarning('Table {0} was not exported. Aborting the action'.format(self.table_name))
@@ -95,13 +94,13 @@ class PigAction(AbstractAction):
         super(PigAction, self).__init__('EMR Pig Action', kwargs)
         self.uri_script = uri_script
 
-    def do(self, context, execution_cluster):
-        self.set_context(context)
+    def do(self, execution_cluster):
+        assert self.is_context_set is True
         assert isinstance(execution_cluster, AbstractCluster)
 
         is_successful = execution_cluster.run_pig_step(
-            uri_script=os.path.join(context.settings['s3_pig_lib_path'], self.uri_script),
+            uri_script=os.path.join(self.settings['s3_pig_lib_path'], self.uri_script),
             s3_input_path='s3://synergy',
-            s3_output_path=context.settings['s3_output_bucket'])
+            s3_output_path=self.settings['s3_output_bucket'])
         if not is_successful:
             raise UserWarning('Pig Action failed on {0}'.format(self.uri_script))

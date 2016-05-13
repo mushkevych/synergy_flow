@@ -1,7 +1,8 @@
 __author__ = 'Bohdan Mushkevych'
 
+import copy
 from flow.core.abstract_action import AbstractAction
-from flow.core.execution_context import ContextDriven
+from flow.core.execution_context import ContextDriven, get_step_logger
 
 
 def validate_action_param(param, klass):
@@ -11,30 +12,32 @@ def validate_action_param(param, klass):
         'Expected list of {0}. Not all elements of the list were of this type'.format(klass.__name__)
 
 
-class ExecutionStep(ContextDriven):
-    """ helper class for the GraphNode, keeping the track of completed actions
-        and providing means to run the step """
-    def __init__(self, name, main_action, pre_actions=None, post_actions=None, **kwargs):
-        super(ExecutionStep, self).__init__()
+class StepExecutor(ContextDriven):
+    """ helper class for the GraphNode, encapsulating means to run and track action progress
+        NOTICE: during __init__ all actions are cloned
+                so that set_context can be applied to an action in concurrency-safe manner """
+    def __init__(self, step_name, main_action, pre_actions=None, post_actions=None):
+        super(StepExecutor, self).__init__()
 
         if pre_actions is None: pre_actions = []
         if post_actions is None: post_actions = []
-        if kwargs is None: kwargs = {}
 
-        self.name = name
-        self.main_action = main_action
+        self.step_name = step_name
+        assert isinstance(main_action, AbstractAction)
+        self.main_action = copy.deepcopy(main_action)
 
         self.is_pre_completed = False
         self.is_main_completed = False
         self.is_post_completed = False
 
-        self.pre_actions = pre_actions
-        validate_action_param(self.pre_actions, AbstractAction)
+        validate_action_param(pre_actions, AbstractAction)
+        self.pre_actions = copy.deepcopy(pre_actions)
 
-        self.post_actions = post_actions
-        validate_action_param(self.post_actions, AbstractAction)
+        validate_action_param(post_actions, AbstractAction)
+        self.post_actions = copy.deepcopy(post_actions)
 
-        self.kwargs = kwargs
+    def get_logger(self):
+        return get_step_logger(self.flow_name, self.step_name, self.settings)
 
     @property
     def is_complete(self):
@@ -45,7 +48,8 @@ class ExecutionStep(ContextDriven):
         is_success = True
         for action in actions:
             try:
-                action.do(self.context, execution_cluster)
+                action.set_context(self.context, step_name=self.step_name)
+                action.do(execution_cluster)
             except Exception as e:
                 is_success = False
                 self.logger.error('Execution Error: {0}'.format(e), exc_info=True)

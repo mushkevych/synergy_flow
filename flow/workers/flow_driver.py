@@ -26,7 +26,7 @@ class FlowDriver(AbstractUowAwareWorker):
             flow_graph = flows.get(flow_name)
             execution_engine = ExecutionEngine(self.logger, flow_graph)
 
-            context = ExecutionContext(uow.timeperiod, settings.settings)
+            context = ExecutionContext(flow_name, uow.timeperiod, settings.settings)
             execution_engine.run(context)
 
             if context.flow_model.state == flow.STATE_PROCESSED:

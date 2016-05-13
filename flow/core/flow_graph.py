@@ -4,8 +4,8 @@ import time
 from collections import OrderedDict
 from datetime import datetime
 
-from flow.core.execution_context import ContextDriven
-from flow.core.execution_step import ExecutionStep
+from flow.core.execution_context import ContextDriven, get_flow_logger
+from flow.core.step_executor import StepExecutor
 from flow.core.flow_graph_node import FlowGraphNode
 from flow.db.dao.flow_dao import FlowDao
 from flow.db.dao.step_dao import StepDao
@@ -19,8 +19,9 @@ class GraphError(Exception):
 
 class FlowGraph(ContextDriven):
     """ Graph of interconnected Nodes, each representing an execution step """
+
     def __init__(self, flow_name):
-        super(FlowGraph, self).__init__(flow_name)
+        super(FlowGraph, self).__init__()
         self.flow_name = flow_name
 
         # format: {step_name:String -> node:FlowGraphNode}
@@ -45,6 +46,7 @@ class FlowGraph(ContextDriven):
             in case all nodes are blocked - blocks by sleeping
             in case all nodes have been yielded for processing - throws a StopIteration exception
         """
+
         def _next_iteration():
             if len(self.yielded) == len(self):
                 # all of the nodes have been yielded for processing
@@ -76,7 +78,7 @@ class FlowGraph(ContextDriven):
     def __contains__(self, item):
         return item in self._dict
 
-    def append(self, name, dependent_on_names, main_action, pre_actions=None, post_actions=None, **kwargs):
+    def append(self, name, dependent_on_names, main_action, pre_actions=None, post_actions=None):
         """ method appends a new Node to the Graph,
             validates the input for non-existent references
             :return self to allow chained *append*
@@ -96,11 +98,10 @@ class FlowGraph(ContextDriven):
             raise GraphError('Step {0} from Flow {1} is dependent on a non-existent Step {2}'
                              .format(name, self.flow_name, dependent_on_names))
 
-        node = FlowGraphNode(name, dependent_on_names, ExecutionStep(name=name,
-                                                                     main_action=main_action,
-                                                                     pre_actions=pre_actions,
-                                                                     post_actions=post_actions,
-                                                                     kwargs=kwargs))
+        node = FlowGraphNode(name, dependent_on_names, StepExecutor(step_name=name,
+                                                                    main_action=main_action,
+                                                                    pre_actions=pre_actions,
+                                                                    post_actions=post_actions))
 
         # link newly inserted node with the dependent_on nodes
         for dependent_on_name in dependent_on_names:
@@ -118,7 +119,7 @@ class FlowGraph(ContextDriven):
         """
         is_unblocked = True
         for prev_node in self[step_name]._prev:
-            if prev_node.step_instance and not prev_node.step_instance.is_complete:
+            if prev_node.step_executor and not prev_node.step_executor.is_complete:
                 is_unblocked = False
         return is_unblocked
 
@@ -130,9 +131,12 @@ class FlowGraph(ContextDriven):
         node = self[step_name]
         return node.step_model and node.step_model.is_failed
 
-    def set_context(self, context):
-        super(FlowGraph, self).set_context(context)
+    def set_context(self, context, **kwargs):
+        super(FlowGraph, self).set_context(context, **kwargs)
         self.flow_dao = FlowDao(self.logger)
+
+    def get_logger(self):
+        return get_flow_logger(self.flow_name, self.settings)
 
     def mark_start(self):
         """ performs flow start-up, such as db and context updates """

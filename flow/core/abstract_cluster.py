@@ -1,6 +1,6 @@
 __author__ = 'Bohdan Mushkevych'
 
-from flow.core.execution_context import ExecutionContext, get_flow_logger
+from flow.core.execution_context import ExecutionContext, get_cluster_logger
 
 
 class ClusterError(Exception):
@@ -15,8 +15,7 @@ class AbstractCluster(object):
 
         self.name = name
         self.context = context
-        self.logger = get_flow_logger(name, context)
-
+        self.logger = get_cluster_logger(context.flow_name, self.name, context.settings)
         self.kwargs = {} if not kwargs else kwargs
 
     def run_pig_step(self, uri_script, **kwargs):

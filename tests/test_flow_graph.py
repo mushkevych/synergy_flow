@@ -12,7 +12,7 @@ ut_flows.register_flows()
 from synergy.conf import settings
 from flow.conf import flows
 from flow.core.flow_graph_node import FlowGraphNode
-from flow.core.execution_context import get_flow_logger, ExecutionContext
+from flow.core.execution_context import ExecutionContext
 from flow.core.ephemeral_cluster import EphemeralCluster
 
 TEST_PRESET_TIMEPERIOD = '2016060107'
@@ -20,8 +20,8 @@ TEST_PRESET_TIMEPERIOD = '2016060107'
 
 class FlowGraphTest(unittest.TestCase):
     def setUp(self):
-        self.context = ExecutionContext(TEST_PRESET_TIMEPERIOD, settings.settings)
-        self.logger = get_flow_logger('unit_test', self.context)
+        flow_name = 'ut_flow_name'
+        self.context = ExecutionContext(flow_name, TEST_PRESET_TIMEPERIOD, settings.settings)
 
     def tearDown(self):
         pass
@@ -45,7 +45,8 @@ class FlowGraphTest(unittest.TestCase):
     def test_simple_iterator(self, flow_flow_dao, flow_step_dao, step_step_dao):
         """ method tests happy-flow for the iterator """
         the_flow = flows.flows[ut_flows.UNIT_TEST_FLOW_SIMPLE]
-        the_flow.mark_start(self.context)
+        the_flow.set_context(self.context)
+        the_flow.mark_start()
 
         steps_order = list()
         for step_name in the_flow:
@@ -55,9 +56,9 @@ class FlowGraphTest(unittest.TestCase):
 
             step.set_context(self.context)
             step.mark_start()
-            step.step_instance.is_pre_completed = True
-            step.step_instance.is_main_completed = True
-            step.step_instance.is_post_completed = True
+            step.step_executor.is_pre_completed = True
+            step.step_executor.is_main_completed = True
+            step.step_executor.is_post_completed = True
             step.mark_success()
 
         self.assertListEqual(steps_order, ['step_1', 'step_2', 'step_3', 'step_4', 'step_5'])
@@ -68,7 +69,8 @@ class FlowGraphTest(unittest.TestCase):
     def test_interrupted_iterator(self, flow_flow_dao, flow_step_dao, step_step_dao):
         """ method tests iterator interrupted by failed step """
         the_flow = flows.flows[ut_flows.UNIT_TEST_FLOW_FAILURE]
-        the_flow.mark_start(self.context)
+        the_flow.set_context(self.context)
+        the_flow.mark_start()
         ephemeral_cluster = EphemeralCluster('unit test cluster', self.context)
 
         steps_order = list()
@@ -76,7 +78,8 @@ class FlowGraphTest(unittest.TestCase):
             steps_order.append(step_name)
             step = the_flow[step_name]
             assert isinstance(step, FlowGraphNode)
-            step.run(self.context, ephemeral_cluster)
+            step.set_context(self.context)
+            step.run(ephemeral_cluster)
 
         self.assertListEqual(steps_order, ['step_1', 'step_2', 'step_3', 'step_4'])
 
