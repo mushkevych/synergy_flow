@@ -12,7 +12,7 @@ from flow.core.simple_actions import FailureAction, IdentityAction
 TEST_PRESET_TIMEPERIOD = '2016060107'
 
 
-class FlowGraphTest(unittest.TestCase):
+class StepExecutorTest(unittest.TestCase):
     def setUp(self):
         flow_name = 'ut_flow_name'
         self.context = ExecutionContext(flow_name, TEST_PRESET_TIMEPERIOD, settings.settings)

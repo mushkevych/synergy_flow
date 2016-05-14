@@ -5,14 +5,20 @@
 
 Simple Workflow Engine, capable of running on a local desktop or multiple concurrent EMR clusters
 
+Reprocessing vs Continuation
+---------
+As of version 0.4 the workflow is restarted every time the processing is requested
+It is expected that continuation from the last known successful step will be available in later versions
+
+
 Multithreading and Context:
 ---------
 
 SynergyFlow revolves around the concept of Context - a structure of settings, names, credentials specific to the
 environment and time of the Flow execution.
 
-
 Synergy Flow is underneath the multi-threaded application, and thus - all the context are thread-local.
+
 
 Logging:
 ---------
@@ -29,6 +35,14 @@ step_name.log file itself is structured as:
 
     step        LEVEL   message
     step.action LEVEL   message
+
+
+Roadmap:
+---------
+
+- add the *rollback* to `AbstractAction` interface and incorporate it into the `action's` life-cycle
+- add *REQUEST_REPROCESS* to the `unit_of_work` states and allow Flow Worker to react to it
+by continuing from the last known successful step
 
 
 License:
