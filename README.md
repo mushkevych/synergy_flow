@@ -5,19 +5,44 @@
 
 Simple Workflow Engine, capable of running on a local desktop or multiple concurrent EMR clusters
 
-Reprocessing vs Continuation
----------
-As of version 0.4 the workflow is restarted every time the processing is requested
-It is expected that continuation from the last known successful step will be available in later versions
-
-
-Multithreading and Context:
+Concepts:
 ---------
 
-SynergyFlow revolves around the concept of Context - a structure of settings, names, credentials specific to the
-environment and time of the Flow execution.
+Workflow (or Flow for simplicity) is identified by its name and processing timeperiod: [flow_name, timeperiod].
+It represents a Directed Acyclic Graph (DAG), where each node is an execution step and edge
+represents order of the execution. Each step consist of three groups of actions:
+- pre: actions that has to be executed before the main
+- main: main action (single)
+- post: actions that has to be executed after the main
 
-Synergy Flow is underneath the multi-threaded application, and thus - all the context are thread-local.
+**NOTICE**: it is possible that the flow primary key should be extended by UOW_ID:
+[flow_name, timeperiod, uow_id]
+
+
+Reprocessing vs Continuation:
+---------
+
+As of version 0.4 the `ExecutionEngine` has main method `run`, which:
+- spawns clusters
+- locates existing flow records and purges them.
+- starts the flow
+- terminates clusters after the flow is completed or terminated
+
+As of version 0.5 the `ExecutionEngine` will have additional method `continue`, which:
+- spawns clusters
+- scans existing flow and identifies last known successful step
+- triggers the execution from the identified step
+- terminates clusters after the flow is completed or terminated
+
+
+Multi-threading and Context:
+---------
+
+SynergyFlow revolves around the concept of a Context - a structure of names,
+credentials and environment-specific settings for the Flow execution.
+
+Under the hood, SynergyFlow is a multi-threaded application and thus - all of the steps/actions are re-entrant:
+i.e. they behave as is their execution and state are thread-safe/thread-local.
 
 
 Logging:
@@ -41,9 +66,7 @@ Roadmap:
 ---------
 
 - add the *rollback* to `AbstractAction` interface and incorporate it into the `action's` life-cycle
-- add *REQUEST_REPROCESS* to the `unit_of_work` states and allow Flow Worker to react to it
-by continuing from the last known successful step
-
+- add *flows* tab to the Synergy Scheduler; MX should provide ability to reprocess/continue the flow
 
 License:
 ---------
