@@ -23,3 +23,8 @@ class StepDao(BaseDao):
         """ removes all steps for given flow_id """
         collection = self.ds.connection(COLLECTION_STEP)
         return collection.delete_many(filter={RELATED_FLOW: ObjectId(flow_id)})
+
+    @thread_safe
+    def get_all_by_flow_id(self, flow_id):
+        """ fetch all steps for given flow_id """
+        return self.run_query({RELATED_FLOW: ObjectId(flow_id)})

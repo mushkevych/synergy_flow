@@ -34,13 +34,19 @@ class FlowGraphNode(ContextDriven):
 
     def mark_start(self):
         """ performs step start-up, such as db and context updates """
-        self.step_model = Step()
-        self.step_model.created_at = datetime.utcnow()
+        if not self.step_model:
+            # Normal flow
+            self.step_model = Step()
+            self.step_model.created_at = datetime.utcnow()
+            self.step_model.flow_name = self.context.flow_name
+            self.step_model.timeperiod = self.context.timeperiod
+            self.step_model.related_flow = self.context.flow_id
+            self.step_model.state = STATE_REQUESTED
+        else:
+            # ExecutionEngine is doing recovery - step_model has been loaded from the DB
+            pass
+
         self.step_model.started_at = datetime.utcnow()
-        self.step_model.flow_name = self.context.flow_name
-        self.step_model.timeperiod = self.context.timeperiod
-        self.step_model.related_flow = self.context.flow_id
-        self.step_model.state = STATE_REQUESTED
         self.step_dao.update(self.step_model)
 
     def mark_failure(self):

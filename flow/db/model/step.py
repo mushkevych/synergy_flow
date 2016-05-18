@@ -57,3 +57,7 @@ class Step(BaseDocument):
     @property
     def is_failed(self):
         return self.state in [STATE_INVALID, STATE_CANCELED]
+
+    @property
+    def is_processed(self):
+        return self.state == STATE_PROCESSED

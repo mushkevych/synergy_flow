@@ -9,8 +9,9 @@ from flow.core.step_executor import StepExecutor
 from flow.core.flow_graph_node import FlowGraphNode
 from flow.db.dao.flow_dao import FlowDao
 from flow.db.dao.step_dao import StepDao
+from flow.db.model.step import Step
 
-from flow.db.model.flow import Flow, STATE_REQUESTED, STATE_INVALID, STATE_PROCESSED
+from flow.db.model.flow import Flow, STATE_REQUESTED, STATE_INVALID, STATE_PROCESSED, STATE_IN_PROGRESS
 
 
 class GraphError(Exception):
@@ -138,29 +139,59 @@ class FlowGraph(ContextDriven):
     def get_logger(self):
         return get_flow_logger(self.flow_name, self.settings)
 
-    def mark_start(self):
+    def mark_init(self):
         """ performs flow start-up, such as db and context updates """
         assert self.is_context_set is True
-        flow_model = Flow()
-        flow_model.flow_name = self.flow_name
-        flow_model.timeperiod = self.context.timeperiod
-        flow_model.created_at = datetime.utcnow()
-        flow_model.started_at = datetime.utcnow()
-        flow_model.state = STATE_REQUESTED
+        assert self.context.flow_model is None
 
-        step_dao = StepDao(self.logger)
         try:
-            # remove, if exists, existing Flow and related Steps
-            db_key = [flow_model.flow_name, flow_model.timeperiod]
-            existing_flow = self.flow_dao.get_one(db_key)
-            step_dao.remove_by_flow_id(existing_flow.db_id)
-            self.flow_dao.remove(db_key)
+            # fetch, if exists, existing Flow and related Steps
+            db_key = [self.flow_name, self.context.timeperiod]
+            flow_model = self.flow_dao.get_one(db_key)
         except LookupError:
             # no flow record for given key was present in the database
-            pass
+            flow_model = Flow()
+            flow_model.flow_name = self.flow_name
+            flow_model.timeperiod = self.context.timeperiod
+            flow_model.created_at = datetime.utcnow()
+            flow_model.state = STATE_REQUESTED
         finally:
             self.flow_dao.update(flow_model)
             self.context.flow_model = flow_model
+
+    def clear_steps(self):
+        """ method purges from the DB all steps related to given flow """
+        assert self.is_context_set is True
+        assert self.context.flow_model is not None
+
+        step_dao = StepDao(self.logger)
+        step_dao.remove_by_flow_id(self.context.flow_model.db_id)
+
+    def load_steps(self):
+        """ method:
+            1. loads all steps
+            2. filters out successful and updates GraphNodes and self.yielded list accordingly
+            3. removes failed steps from the DB
+        """
+        assert self.is_context_set is True
+        assert self.context.flow_model is not None
+
+        step_dao = StepDao(self.logger)
+        steps = step_dao.get_all_by_flow_id(self.context.flow_model.db_id)
+        for s in steps:
+            assert isinstance(s, Step)
+            if s.is_processed:
+                self[s.step_name].step_model = s
+                self.yielded.append(s)
+            else:
+                step_dao.remove(s.key)
+
+    def mark_start(self):
+        """ performs flow start-up, such as db and context updates """
+        assert self.is_context_set is True
+        self.context.flow_model.started_at = datetime.utcnow()
+        self.context.flow_model.state = STATE_IN_PROGRESS
+        self.flow_dao.update(self.context.flow_model)
 
     def mark_failure(self):
         """ perform flow post-failure activities, such as db update """

@@ -84,14 +84,45 @@ class ExecutionEngine(object):
 
     def run(self, context):
         """ method executes the flow by:
-            - spawning the clusters
+            - spawning clusters
             - traversing the FlowGraph and assigning
               steps for concurrent execution (if permitted by the Graph layout)
+            - terminating clusters after the flow has completed or failed
         """
         self.logger.info('starting Engine: {')
 
         try:
             self.flow_graph.set_context(context)
+            self.flow_graph.mark_init()
+            self.flow_graph.clear_steps()
+            self.flow_graph.mark_start()
+            self._spawn_clusters(context)
+            self._run_engine(context)
+            self.flow_graph.mark_success()
+        except Exception:
+            self.logger.error('Exception on starting Engine', exc_info=True)
+            self.flow_graph.mark_failure()
+        finally:
+            # TODO: do not terminate failed cluster to be able to retrieve and analyze the processing errors
+            for cluster in self.execution_clusters:
+                cluster.terminate()
+
+            self.logger.info('}')
+
+    def recover(self, context):
+        """ method tries to recover the failed flow by:
+            - verifying that the flow has failed before
+            - spawning clusters
+            - locating the failed steps and resetting their state
+            - starting the flow processing from the last known successful step
+            - terminating clusters after the flow has completed or failed
+        """
+        self.logger.info('starting Engine: {')
+
+        try:
+            self.flow_graph.set_context(context)
+            self.flow_graph.mark_init()
+            self.flow_graph.load_steps()
             self.flow_graph.mark_start()
             self._spawn_clusters(context)
             self._run_engine(context)
