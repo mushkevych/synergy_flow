@@ -10,6 +10,8 @@ from synergy.workers.abstract_uow_aware_worker import AbstractUowAwareWorker
 from flow.db.model import flow
 
 ARGUMENT_FLOW_NAME = 'flow_name'
+ARGUMENT_DO_RECOVERY = 'do_recovery'
+ARGUMENT_RUN_ONE_STEP = 'run_one_step'
 
 
 class FlowDriver(AbstractUowAwareWorker):
@@ -20,6 +22,7 @@ class FlowDriver(AbstractUowAwareWorker):
 
     def _process_uow(self, uow):
         flow_name = uow.arguments[ARGUMENT_FLOW_NAME]
+        do_recovery = uow.arguments.get(ARGUMENT_DO_RECOVERY)
         try:
             self.logger.info('starting Flow: {0} {{'.format(flow_name))
 
@@ -27,7 +30,10 @@ class FlowDriver(AbstractUowAwareWorker):
             execution_engine = ExecutionEngine(self.logger, flow_graph)
 
             context = ExecutionContext(flow_name, uow.timeperiod, settings.settings)
-            execution_engine.run(context)
+            if do_recovery in [1, True, 'true', 'yes']:
+                execution_engine.recover(context)
+            else:
+                execution_engine.run(context)
 
             if context.flow_model.state == flow.STATE_PROCESSED:
                 uow_status = unit_of_work.STATE_PROCESSED

@@ -16,7 +16,7 @@ RELATED_FLOW = 'related_flow'
 
 # Step record created in the DB
 # Next valid states: STATE_IN_PROGRESS
-STATE_REQUESTED = 'state_requested'
+STATE_EMBRYO = 'state_embryo'
 
 # Step execution started by a worker
 STATE_IN_PROGRESS = 'state_in_progress'
@@ -28,7 +28,7 @@ STATE_PROCESSED = 'state_processed'
 # all non-completed Steps are marked as STATE_CANCELED
 STATE_CANCELED = 'state_canceled'
 
-# Step has failed with an exception at the worker level
+# Step has failed with an exception during the execution
 STATE_INVALID = 'state_invalid'
 
 # Step was completed, but no data was found to process
@@ -42,7 +42,7 @@ class Step(BaseDocument):
     flow_name = StringField(FLOW_NAME)
     step_name = StringField(STEP_NAME)
     timeperiod = StringField(TIMEPERIOD, null=True)
-    state = StringField(STATE, choices=[STATE_INVALID, STATE_REQUESTED, STATE_IN_PROGRESS,
+    state = StringField(STATE, choices=[STATE_INVALID, STATE_EMBRYO, STATE_IN_PROGRESS,
                                         STATE_PROCESSED, STATE_CANCELED, STATE_NOOP])
     created_at = DateTimeField(CREATED_AT)
     started_at = DateTimeField(STARTED_AT)

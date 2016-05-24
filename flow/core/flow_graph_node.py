@@ -4,7 +4,7 @@ from datetime import datetime
 
 from flow.core.execution_context import ContextDriven, get_step_logger
 
-from flow.db.model.step import Step, STATE_REQUESTED, STATE_INVALID, STATE_PROCESSED
+from flow.db.model.step import Step, STATE_EMBRYO, STATE_INVALID, STATE_PROCESSED
 from flow.db.dao.step_dao import StepDao
 
 
@@ -41,9 +41,10 @@ class FlowGraphNode(ContextDriven):
             self.step_model.flow_name = self.context.flow_name
             self.step_model.timeperiod = self.context.timeperiod
             self.step_model.related_flow = self.context.flow_id
-            self.step_model.state = STATE_REQUESTED
+            self.step_model.state = STATE_EMBRYO
         else:
-            # ExecutionEngine is doing recovery - step_model has been loaded from the DB
+            # ExecutionEngine is performing recovery
+            # step_model has been loaded from the DB
             pass
 
         self.step_model.started_at = datetime.utcnow()

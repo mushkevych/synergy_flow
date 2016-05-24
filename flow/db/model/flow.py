@@ -31,7 +31,7 @@ STATE_IN_PROGRESS = 'state_in_progress'
 
 # Flow record created in the DB
 # Next valid states: STATE_IN_PROGRESS
-STATE_REQUESTED = 'state_requested'
+STATE_EMBRYO = 'state_embryo'
 
 
 class Flow(BaseDocument):
@@ -40,7 +40,7 @@ class Flow(BaseDocument):
     db_id = ObjectIdField('_id', null=True)
     flow_name = StringField(FLOW_NAME)
     timeperiod = StringField(TIMEPERIOD)
-    state = StringField(STATE, choices=[STATE_REQUESTED, STATE_IN_PROGRESS, STATE_PROCESSED, STATE_NOOP, STATE_INVALID])
+    state = StringField(STATE, choices=[STATE_EMBRYO, STATE_IN_PROGRESS, STATE_PROCESSED, STATE_NOOP, STATE_INVALID])
 
     created_at = DateTimeField(CREATED_AT)
     started_at = DateTimeField(STARTED_AT)

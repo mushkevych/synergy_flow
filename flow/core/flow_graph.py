@@ -11,7 +11,7 @@ from flow.db.dao.flow_dao import FlowDao
 from flow.db.dao.step_dao import StepDao
 from flow.db.model.step import Step
 
-from flow.db.model.flow import Flow, STATE_REQUESTED, STATE_INVALID, STATE_PROCESSED, STATE_IN_PROGRESS
+from flow.db.model.flow import Flow, STATE_EMBRYO, STATE_INVALID, STATE_PROCESSED, STATE_IN_PROGRESS
 
 
 class GraphError(Exception):
@@ -140,12 +140,12 @@ class FlowGraph(ContextDriven):
         return get_flow_logger(self.flow_name, self.settings)
 
     def mark_init(self):
-        """ performs flow start-up, such as db and context updates """
+        """ creates performs flow start-up, such as db and context updates """
         assert self.is_context_set is True
         assert self.context.flow_model is None
 
         try:
-            # fetch, if exists, existing Flow and related Steps
+            # fetch existing Flow from the DB
             db_key = [self.flow_name, self.context.timeperiod]
             flow_model = self.flow_dao.get_one(db_key)
         except LookupError:
@@ -154,13 +154,14 @@ class FlowGraph(ContextDriven):
             flow_model.flow_name = self.flow_name
             flow_model.timeperiod = self.context.timeperiod
             flow_model.created_at = datetime.utcnow()
-            flow_model.state = STATE_REQUESTED
-        finally:
+            flow_model.state = STATE_EMBRYO
+
+        if flow_model:
             self.flow_dao.update(flow_model)
             self.context.flow_model = flow_model
 
     def clear_steps(self):
-        """ method purges from the DB all steps related to given flow """
+        """ method purges all steps related to given flow from the DB """
         assert self.is_context_set is True
         assert self.context.flow_model is not None
 
