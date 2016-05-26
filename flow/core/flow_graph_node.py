@@ -4,17 +4,16 @@ from datetime import datetime
 
 from flow.core.execution_context import ContextDriven, get_step_logger
 
-from flow.db.model.step import Step, STATE_EMBRYO, STATE_INVALID, STATE_PROCESSED
+from flow.db.model.step import Step, STATE_EMBRYO, STATE_INVALID, STATE_PROCESSED, STATE_IN_PROGRESS
 from flow.db.dao.step_dao import StepDao
 
 
 class FlowGraphNode(ContextDriven):
     """ represents a Node in the FlowGraph """
-    def __init__(self, step_name, dependent_on_names, step_executor):
+    def __init__(self, step_name, step_executor):
         super(FlowGraphNode, self).__init__()
 
         self.step_name = step_name
-        self.dependent_on_names = dependent_on_names
         self.step_executor = step_executor
         self.step_dao = None
         self.step_model = None
@@ -29,11 +28,6 @@ class FlowGraphNode(ContextDriven):
         self.step_executor.set_context(context)
         self.step_dao = StepDao(self.logger)
 
-    def get_logger(self):
-        return get_step_logger(self.flow_name, self.step_name, self.settings)
-
-    def mark_start(self):
-        """ performs step start-up, such as db and context updates """
         if not self.step_model:
             # Normal flow
             self.step_model = Step()
@@ -47,7 +41,13 @@ class FlowGraphNode(ContextDriven):
             # step_model has been loaded from the DB
             pass
 
+    def get_logger(self):
+        return get_step_logger(self.flow_name, self.step_name, self.settings)
+
+    def mark_start(self):
+        """ performs step start-up, such as db and context updates """
         self.step_model.started_at = datetime.utcnow()
+        self.step_model.state = STATE_IN_PROGRESS
         self.step_dao.update(self.step_model)
 
     def mark_failure(self):
@@ -72,12 +72,12 @@ class FlowGraphNode(ContextDriven):
             return False
 
         self.step_executor.do_main(execution_cluster)
-        if not self.step_executor.is_pre_completed:
+        if not self.step_executor.is_main_completed:
             self.mark_failure()
             return False
 
         self.step_executor.do_post(execution_cluster)
-        if not self.step_executor.is_complete:
+        if not self.step_executor.is_post_completed:
             self.mark_failure()
             return False
 

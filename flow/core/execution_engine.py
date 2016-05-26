@@ -93,7 +93,6 @@ class ExecutionEngine(object):
 
         try:
             self.flow_graph.set_context(context)
-            self.flow_graph.mark_init()
             self.flow_graph.clear_steps()
             self.flow_graph.mark_start()
             self._spawn_clusters(context)
@@ -121,7 +120,6 @@ class ExecutionEngine(object):
 
         try:
             self.flow_graph.set_context(context)
-            self.flow_graph.mark_init()
             self.flow_graph.load_steps()
             self.flow_graph.mark_start()
             self._spawn_clusters(context)

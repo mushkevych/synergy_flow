@@ -99,10 +99,10 @@ class FlowGraph(ContextDriven):
             raise GraphError('Step {0} from Flow {1} is dependent on a non-existent Step {2}'
                              .format(name, self.flow_name, dependent_on_names))
 
-        node = FlowGraphNode(name, dependent_on_names, StepExecutor(step_name=name,
-                                                                    main_action=main_action,
-                                                                    pre_actions=pre_actions,
-                                                                    post_actions=post_actions))
+        node = FlowGraphNode(name, StepExecutor(step_name=name,
+                                                main_action=main_action,
+                                                pre_actions=pre_actions,
+                                                post_actions=post_actions))
 
         # link newly inserted node with the dependent_on nodes
         for dependent_on_name in dependent_on_names:
@@ -136,14 +136,6 @@ class FlowGraph(ContextDriven):
         super(FlowGraph, self).set_context(context, **kwargs)
         self.flow_dao = FlowDao(self.logger)
 
-    def get_logger(self):
-        return get_flow_logger(self.flow_name, self.settings)
-
-    def mark_init(self):
-        """ creates performs flow start-up, such as db and context updates """
-        assert self.is_context_set is True
-        assert self.context.flow_model is None
-
         try:
             # fetch existing Flow from the DB
             db_key = [self.flow_name, self.context.timeperiod]
@@ -156,9 +148,11 @@ class FlowGraph(ContextDriven):
             flow_model.created_at = datetime.utcnow()
             flow_model.state = STATE_EMBRYO
 
-        if flow_model:
-            self.flow_dao.update(flow_model)
-            self.context.flow_model = flow_model
+        self.flow_dao.update(flow_model)
+        self.context.flow_model = flow_model
+
+    def get_logger(self):
+        return get_flow_logger(self.flow_name, self.settings)
 
     def clear_steps(self):
         """ method purges all steps related to given flow from the DB """
