@@ -28,10 +28,10 @@ As of version 0.4 the `ExecutionEngine` has main method `run`, which:
 - starts the flow
 - terminates clusters after the flow is completed or terminated
 
-As of version 0.5 the `ExecutionEngine` will have additional method `continue`, which:
+As of version 0.5 the `ExecutionEngine` has method `recover`, which:
 - spawns clusters
 - scans existing flow and identifies last known successful step
-- triggers the execution from the identified step
+- triggers the execution from that identified step
 - terminates clusters after the flow is completed or terminated
 
 
@@ -96,3 +96,4 @@ Os-Level Dependencies
 ---------
 1. linux/unix
 1. python 2.7+ / 3.4+
+1. Synergy Scheduler
