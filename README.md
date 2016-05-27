@@ -8,47 +8,58 @@ Simple Workflow Engine, capable of running on a local desktop or multiple concur
 Concepts:
 ---------
 
-Workflow (or Flow for simplicity) is identified by its name and processing timeperiod: [flow_name, timeperiod].
-It represents a Directed Acyclic Graph (DAG), where each node is an execution step and edge
-represents order of the execution. Each step consist of three groups of actions:
+Workflow (or Flow for simplicity) is identified by its name and processing timeperiod: `[flow_name, timeperiod]`
+It represents a Directed Acyclic Graph (DAG) where each node is an execution step
+and edge represents dependencies between steps and hence - order of the execution.
+
+Each step consist of three groups of actions:
 - pre: actions that has to be executed before the main
-- main: main action (single)
+- main: single main action
 - post: actions that has to be executed after the main
 
-**NOTICE**: it is possible that the flow primary key should be extended by UOW_ID:
-[flow_name, timeperiod, uow_id]
 
-
-Reprocessing vs Continuation:
+Processing and Recovery:
 ---------
 
-As of version 0.4 the `ExecutionEngine` has main method `run`, which:
+`ExecutionEngine` exposes two main methods:
+
+`run`
 - spawns clusters
-- locates existing flow records and purges them.
+- locates existing flow record or creates one
+- purges all existing step records, if they exist
 - starts the flow
 - terminates clusters after the flow is completed or terminated
 
-As of version 0.5 the `ExecutionEngine` has method `recover`, which:
+`recover`
 - spawns clusters
-- scans existing flow and identifies last known successful step
-- triggers the execution from that identified step
+- locates existing flow record or creates one
+- scans for existing step records and loads all successful ones
+- triggers the execution from the last successful step
 - terminates clusters after the flow is completed or terminated
 
 
-Multi-threading and Context:
+Context:
 ---------
 
 SynergyFlow revolves around the concept of a Context - a structure of names,
 credentials and environment-specific settings for the Flow execution.
 
-Under the hood, SynergyFlow is a multi-threaded application and thus - all of the steps/actions are re-entrant:
-i.e. they behave as is their execution and state are thread-safe/thread-local.
+
+Multi-threading:
+---------
+
+In production setup Synergy Flow orchestrates workflow execution on a cluster of machines.
+To coordinate such plurality, it is a multi-threaded application under the hood.
+From the design perspective, it requires all of the steps/actions to be re-entrant:
+i.e. they behave as if their execution and state are thread-safe/thread-local.
+From implementation perspective, this is achieved by deep copying of every action used by steps.
 
 
 Logging:
 ---------
 
-logs are located under the `settings['log_directory']` path and resemble following structure:
+Synergy Flow provide rich logging output.
+Logs are located under the `settings['log_directory']` path and resemble following structure:
 
     settings['log_directory']/
         /flow_name/flow_name.log
@@ -67,6 +78,8 @@ Roadmap:
 
 - add the *rollback* to `AbstractAction` interface and incorporate it into the `action's` life-cycle
 - add *flows* tab to the Synergy Scheduler; MX should provide ability to reprocess/continue the flow
+- evaluate whether it makes sense to extend Flow **primary key** by UOW_ID:
+`[flow_name, timeperiod, uow_id]`
 
 License:
 ---------
@@ -96,4 +109,3 @@ Os-Level Dependencies
 ---------
 1. linux/unix
 1. python 2.7+ / 3.4+
-1. Synergy Scheduler

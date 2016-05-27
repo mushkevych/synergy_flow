@@ -1,7 +1,7 @@
 from distutils.core import setup
 
 setup(name='synergy_flow',
-      version='0.5',
+      version='0.6',
       description='Synergy Flow',
       author='Bohdan Mushkevych',
       author_email='mushkevych@gmail.com',
@@ -13,7 +13,7 @@ setup(name='synergy_flow',
                        'on a local desktop or multiple concurrent EMR clusters.',
       license='BSD 3-Clause License',
       classifiers=[
-          'Development Status :: 3 - Alpha',
+          'Development Status :: 4 - Beta',
           'Intended Audience :: Developers',
           'Intended Audience :: Information Technology',
           'Intended Audience :: System Administrators',
