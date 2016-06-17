@@ -8,7 +8,7 @@ setup(name='synergy_flow',
       url='https://github.com/mushkevych/synergy_flow',
       packages=['flow.conf', 'flow.db', 'flow.db.dao', 'flow.db.model',
                 'flow.core', 'flow.workers', 'flow.mx'],
-      package_data={'flow.mx': ['css/*', 'js/*']},
+      package_data={'flow.mx': ['css/*', 'js/*', 'templates/*']},
       long_description='Synergy Flow is a workflow engine, capable of running '
                        'on a local desktop or multiple concurrent EMR clusters.',
       license='BSD 3-Clause License',
