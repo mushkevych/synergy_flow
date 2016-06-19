@@ -15,11 +15,15 @@
 </head>
 
 <body>
-<form style="text-align: center">
-    <input type="button" class="action_button fa-input" value="&#xf00d;&nbsp;Close" onclick="window.close()"/>
+<form style="text-align: left">
+    <input type="button" class="action_button fa-input" value="&#xf04e;&nbsp;Recover" onclick="window.close()"/>
 </form>
 
-<pre id="flow"></pre>
+<form style="text-align: left">
+    <input type="button" class="action_button fa-input" value="&#xf051;&nbsp;Run&nbsp;One" onclick="window.close()"/>
+</form>
+
+<div id="flow"></div>
 
 <form style="text-align: center">
     <input type="button" class="action_button fa-input" value="&#xf00d;&nbsp;Close" onclick="window.close()"/>
@@ -27,11 +31,12 @@
 
 <script type="text/javascript">
     $(document).ready(function () {
-        var action = get_url_parameter('action');
-        var url = '/' + action + '/?' + window.location.search.substring(1);
+//        var action = get_url_parameter('action');
+//        var url = '/' + action + '/?' + window.location.search.substring(1);
+        var url = "{{ url_for('flow/static', file='js/flare.json') }}";
 
         $.get(url, function (data) {
-            render_flow(data, $("#flow"));
+            render_flow(data, d3.select("#flow"));
         });
     });
 </script>
