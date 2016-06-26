@@ -8,6 +8,7 @@
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', file='css/mx_page.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', file='css/font-awesome-4.3.0.css') }}">
     <script type="text/javascript" src="{{ url_for('flow/static', file='js/d3-3.5.17.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('flow/static', file='js/dagre-d3-0.4.17.min.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('flow/static', file='js/flow_viewer.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', file='js/mx_utils.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', file='js/jquery-2.1.4.min.js') }}"></script>
@@ -15,6 +16,7 @@
 </head>
 
 <body>
+
 <form style="text-align: left">
     <input type="button" class="action_button fa-input" value="&#xf04e;&nbsp;Recover" onclick="window.close()"/>
 </form>
@@ -23,7 +25,9 @@
     <input type="button" class="action_button fa-input" value="&#xf051;&nbsp;Run&nbsp;One" onclick="window.close()"/>
 </form>
 
-<div id="flow"></div>
+<div class="live map">
+  <svg><g/></svg>
+</div>
 
 <form style="text-align: center">
     <input type="button" class="action_button fa-input" value="&#xf00d;&nbsp;Close" onclick="window.close()"/>
