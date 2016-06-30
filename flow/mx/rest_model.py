@@ -7,37 +7,36 @@ from flow.db.model.flow import Flow
 from flow.db.model.step import Step
 
 
-FIELD_IS_ALIVE = 'is_alive'                 # actual state of the trigger
-FIELD_NEXT_RUN_IN = 'next_run_in'           # duration until the next trigger event in HH:MM:SS format
-FIELD_NEXT_TIMEPERIOD = 'next_timeperiod'   # Synergy timeperiod format
-FIELD_DEPENDANT_TREES = 'dependant_trees'
-FIELD_SORTED_PROCESS_NAMES = 'sorted_process_names'     # process names sorted by their time_qualifier
-FIELD_REPROCESSING_QUEUE = 'reprocessing_queue'
-
-FIELD_NUMBER_OF_CHILDREN = 'number_of_children'
-FIELD_PROCESSES = 'processes'
-FIELD_TIME_QUALIFIER = 'time_qualifier'
+FIELD_ACTION_NAME = 'action_name'
+FIELD_ACTION_KWARGS = 'kwargs'
+FIELD_IS_PRE_COMPLETED = 'is_pre_completed'
+FIELD_IS_MAIN_COMPLETED = 'is_main_completed'
+FIELD_IS_POST_COMPLETED = 'is_post_completed'
+FIELD_PRE_ACTIONS = 'pre_actions'
+FIELD_MAIN_ACTION = 'main_action'
+FIELD_POST_ACTIONS = 'post_actions'
 FIELD_STEPS = 'steps'
-FIELD_FLOW = 'flow'
+FIELD_PREVIOUS_NODES = 'previous_nodes'
+FIELD_NEXT_NODES = 'next_nodes'
 
 
-class RestFlow(Flow):
-    is_alive = BooleanField(FIELD_IS_ALIVE)
-    next_run_in = StringField(FIELD_NEXT_RUN_IN)
+class RestAction(BaseDocument):
+    action_name = StringField(FIELD_ACTION_NAME)
+    kwargs = DictField(FIELD_ACTION_KWARGS)
 
 
 class RestStep(Step):
-    is_alive = BooleanField(FIELD_IS_ALIVE)
-    next_run_in = StringField(FIELD_NEXT_RUN_IN)
-    next_timeperiod = StringField(FIELD_NEXT_TIMEPERIOD)
-    reprocessing_queue = ListField(FIELD_REPROCESSING_QUEUE)
+    is_pre_completed = BooleanField(FIELD_IS_PRE_COMPLETED)
+    is_main_completed = BooleanField(FIELD_IS_MAIN_COMPLETED)
+    is_post_completed = BooleanField(FIELD_IS_POST_COMPLETED)
+
+    pre_actions = ListField(FIELD_PRE_ACTIONS)
+    main_action = NestedDocumentField(FIELD_MAIN_ACTION, RestAction, null=True)
+    post_actions = ListField(FIELD_POST_ACTIONS)
+
+    previous_nodes = ListField(FIELD_PREVIOUS_NODES)
+    next_nodes = ListField(FIELD_NEXT_NODES)
 
 
-class RestFlowGraph(BaseDocument):
-    flow = NestedDocumentField(FIELD_FLOW, RestFlow, null=True)
-    steps = DictField(FIELD_STEPS)
-
-
-class RestFlowGraphNode(BaseDocument):
-    flow = NestedDocumentField(FIELD_FLOW, RestStep, null=True)
-    steps = DictField(FIELD_STEPS)
+class RestFlow(Flow):
+    steps = DictField(FIELD_STEPS)      # format {step_name: RestStep }

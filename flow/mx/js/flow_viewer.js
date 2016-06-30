@@ -47,17 +47,17 @@ function render_flow(data, element) {
                 class: className
             });
 
-            if (worker.prevNodes) {
-                if (worker.prevNodes instanceof Array) {
-                    var arrayLength = worker.prevNodes.length;
+            if (worker.previous_nodes) {
+                if (worker.previous_nodes instanceof Array) {
+                    var arrayLength = worker.previous_nodes.length;
                     for (var i = 0; i < arrayLength; i++) {
-                        g.setEdge(worker.prevNodes[i], id, {
+                        g.setEdge(worker.previous_nodes[i], id, {
                             label: worker.inputThroughput + "/s",
                             width: 40
                         });
                     }
                 } else {
-                    g.setEdge(worker.prevNodes, id, {
+                    g.setEdge(worker.previous_nodes, id, {
                         label: worker.inputThroughput + "/s",
                         width: 40
                     });
@@ -97,7 +97,7 @@ function render_flow(data, element) {
         workers["step 2"] = {
             "consumers": 0,
             "count": 0,
-            "prevNodes": "start",
+            "previous_nodes": "start",
             "inputThroughput": 50
         }
     }, 5000);

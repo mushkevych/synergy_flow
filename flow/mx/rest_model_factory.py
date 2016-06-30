@@ -1,79 +1,69 @@
 __author__ = 'Bohdan Mushkevych'
 
-from synergy.system.time_trigger_factory import format_time_trigger_string
+from flow.core.abstract_action import AbstractAction
+from flow.core.flow_graph import FlowGraph
+from flow.core.flow_graph_node import FlowGraphNode
+from flow.db.model import flow
 from flow.mx.rest_model import *
 
 
-def get_next_run_in(thread_handler):
-    if not thread_handler.is_alive:
-        return 'NA'
-
-    next_run = thread_handler.next_run_in()
-    return str(next_run).split('.')[0]
-
-
-def get_next_timeperiod(timetable, process_name):
-    if timetable.get_tree(process_name) is None:
-        return 'NA'
-    else:
-        job_record = timetable.get_next_job_record(process_name)
-        return job_record.timeperiod
-
-
-def get_dependant_trees(timetable, tree_obj):
-    trees = timetable._find_dependant_trees(tree_obj)
-    return [x.tree_name for x in trees]
-
-
-def get_reprocessing_queue(gc, process_name):
-    per_process = gc.reprocess_uows[process_name]
-    q = []
-    for priority_entry in sorted(per_process.queue):
-        q.append(priority_entry.entry.timeperiod)
-    return q
-
-
-def create_rest_managed_scheduler_entry(thread_handler, timetable, gc):
-    process_entry = thread_handler.process_entry
-    process_name = process_entry.process_name
-
-    rest_model = RestManagedSchedulerEntry(
-        is_on=process_entry.is_on,
-        is_alive=thread_handler.is_alive,
-        process_name=process_name,
-        trigger_frequency=format_time_trigger_string(thread_handler.timer_instance),
-        next_run_in=get_next_run_in(thread_handler),
-        next_timeperiod=get_next_timeperiod(timetable, process_name),
-        time_qualifier=process_entry.time_qualifier,
-        time_grouping=process_entry.time_grouping,
-        state_machine_name=process_entry.state_machine_name,
-        blocking_type=process_entry.blocking_type,
-        reprocessing_queue=get_reprocessing_queue(gc, process_name),
+def create_rest_action(action_obj):
+    assert isinstance(action_obj, AbstractAction)
+    rest_model = RestAction(
+        action_name=action_obj.action_name,
+        kwargs=action_obj.kwargs
     )
     return rest_model
 
 
-def create_rest_freerun_scheduler_entry(thread_handler):
-    process_name, entry_name = thread_handler.key
-    rest_model = RestFreerunSchedulerEntry(
-        is_on=thread_handler.process_entry.is_on,
-        is_alive=thread_handler.is_alive,
-        process_name=process_name,
-        entry_name=entry_name,
-        trigger_frequency=format_time_trigger_string(thread_handler.timer_instance),
-        description=thread_handler.process_entry.description,
-        next_run_in=get_next_run_in(thread_handler),
-        event_log=thread_handler.process_entry.event_log,
-        arguments=thread_handler.process_entry.arguments
+def create_rest_step(step_entry, graph_node_obj):
+    assert isinstance(step_entry, Step)
+    assert isinstance(graph_node_obj, FlowGraphNode)
+
+    rest_model = RestStep(
+        step_name=graph_node_obj.step_name,
+        is_pre_completed=graph_node_obj.step_executor.is_pre_completed,
+        is_main_completed=graph_node_obj.step_executor.is_main_completed,
+        is_post_completed=graph_node_obj.step_executor.is_post_completed,
+        pre_actions=[create_rest_action(x) for x in graph_node_obj.step_executor.pre_actions],
+        main_action=create_rest_action(graph_node_obj.step_executor.main_action),
+        post_actions=[create_rest_action(x) for x in graph_node_obj.step_executor.post_actions],
+        previous_nodes=[x.step_name for x in graph_node_obj._prev],
+        next_nodes=[x.step_name for x in graph_node_obj._next]
     )
+
+    if step_entry:
+        rest_model.db_id = step_entry.db_id
+        rest_model.flow_name = step_entry.flow_name
+        rest_model.timeperiod = step_entry.timeperiod
+        rest_model.state = step_entry.state
+        rest_model.created_at = step_entry.created_at
+        rest_model.started_at = step_entry.started_at
+        rest_model.finished_at = step_entry.finished_at
+        rest_model.related_flow = step_entry.related_flow
+
     return rest_model
 
 
-def create_rest_timetable_tree(timetable, tree_obj):
-    rest_tree = RestTimetableTree(tree_name=tree_obj.tree_name,
-                                  mx_page=tree_obj.mx_page,
-                                  mx_name=tree_obj.mx_name,
-                                  dependent_on=[tree.tree_name for tree in tree_obj.dependent_on],
-                                  dependant_trees=get_dependant_trees(timetable, tree_obj),
-                                  sorted_process_names=[x for x in tree_obj.process_hierarchy])
-    return rest_tree
+def create_rest_flow(flow_entry, flow_graph_obj):
+    assert isinstance(flow_entry, Flow)
+    assert isinstance(flow_graph_obj, FlowGraph)
+
+    steps = dict()
+    for step_name, graph_node_obj in flow_graph_obj._dict.items():
+        steps[step_name] = create_rest_step(graph_node_obj.step_model, graph_node_obj)
+
+    rest_flow = RestFlow(
+        flow_name=flow_graph_obj.flow_name,
+        timeperiod='NA' if not flow_entry else flow_entry.timeperiod,
+        state=flow.STATE_EMBRYO if not flow_entry else flow_entry.state,
+        steps=steps
+    )
+
+    if flow_entry:
+        rest_flow.db_id = flow_entry.db_id
+        rest_flow.created_at = flow_entry.created_at
+        rest_flow.started_at = flow_entry.started_at
+        rest_flow.finished_at = flow_entry.finished_at
+
+    return rest_flow
