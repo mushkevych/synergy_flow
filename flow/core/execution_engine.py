@@ -1,7 +1,9 @@
 __author__ = 'Bohdan Mushkevych'
 
+import copy
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+from flow.conf import flows
 from flow.core.abstract_cluster import AbstractCluster
 from flow.core.emr_cluster import EmrCluster
 from flow.core.flow_graph import FlowGraph
@@ -19,15 +21,15 @@ def launch_cluster(logger, context, cluster_name):
     return cluster
 
 
-def parallel_flow_execution(logger, context, execution_cluster, flow_graph):
+def parallel_flow_execution(logger, context, execution_cluster, flow_graph_obj):
     """ function fetches next available GraphNode/Step
         from the FlowGraph and executes it on the given cluster """
     assert isinstance(context, ExecutionContext)
     assert isinstance(execution_cluster, AbstractCluster)
-    assert isinstance(flow_graph, FlowGraph)
-    for step_name in flow_graph:
+    assert isinstance(flow_graph_obj, FlowGraph)
+    for step_name in flow_graph_obj:
         try:
-            graph_node = flow_graph[step_name]
+            graph_node = flow_graph_obj[step_name]
             graph_node.set_context(context)
             graph_node.run(execution_cluster)
         except Exception:
@@ -41,10 +43,13 @@ class ExecutionEngine(object):
         - assigns execution steps to the clusters and monitor their progress
         - tracks dependencies and terminate execution should the Flow Critical Path fail """
 
-    def __init__(self, logger, flow_graph):
-        assert isinstance(flow_graph, FlowGraph)
+    def __init__(self, logger, flow_name):
+        assert isinstance(flow_name, FlowGraph)
         self.logger = logger
-        self.flow_graph = flow_graph
+        if flow_name not in flows:
+            raise ValueError('flow {0} not registered among flows: {1}'.format(flow_name, flows))
+
+        self.flow_graph_obj = copy.deepcopy(flows[flow_name])
 
         # list of execution clusters (such as AWS EMR) available for processing
         self.execution_clusters = list()
@@ -69,7 +74,7 @@ class ExecutionEngine(object):
             # Start the GraphNode/Step as soon as the step is unblocked and available for run
             # each future is marked with the execution_cluster
             future_to_worker = {executor.submit(parallel_flow_execution, self.logger,
-                                                context, cluster, self.flow_graph): cluster
+                                                context, cluster, self.flow_graph_obj): cluster
                                 for cluster in self.execution_clusters}
 
             for future in as_completed(future_to_worker):
@@ -92,15 +97,15 @@ class ExecutionEngine(object):
         self.logger.info('starting Engine: {')
 
         try:
-            self.flow_graph.set_context(context)
-            self.flow_graph.clear_steps()
-            self.flow_graph.mark_start()
+            self.flow_graph_obj.set_context(context)
+            self.flow_graph_obj.clear_steps()
+            self.flow_graph_obj.mark_start()
             self._spawn_clusters(context)
             self._run_engine(context)
-            self.flow_graph.mark_success()
+            self.flow_graph_obj.mark_success()
         except Exception:
             self.logger.error('Exception on starting Engine', exc_info=True)
-            self.flow_graph.mark_failure()
+            self.flow_graph_obj.mark_failure()
         finally:
             # TODO: do not terminate failed cluster to be able to retrieve and analyze the processing errors
             for cluster in self.execution_clusters:
@@ -119,15 +124,15 @@ class ExecutionEngine(object):
         self.logger.info('starting Engine: {')
 
         try:
-            self.flow_graph.set_context(context)
-            self.flow_graph.load_steps()
-            self.flow_graph.mark_start()
+            self.flow_graph_obj.set_context(context)
+            self.flow_graph_obj.load_steps()
+            self.flow_graph_obj.mark_start()
             self._spawn_clusters(context)
             self._run_engine(context)
-            self.flow_graph.mark_success()
+            self.flow_graph_obj.mark_success()
         except Exception:
             self.logger.error('Exception on starting Engine', exc_info=True)
-            self.flow_graph.mark_failure()
+            self.flow_graph_obj.mark_failure()
         finally:
             # TODO: do not terminate failed cluster to be able to retrieve and analyze the processing errors
             for cluster in self.execution_clusters:

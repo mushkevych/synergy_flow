@@ -130,7 +130,7 @@ class FlowGraph(ContextDriven):
         :return: True if the step has failed (either in STATE_INVALID or STATE_CANCELED); False otherwise
         """
         node = self[step_name]
-        return node.step_model and node.step_model.is_failed
+        return node.step_entry and node.step_entry.is_failed
 
     def set_context(self, context, **kwargs):
         super(FlowGraph, self).set_context(context, **kwargs)
@@ -139,17 +139,17 @@ class FlowGraph(ContextDriven):
         try:
             # fetch existing Flow from the DB
             db_key = [self.flow_name, self.context.timeperiod]
-            flow_model = self.flow_dao.get_one(db_key)
+            flow_entry = self.flow_dao.get_one(db_key)
         except LookupError:
             # no flow record for given key was present in the database
-            flow_model = Flow()
-            flow_model.flow_name = self.flow_name
-            flow_model.timeperiod = self.context.timeperiod
-            flow_model.created_at = datetime.utcnow()
-            flow_model.state = STATE_EMBRYO
+            flow_entry = Flow()
+            flow_entry.flow_name = self.flow_name
+            flow_entry.timeperiod = self.context.timeperiod
+            flow_entry.created_at = datetime.utcnow()
+            flow_entry.state = STATE_EMBRYO
 
-        self.flow_dao.update(flow_model)
-        self.context.flow_model = flow_model
+        self.flow_dao.update(flow_entry)
+        self.context.flow_entry = flow_entry
 
     def get_logger(self):
         return get_flow_logger(self.flow_name, self.settings)
@@ -157,10 +157,10 @@ class FlowGraph(ContextDriven):
     def clear_steps(self):
         """ method purges all steps related to given flow from the DB """
         assert self.is_context_set is True
-        assert self.context.flow_model is not None
+        assert self.context.flow_entry is not None
 
         step_dao = StepDao(self.logger)
-        step_dao.remove_by_flow_id(self.context.flow_model.db_id)
+        step_dao.remove_by_flow_id(self.context.flow_entry.db_id)
 
     def load_steps(self):
         """ method:
@@ -169,14 +169,14 @@ class FlowGraph(ContextDriven):
             3. removes failed steps from the DB
         """
         assert self.is_context_set is True
-        assert self.context.flow_model is not None
+        assert self.context.flow_entry is not None
 
         step_dao = StepDao(self.logger)
-        steps = step_dao.get_all_by_flow_id(self.context.flow_model.db_id)
+        steps = step_dao.get_all_by_flow_id(self.context.flow_entry.db_id)
         for s in steps:
             assert isinstance(s, Step)
             if s.is_processed:
-                self[s.step_name].step_model = s
+                self[s.step_name].step_entry = s
                 self.yielded.append(s)
             else:
                 step_dao.remove(s.key)
@@ -184,20 +184,20 @@ class FlowGraph(ContextDriven):
     def mark_start(self):
         """ performs flow start-up, such as db and context updates """
         assert self.is_context_set is True
-        self.context.flow_model.started_at = datetime.utcnow()
-        self.context.flow_model.state = STATE_IN_PROGRESS
-        self.flow_dao.update(self.context.flow_model)
+        self.context.flow_entry.started_at = datetime.utcnow()
+        self.context.flow_entry.state = STATE_IN_PROGRESS
+        self.flow_dao.update(self.context.flow_entry)
 
     def mark_failure(self):
         """ perform flow post-failure activities, such as db update """
         assert self.is_context_set is True
-        self.context.flow_model.finished_at = datetime.utcnow()
-        self.context.flow_model.state = STATE_INVALID
-        self.flow_dao.update(self.context.flow_model)
+        self.context.flow_entry.finished_at = datetime.utcnow()
+        self.context.flow_entry.state = STATE_INVALID
+        self.flow_dao.update(self.context.flow_entry)
 
     def mark_success(self):
         """ perform activities in case of the flow successful completion """
         assert self.is_context_set is True
-        self.context.flow_model.finished_at = datetime.utcnow()
-        self.context.flow_model.state = STATE_PROCESSED
-        self.flow_dao.update(self.context.flow_model)
+        self.context.flow_entry.finished_at = datetime.utcnow()
+        self.context.flow_entry.state = STATE_PROCESSED
+        self.flow_dao.update(self.context.flow_entry)

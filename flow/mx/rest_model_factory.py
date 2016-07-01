@@ -16,9 +16,9 @@ def create_rest_action(action_obj):
     return rest_model
 
 
-def create_rest_step(step_entry, graph_node_obj):
-    assert isinstance(step_entry, Step)
+def create_rest_step(graph_node_obj):
     assert isinstance(graph_node_obj, FlowGraphNode)
+    step_entry = graph_node_obj.step_entry
 
     rest_model = RestStep(
         step_name=graph_node_obj.step_name,
@@ -45,13 +45,13 @@ def create_rest_step(step_entry, graph_node_obj):
     return rest_model
 
 
-def create_rest_flow(flow_entry, flow_graph_obj):
-    assert isinstance(flow_entry, Flow)
+def create_rest_flow(flow_graph_obj):
     assert isinstance(flow_graph_obj, FlowGraph)
+    flow_entry = flow_graph_obj.context.flow_entry
 
     steps = dict()
     for step_name, graph_node_obj in flow_graph_obj._dict.items():
-        steps[step_name] = create_rest_step(graph_node_obj.step_model, graph_node_obj)
+        steps[step_name] = create_rest_step(graph_node_obj.step_entry)
 
     rest_flow = RestFlow(
         flow_name=flow_graph_obj.flow_name,

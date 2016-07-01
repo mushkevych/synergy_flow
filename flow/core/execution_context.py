@@ -50,19 +50,18 @@ class ExecutionContext(object):
         - timeperiod boundaries of the run
         - environment-specific settings, where the flow is run
     """
-    def __init__(self, flow_name, timeperiod, settings, number_of_clusters=2, flow_graph=None, flow_model=None):
+    def __init__(self, flow_name, timeperiod, settings, number_of_clusters=2, flow_entry=None):
         assert isinstance(settings, dict)
 
         self.flow_name = flow_name
         self.timeperiod = timeperiod
         self.settings = settings
         self.number_of_clusters = number_of_clusters
-        self.flow_graph = flow_graph
-        self.flow_model = flow_model
+        self.flow_entry = flow_entry
 
     @property
     def flow_id(self):
-        return self.flow_model.db_id
+        return self.flow_entry.db_id
 
 
 class ContextDriven(object):

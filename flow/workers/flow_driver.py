@@ -1,6 +1,5 @@
 __author__ = 'Bohdan Mushkevych'
 
-from flow.conf import flows
 from flow.core.execution_context import ExecutionContext
 from flow.core.execution_engine import ExecutionEngine
 from synergy.conf import settings
@@ -25,9 +24,7 @@ class FlowDriver(AbstractUowAwareWorker):
         run_recovery = uow.arguments.get(ARGUMENT_RUN_RECOVERY)
         try:
             self.logger.info('starting Flow: {0} {{'.format(flow_name))
-
-            flow_graph = flows.get(flow_name)
-            execution_engine = ExecutionEngine(self.logger, flow_graph)
+            execution_engine = ExecutionEngine(self.logger, flow_name)
 
             context = ExecutionContext(flow_name, uow.timeperiod, settings.settings)
             if run_recovery in [1, True, 'true', 'yes']:
@@ -35,9 +32,9 @@ class FlowDriver(AbstractUowAwareWorker):
             else:
                 execution_engine.run(context)
 
-            if context.flow_model.state == flow.STATE_PROCESSED:
+            if context.flow_entry.state == flow.STATE_PROCESSED:
                 uow_status = unit_of_work.STATE_PROCESSED
-            elif context.flow_model.state == flow.STATE_NOOP:
+            elif context.flow_entry.state == flow.STATE_NOOP:
                 uow_status = unit_of_work.STATE_NOOP
             else:
                 uow_status = unit_of_work.STATE_INVALID

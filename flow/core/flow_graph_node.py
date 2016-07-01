@@ -16,7 +16,7 @@ class FlowGraphNode(ContextDriven):
         self.step_name = step_name
         self.step_executor = step_executor
         self.step_dao = None
-        self.step_model = None
+        self.step_entry = None
 
         # attributes _prev and _next contains FlowGraphNodes that precedes and follows this node
         # these are managed by the FlowGraph.append
@@ -28,17 +28,17 @@ class FlowGraphNode(ContextDriven):
         self.step_executor.set_context(context)
         self.step_dao = StepDao(self.logger)
 
-        if not self.step_model:
+        if not self.step_entry:
             # Normal flow
-            self.step_model = Step()
-            self.step_model.created_at = datetime.utcnow()
-            self.step_model.flow_name = self.context.flow_name
-            self.step_model.timeperiod = self.context.timeperiod
-            self.step_model.related_flow = self.context.flow_id
-            self.step_model.state = STATE_EMBRYO
+            self.step_entry = Step()
+            self.step_entry.created_at = datetime.utcnow()
+            self.step_entry.flow_name = self.context.flow_name
+            self.step_entry.timeperiod = self.context.timeperiod
+            self.step_entry.related_flow = self.context.flow_id
+            self.step_entry.state = STATE_EMBRYO
         else:
             # ExecutionEngine is performing recovery
-            # step_model has been loaded from the DB
+            # step_entry has been loaded from the DB
             pass
 
     def get_logger(self):
@@ -46,21 +46,21 @@ class FlowGraphNode(ContextDriven):
 
     def mark_start(self):
         """ performs step start-up, such as db and context updates """
-        self.step_model.started_at = datetime.utcnow()
-        self.step_model.state = STATE_IN_PROGRESS
-        self.step_dao.update(self.step_model)
+        self.step_entry.started_at = datetime.utcnow()
+        self.step_entry.state = STATE_IN_PROGRESS
+        self.step_dao.update(self.step_entry)
 
     def mark_failure(self):
         """ perform step post-failure activities, such as db update """
-        self.step_model.finished_at = datetime.utcnow()
-        self.step_model.state = STATE_INVALID
-        self.step_dao.update(self.step_model)
+        self.step_entry.finished_at = datetime.utcnow()
+        self.step_entry.state = STATE_INVALID
+        self.step_dao.update(self.step_entry)
 
     def mark_success(self):
         """ perform activities in case of the step successful completion """
-        self.step_model.finished_at = datetime.utcnow()
-        self.step_model.state = STATE_PROCESSED
-        self.step_dao.update(self.step_model)
+        self.step_entry.finished_at = datetime.utcnow()
+        self.step_entry.state = STATE_PROCESSED
+        self.step_dao.update(self.step_entry)
 
     def run(self, execution_cluster):
         assert self.is_context_set is True
