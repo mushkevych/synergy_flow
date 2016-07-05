@@ -6,9 +6,9 @@ except ImportError:
     from httplib import NO_CONTENT
 
 import json
-from synergy.mx.utils import render_template, expose
 from werkzeug.wrappers import Response
 
+from synergy.mx.utils import render_template, expose
 from flow.mx.flow_action_handler import FlowActionHandler
 
 
@@ -47,4 +47,4 @@ def action_get_step_log(request, **values):
 @expose('/viewer/flow/')
 def flow_viewer(request, **values):
     details = FlowActionHandler(request, **values)
-    return render_template('flow_viewer.html', details=details.flow_details)
+    return render_template('flow_viewer.html', flow_details=details.flow_details)
