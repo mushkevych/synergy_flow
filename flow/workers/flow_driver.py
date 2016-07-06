@@ -7,10 +7,7 @@ from synergy.db.model import unit_of_work
 from synergy.workers.abstract_uow_aware_worker import AbstractUowAwareWorker
 
 from flow.db.model import flow
-
-ARGUMENT_FLOW_NAME = 'flow_name'
-ARGUMENT_RUN_RECOVERY = 'run_recovery'
-ARGUMENT_RUN_ONE_STEP = 'run_one_step'
+from flow.workers.flow_constants import *
 
 
 class FlowDriver(AbstractUowAwareWorker):
@@ -21,16 +18,24 @@ class FlowDriver(AbstractUowAwareWorker):
 
     def _process_uow(self, uow):
         flow_name = uow.arguments[ARGUMENT_FLOW_NAME]
-        run_recovery = uow.arguments.get(ARGUMENT_RUN_RECOVERY)
+        run_mode = uow.arguments.get(ARGUMENT_RUN_MODE, RUN_MODE_NOMINAL)
         try:
             self.logger.info('starting Flow: {0} {{'.format(flow_name))
             execution_engine = ExecutionEngine(self.logger, flow_name)
 
             context = ExecutionContext(flow_name, uow.timeperiod, settings.settings)
-            if run_recovery in [1, True, 'true', 'yes']:
+            if run_mode == RUN_MODE_RECOVERY:
                 execution_engine.recover(context)
-            else:
+            elif run_mode == RUN_MODE_ONE_STEP:
+                step_name = uow.arguments.get(ARGUMENT_STEP_NAME)
+                execution_engine.run_one(context, step_name)
+            elif run_mode == RUN_MODE_RUN_FROM:
+                step_name = uow.arguments.get(ARGUMENT_STEP_NAME)
+                execution_engine.run_from(context, step_name)
+            elif run_mode == RUN_MODE_NOMINAL:
                 execution_engine.run(context)
+            else:
+                raise ValueError('run mode {0} is unknown to the Synergy Flow'.format(run_mode))
 
             if context.flow_entry.state == flow.STATE_PROCESSED:
                 uow_status = unit_of_work.STATE_PROCESSED

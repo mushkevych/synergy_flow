@@ -139,3 +139,22 @@ class ExecutionEngine(object):
                 cluster.terminate()
 
             self.logger.info('}')
+
+    def run_one(self, context, step_name):
+        """ method tries to execute a single step:
+            - verifying that the flow has steps preceding to the one completed
+            - spawning at most 1 cluster
+            - starting the step processing
+            - terminating clusters after the step has completed or failed
+        """
+        pass
+
+    def run_from(self, context, step_name):
+        """ method tries to execute a single step:
+            - verifying that the flow has steps preceding to the one completed
+            - locating the failed steps and resetting their state
+            - spawning clusters
+            - starting the flow processing from the given step
+            - terminating clusters after the flow has completed or failed
+        """
+        pass
