@@ -67,7 +67,7 @@
     var mx_flow = {{ flow_details|jsonify|safe }};
 
     $(document).ready(function () {
-        render_flow(mx_flow, d3.select("#flow"));
+        render_flow(mx_flow.graph, d3.select("#flow"));
     });
 </script>
 

@@ -1,6 +1,4 @@
-function render_flow(data, element) {
-
-    var workers = data;
+function render_flow(steps, element) {
 
     // Set up zoom support
     var svg = d3.select("svg"),
@@ -25,20 +23,24 @@ function render_flow(data, element) {
     });
 
     function draw(isUpdate) {
-        for (var id in workers) {
-            var worker = workers[id];
-            var className = worker.consumers ? "running" : "stopped";
-            if (worker.count > 10000) {
+        for (var step_name in steps) {
+            var step = steps[step_name];
+            var className = step.consumers ? "running" : "stopped";
+            if (step.count > 10000) {
                 className += " warn";
             }
+
             var html = "<div>";
-            html += "<span class=status></span>";
-            html += "<span class=consumers>" + worker.consumers + "</span>";
-            html += "<span class=name>" + id + "</span>";
-            html += "<span class=queue><span class=counter>" + worker.count + "</span></span>";
+            html += "<span class=status>" + step.state + "</span>";
+            html += "<span class=consumers>" + step.consumers + "</span>";
+            html += "<span class=name>" + step_name + "</span>";
+            html += "<span class=is_pre_completed>" + step.is_pre_completed + "</span>";
+            html += "<span class=is_main_completed>" + step.is_main_completed + "</span>";
+            html += "<span class=is_post_completed>" + step.is_post_completed + "</span>";
+            html += "<span class=queue><span class=counter>" + step.count + "</span></span>";
             html += "</div>";
 
-            g.setNode(id, {
+            g.setNode(step_name, {
                 labelType: "html",
                 label: html,
                 rx: 5,
@@ -47,18 +49,18 @@ function render_flow(data, element) {
                 class: className
             });
 
-            if (worker.previous_nodes) {
-                if (worker.previous_nodes instanceof Array) {
-                    var arrayLength = worker.previous_nodes.length;
+            if (step.previous_nodes) {
+                if (step.previous_nodes instanceof Array) {
+                    var arrayLength = step.previous_nodes.length;
                     for (var i = 0; i < arrayLength; i++) {
-                        g.setEdge(worker.previous_nodes[i], id, {
-                            label: worker.inputThroughput + "/s",
+                        g.setEdge(step.previous_nodes[i], step_name, {
+                            label: step.inputThroughput + "/s",
                             width: 40
                         });
                     }
                 } else {
-                    g.setEdge(worker.previous_nodes, id, {
-                        label: worker.inputThroughput + "/s",
+                    g.setEdge(step.previous_nodes, step_name, {
+                        label: step.inputThroughput + "/s",
                         width: 40
                     });
                 }
@@ -79,28 +81,35 @@ function render_flow(data, element) {
         zoom.event(isUpdate ? svg.transition().duration(500) : d3.select("svg"));
     }
 
+    /*
+     * mock functions go here
+     */
+
+    draw();
+}
+
+/*  DEAD ELEPHANT
+
     // Do some mock queue status updates
     setInterval(function () {
-        var stoppedWorker1Count = workers["step 3"].count;
-        var stoppedWorker2Count = workers["etl_dim"].count;
-        for (var id in workers) {
-            workers[id].count = Math.ceil(Math.random() * 3);
-            if (workers[id].inputThroughput) workers[id].inputThroughput = Math.ceil(Math.random() * 250);
+        var stoppedWorker1Count = steps["step 3"].count;
+        var stoppedWorker2Count = steps["etl_dim"].count;
+        for (var id in steps) {
+            steps[id].count = Math.ceil(Math.random() * 3);
+            if (steps[id].inputThroughput) steps[id].inputThroughput = Math.ceil(Math.random() * 250);
         }
-        workers["step 3"].count = stoppedWorker1Count + Math.ceil(Math.random() * 100);
-        workers["etl_dim"].count = stoppedWorker2Count + Math.ceil(Math.random() * 100);
+        steps["step 3"].count = stoppedWorker1Count + Math.ceil(Math.random() * 100);
+        steps["etl_dim"].count = stoppedWorker2Count + Math.ceil(Math.random() * 100);
         draw(true);
     }, 1000);
 
     // Do a mock change of worker configuration
     setInterval(function () {
-        workers["step 2"] = {
+        steps["step 2"] = {
             "consumers": 0,
             "count": 0,
             "previous_nodes": "start",
             "inputThroughput": 50
         }
     }, 5000);
-
-    draw();
-}
+*/

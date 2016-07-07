@@ -4,6 +4,7 @@ import time
 from collections import OrderedDict
 from datetime import datetime
 
+from flow.flow_constants import STEP_NAME_START, STEP_NAME_FINISH
 from flow.core.execution_context import ContextDriven, get_flow_logger
 from flow.core.step_executor import StepExecutor
 from flow.core.flow_graph_node import FlowGraphNode
@@ -86,6 +87,8 @@ class FlowGraph(ContextDriven):
         """
         assert isinstance(dependent_on_names, list), \
             'dependent_on_names must be either a list of string or an empty list'
+        assert name not in [STEP_NAME_START, STEP_NAME_FINISH], \
+            'step names [{0}, {1}] are reserved.'.format(STEP_NAME_START, STEP_NAME_FINISH)
 
         def _find_non_existent(names):
             non_existent = list()

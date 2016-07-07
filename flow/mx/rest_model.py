@@ -16,6 +16,7 @@ FIELD_PRE_ACTIONS = 'pre_actions'
 FIELD_MAIN_ACTION = 'main_action'
 FIELD_POST_ACTIONS = 'post_actions'
 FIELD_STEPS = 'steps'
+FIELD_GRAPH = 'graph'
 FIELD_PREVIOUS_NODES = 'previous_nodes'
 FIELD_NEXT_NODES = 'next_nodes'
 
@@ -39,4 +40,9 @@ class RestStep(Step):
 
 
 class RestFlow(Flow):
-    steps = DictField(FIELD_STEPS)      # format {step_name: RestStep }
+    # format {step_name: RestStep }
+    steps = DictField(FIELD_STEPS)
+
+    # format {step_name: RestStep }
+    # copy of *RestFlow.steps* with additional *start* and *finish* steps
+    graph = DictField(FIELD_GRAPH)

@@ -5,3 +5,6 @@ RUN_MODE_RECOVERY = 'run_mode_recovery'
 RUN_MODE_ONE_STEP = 'run_mode_one_step'
 RUN_MODE_RUN_FROM = 'run_mode_run_from'
 RUN_MODE_NOMINAL = 'run_mode_nominal'
+
+STEP_NAME_START = 'start'
+STEP_NAME_FINISH = 'finish'
