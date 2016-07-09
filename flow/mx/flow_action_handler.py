@@ -1,15 +1,14 @@
 __author__ = 'Bohdan Mushkevych'
 
-import copy
-from werkzeug.utils import cached_property
-
 from synergy.conf import settings
 from synergy.mx.base_request_handler import BaseRequestHandler, valid_action_request
+from werkzeug.utils import cached_property
+
 from flow.conf import flows
+from flow.core.execution_context import ExecutionContext
 from flow.db.dao.flow_dao import FlowDao
 from flow.db.dao.step_dao import StepDao
 from flow.mx.rest_model_factory import *
-from flow.core.execution_context import ExecutionContext
 
 
 class FlowActionHandler(BaseRequestHandler):
@@ -18,6 +17,7 @@ class FlowActionHandler(BaseRequestHandler):
         self.flow_dao = FlowDao(self.logger)
         self.step_dao = StepDao(self.logger)
 
+        self.process_name = self.request_arguments.get('process_name')
         self.flow_name = self.request_arguments.get('flow_name')
         self.step_name = self.request_arguments.get('step_name')
         self.timeperiod = self.request_arguments.get('timeperiod')
@@ -53,10 +53,13 @@ class FlowActionHandler(BaseRequestHandler):
         rest_model = create_rest_flow(self.flow_graph_obj)
         return rest_model
 
+    @cached_property
+    def process_name(self):
+        return self.process_name
+
     @valid_action_request
     @cached_property
     def step_details(self):
-        step_entry = self.step_dao.get_one([self.flow_name, self.step_name, self.timeperiod])
         graph_node_obj = self.flow_graph_obj._dict[self.step_name]
         rest_model = create_rest_step(graph_node_obj)
         return rest_model

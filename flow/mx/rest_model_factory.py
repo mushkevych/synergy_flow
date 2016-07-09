@@ -2,12 +2,12 @@ __author__ = 'Bohdan Mushkevych'
 
 import copy
 
+from flow.flow_constants import STEP_NAME_START, STEP_NAME_FINISH
 from flow.core.abstract_action import AbstractAction
 from flow.core.flow_graph import FlowGraph
 from flow.core.flow_graph_node import FlowGraphNode
 from flow.db.model import flow
-from flow.flow_constants import STEP_NAME_START, STEP_NAME_FINISH
-from flow.mx.terminal_graph_node import start_graph_node, finish_graph_node
+from flow.mx.terminal_graph_node import TerminalGraphNode
 from flow.mx.rest_model import *
 
 
@@ -57,17 +57,17 @@ def create_rest_flow(flow_graph_obj):
         steps[step_name] = create_rest_step(graph_node_obj.step_entry)
 
     graph = dict()
-    graph[STEP_NAME_START] = copy.deepcopy(start_graph_node)
-    graph[STEP_NAME_FINISH] = copy.deepcopy(finish_graph_node)
+    graph[STEP_NAME_START] = TerminalGraphNode(STEP_NAME_START)
+    graph[STEP_NAME_FINISH] = TerminalGraphNode(STEP_NAME_FINISH)
 
     for step_name, rest_step_obj in steps.items():
         graph[step_name] = copy.deepcopy(rest_step_obj)
         if not graph[step_name].previous_nodes:
-            graph[step_name].previous_nodes = [STEP_NAME_START]
+            graph[step_name].previous_nodes.append(STEP_NAME_START)
             graph[STEP_NAME_START].next_nodes.append(step_name)
 
         if not graph[step_name].next_nodes:
-            graph[step_name].next_nodes = [STEP_NAME_FINISH]
+            graph[step_name].next_nodes.append(STEP_NAME_FINISH)
             graph[STEP_NAME_FINISH].previous_nodes.append(step_name)
 
     rest_flow = RestFlow(

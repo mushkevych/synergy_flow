@@ -1,4 +1,71 @@
-function render_flow(steps, element) {
+// function applies given "action" to the job record identified by "process_name+timeperiod"
+function process_job(action, tree_name, process_name, timeperiod) {
+    /**
+     * function do_the_call performs communication with the server and parses response
+     */
+    function do_the_call() {
+        var params = {'process_name': process_name, 'timeperiod': timeperiod};
+        $.get('/' + action + '/', params, function (response) {
+            if (response !== undefined && response !== null) {
+                Alertify.log("response: " + response.responseText, null, 1500, null);
+            }
+            Alertify.log("tree view is being refreshed", null, 1500, null);
+
+            var tree_refresh_button = document.getElementById('refresh_button_' + tree_name);
+            tree_refresh_button.click();
+        });
+    }
+
+    var msg = 'You are about to ' + action + ' ' + timeperiod + ' for ' + process_name;
+    Alertify.confirm(msg, function (e) {
+        if (!e) {
+            return;
+        }
+        do_the_call();
+    });
+}
+
+
+function render_flow_header(element, mx_flow, process_name) {
+    var uow_button = $('<button class="action_button"><i class="fa fa-file-code-o"></i>&nbsp;Uow</button>').click(function (e) {
+        var params = { action: 'action/get_uow', timeperiod: mx_flow.timeperiod, process_name: process_name };
+        var viewer_url = '/viewer/object/?' + $.param(params);
+        window.open(viewer_url, 'Object Viewer', 'width=450,height=400,screenX=400,screenY=200,scrollbars=1');
+    });
+    var event_log_button = $('<button class="action_button"><i class="fa fa-th-list"></i>&nbsp;Event&nbsp;Log</button>').click(function (e) {
+        var params = { action: 'action/get_event_log', timeperiod: mx_flow.timeperiod, process_name: process_name };
+        var viewer_url = '/viewer/object/?' + $.param(params);
+        window.open(viewer_url, 'Object Viewer', 'width=800,height=480,screenX=400,screenY=200,scrollbars=1');
+    });
+    var recover_button = $('<button class="action_button"><i class="fa fa-share-square-o"></i>&nbsp;Recover</button>').click(function (e) {
+        process_job('flow/action/recover', null, process_name, mx_flow.timeperiod, mx_flow.flow_name);
+    });
+    var reprocess_button = $('<button class="action_button"><i class="fa fa-repeat"></i>&nbsp;Reprocess</button>').click(function (e) {
+        process_job('action/reprocess', null, process_name, mx_flow.timeperiod, mx_flow.flow_name);
+    });
+    var uow_log_button = $('<button class="action_button"><i class="fa fa-file-text-o"></i>&nbsp;Uow&nbsp;Log</button>').click(function (e) {
+        var params = { action: 'action/get_uow_log', timeperiod: mx_flow.timeperiod, process_name: process_name };
+        var viewer_url = '/viewer/object/?' + $.param(params);
+        window.open(viewer_url, 'Object Viewer', 'width=800,height=480,screenX=400,screenY=200,scrollbars=1');
+    });
+
+    // try element.$el
+    element.append($('<div class="tile_component"></div>').append('<ul class="fa-ul">'
+        + '<li title="Process Name"><i class="fa-li fa fa-terminal"></i>' + process_name + '</li>'
+        + '<li title="Workflow Name"><i class="fa-li fa fa-random"></i>' + mx_flow.flow_name + '</li>'
+        + '<li title="Timeperiod"><i class="fa-li fa fa-clock-o"></i>' + mx_flow.timeperiod + '</li>'
+        + '<li title="State"><i class="fa-li fa fa-flag-o"></i>' + mx_flow.state + '</li>'
+        + '</ul>'));
+    element.append('<div class="clear"></div>');
+    element.append($('<div></div>').append(uow_button)
+                                   .append(event_log_button)
+                                   .append(uow_log_button)
+                                   .append(recover_button)
+                                   .append(reprocess_button));
+}
+
+
+function render_flow_graph(steps, element) {
 
     // Set up zoom support
     var svg = d3.select("svg"),
@@ -82,7 +149,7 @@ function render_flow(steps, element) {
     }
 
     /*
-     * mock functions go here
+     * DEAD ELEPHANT mock functions go here
      */
 
     draw();

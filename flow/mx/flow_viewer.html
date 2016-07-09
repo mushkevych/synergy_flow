@@ -17,41 +17,8 @@
 
 <body>
 
-<form style="text-align: left">
-    <input type="button" class="action_button fa-input" value="&#xf04e;&nbsp;Recover" onclick="window.close()"/>
-</form>
-
-<div class="tile_component">
-    <ul class="fa-ul">
-        <li title="Process Name"><i class="fa-li fa fa-terminal"></i> {{ flow_details.process_name }} </li>
-        <li title="Workflow Name"><i class="fa-li fa fa-random"></i> {{ flow_details.flow_name }} </li>
-        <li title="Timeperiod"><i class="fa-li fa fa-clock-o"></i> {{ flow_details.timeperiod }} </li>
-        <li title="State"><i class="fa-li fa fa-flag-o"></i> {{ flow_details.state }} </li>
-    </ul>
-
-    {% set url = 'action=action/get_uow_log' + '&process_name=' + flow_details.process_name + '&timeperiod=' + flow_details.timeperiod %}
-    <form method="GET" onsubmit="window.open('/viewer/object/?{{ url }}','Uow Log',
-         'toolbar=no,scrollbars=yes,resizable=yes,top=250,left=250,width=800,height=480'); return false;">
-        <input type="submit" class="action_button fa-input" title="Uow Log" value="&#xf0f6;&nbsp;Uow&nbsp;Log"/>
-    </form>
-
-    <form onsubmit="process_job('action/reprocess', null, {{ flow_details.process_name }}, {{ flow_details.timeperiod }});">
-        <input type="hidden" name="process_name" value="{{ flow_details.process_name }}" />
-        <input type="hidden" name="timeperiod" value="{{ flow_details.timeperiod }}" />
-        <input type="submit" title="Reprocess" class="action_button fa-repeat" value="&#xf01e;&nbsp;Reprocess"/>
-    </form>
-    <form onsubmit="process_job('flow/action/recover', null, {{ flow_details.process_name }}, {{ flow_details.timeperiod }});">
-        <input type="hidden" name="process_name" value="{{ flow_details.process_name }}" />
-        <input type="hidden" name="flow_name" value="{{ flow_details.flow_name }}" />
-        <input type="hidden" name="timeperiod" value="{{ flow_details.timeperiod }}" />
-        <input type="submit" title="Recover" class="action_button fa-input" value="&#xf04e;&nbsp;Recover"/>
-    </form>
+<div id="flow_header" class="tile_component">
 </div>
-
-<!--<form style="text-align: left">-->
-    <!--<input type="button" class="action_button fa-input" value="&#xf051;&nbsp;Run&nbsp;One" onclick="window.close()"/>-->
-<!--</form>-->
-
 
 <div class="live map">
     <svg>
@@ -65,9 +32,11 @@
 
 <script type="text/javascript">
     var mx_flow = {{ flow_details|jsonify|safe }};
+    var process_name = {{ process_name|safe }};
 
     $(document).ready(function () {
-        render_flow(mx_flow.graph, d3.select("#flow"));
+        render_flow_header(document.getElementById("flow_header"), mx_flow, process_name);
+        render_flow_graph(mx_flow.graph, d3.select("#flow"));
     });
 </script>
 
