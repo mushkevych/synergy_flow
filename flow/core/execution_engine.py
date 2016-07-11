@@ -46,10 +46,10 @@ class ExecutionEngine(object):
     def __init__(self, logger, flow_name):
         assert isinstance(flow_name, FlowGraph)
         self.logger = logger
-        if flow_name not in flows:
-            raise ValueError('flow {0} not registered among flows: {1}'.format(flow_name, flows))
+        if flow_name not in flows.flows:
+            raise ValueError('flow {0} not registered among flows: {1}'.format(flow_name, list(flows.flows.keys())))
 
-        self.flow_graph_obj = copy.deepcopy(flows[flow_name])
+        self.flow_graph_obj = copy.deepcopy(flows.flows[flow_name])
 
         # list of execution clusters (such as AWS EMR) available for processing
         self.execution_clusters = list()

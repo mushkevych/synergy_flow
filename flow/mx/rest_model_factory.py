@@ -54,11 +54,11 @@ def create_rest_flow(flow_graph_obj):
 
     steps = dict()
     for step_name, graph_node_obj in flow_graph_obj._dict.items():
-        steps[step_name] = create_rest_step(graph_node_obj.step_entry)
+        steps[step_name] = create_rest_step(graph_node_obj)
 
     graph = dict()
-    graph[STEP_NAME_START] = TerminalGraphNode(STEP_NAME_START)
-    graph[STEP_NAME_FINISH] = TerminalGraphNode(STEP_NAME_FINISH)
+    graph[STEP_NAME_START] = create_rest_step(TerminalGraphNode(STEP_NAME_START))
+    graph[STEP_NAME_FINISH] = create_rest_step(TerminalGraphNode(STEP_NAME_FINISH))
 
     for step_name, rest_step_obj in steps.items():
         graph[step_name] = copy.deepcopy(rest_step_obj)
