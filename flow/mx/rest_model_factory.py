@@ -27,9 +27,9 @@ def create_rest_step(graph_node_obj):
         is_pre_completed=graph_node_obj.step_executor.is_pre_completed,
         is_main_completed=graph_node_obj.step_executor.is_main_completed,
         is_post_completed=graph_node_obj.step_executor.is_post_completed,
-        pre_actions=[create_rest_action(x) for x in graph_node_obj.step_executor.pre_actions],
+        pre_actions=[create_rest_action(x).document for x in graph_node_obj.step_executor.pre_actions],
         main_action=create_rest_action(graph_node_obj.step_executor.main_action),
-        post_actions=[create_rest_action(x) for x in graph_node_obj.step_executor.post_actions],
+        post_actions=[create_rest_action(x).document for x in graph_node_obj.step_executor.post_actions],
         previous_nodes=[x.step_name for x in graph_node_obj._prev],
         next_nodes=[x.step_name for x in graph_node_obj._next]
     )
@@ -54,25 +54,26 @@ def create_rest_flow(flow_graph_obj):
 
     steps = dict()
     for step_name, graph_node_obj in flow_graph_obj._dict.items():
-        steps[step_name] = create_rest_step(graph_node_obj)
+        rest_model = create_rest_step(graph_node_obj)
+        steps[step_name] = rest_model.document
 
     graph = dict()
-    graph[STEP_NAME_START] = create_rest_step(TerminalGraphNode(STEP_NAME_START))
-    graph[STEP_NAME_FINISH] = create_rest_step(TerminalGraphNode(STEP_NAME_FINISH))
+    graph[STEP_NAME_START] = create_rest_step(TerminalGraphNode(STEP_NAME_START)).document
+    graph[STEP_NAME_FINISH] = create_rest_step(TerminalGraphNode(STEP_NAME_FINISH)).document
 
-    for step_name, rest_step_obj in steps.items():
-        graph[step_name] = copy.deepcopy(rest_step_obj)
-        if not graph[step_name].previous_nodes:
-            graph[step_name].previous_nodes.append(STEP_NAME_START)
-            graph[STEP_NAME_START].next_nodes.append(step_name)
+    for step_name, rest_step_doc in steps.items():
+        graph[step_name] = copy.deepcopy(rest_step_doc)
+        if not graph[step_name].get(FIELD_PREVIOUS_NODES):
+            graph[step_name][FIELD_PREVIOUS_NODES] = [STEP_NAME_START]
+            graph[STEP_NAME_START][FIELD_NEXT_NODES].append(step_name)
 
-        if not graph[step_name].next_nodes:
-            graph[step_name].next_nodes.append(STEP_NAME_FINISH)
-            graph[STEP_NAME_FINISH].previous_nodes.append(step_name)
+        if not graph[step_name].get(FIELD_NEXT_NODES):
+            graph[step_name][FIELD_NEXT_NODES] = [STEP_NAME_FINISH]
+            graph[STEP_NAME_FINISH][FIELD_PREVIOUS_NODES].append(step_name)
 
     rest_flow = RestFlow(
         flow_name=flow_graph_obj.flow_name,
-        timeperiod='NA' if not flow_entry else flow_entry.timeperiod,
+        timeperiod='NA' if not flow_graph_obj.context.timeperiod else flow_graph_obj.context.timeperiod,
         state=flow.STATE_EMBRYO if not flow_entry else flow_entry.state,
         steps=steps,
         graph=graph

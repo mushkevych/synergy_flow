@@ -32,10 +32,10 @@
 
 <script type="text/javascript">
     var mx_flow = {{ flow_details|jsonify|safe }};
-    var process_name = {{ process_name|safe }};
+    var process_name = "{{ process_name|safe }}";
 
     $(document).ready(function () {
-        render_flow_header(document.getElementById("flow_header"), mx_flow, process_name);
+        render_flow_header($("#flow_header"), mx_flow, process_name);
         render_flow_graph(mx_flow.graph, d3.select("#flow"));
     });
 </script>
