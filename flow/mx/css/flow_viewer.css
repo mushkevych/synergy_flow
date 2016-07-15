@@ -1,35 +1,3 @@
-@-webkit-keyframes flash {
-    0%, 50%, 100% {
-        opacity: 1;
-    }
-    25%, 75% {
-        opacity: 0.2;
-    }
-}
-
-@keyframes flash {
-    0%, 50%, 100% {
-        opacity: 1;
-    }
-    25%, 75% {
-        opacity: 0.2;
-    }
-}
-
-.warn {
-    -webkit-animation-duration: 5s;
-    animation-duration: 5s;
-    -webkit-animation-fill-mode: both;
-    animation-fill-mode: both;
-    -webkit-animation-iteration-count: 1;
-    animation-iteration-count: 1;
-}
-
-.live.map {
-    width: 100%;
-    height: 100%;
-}
-
 svg {
     width: 100%;
     height: 100%;
@@ -38,79 +6,95 @@ svg {
     overflow: hidden;
 }
 
+.live.map {
+    width: 100%;
+    height: 100%;
+}
+
 .live.map text {
     font-weight: 300;
     font-size: 14px;
 }
 
 .live.map .node rect {
-    stroke-width: 1.5px;
+    stroke-width: 2px;
     stroke: #bbb;
     fill: #666;
 }
 
-.live.map .status {
+.live.map .actions_status {
     height: 100%;
     width: 15px;
     display: block;
     float: left;
-    border-top-left-radius: 5px;
-    border-bottom-left-radius: 5px;
-    margin-right: 4px;
-}
-
-.live.map .running .status {
-    background-color: #7f7;
-}
-
-.live.map .running.warn .status {
-    background-color: #ffed68;
-}
-
-.live.map .stopped .status {
-    background-color: #f77;
-}
-
-.live.map .warn .queue {
-    color: #f77;
-}
-
-.warn {
-    -webkit-animation-name: flash;
-    animation-name: flash;
-}
-
-.live.map .consumers {
     margin-right: 2px;
 }
 
-.live.map .consumers,
-.live.map .name {
-    margin-top: 4px;
+.live.map .pre_actions {
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
 }
 
-.live.map .consumers:after {
-    content: "x";
+.live.map .complete {
+    background-color: #7f7;
 }
 
-.live.map .queue {
-    display: block;
-    float: left;
-    width: 130px;
-    height: 20px;
-    font-size: 12px;
-    margin-top: 2px;
+.live.map .pending {
+    background-color: #ffed68;
+}
+
+.live.map .state_embryo {
+    background-color: #D5F5FF;
+}
+
+.live.map .state_embryo div {
+    color: #000000;
+}
+
+.live.map .state_in_progress {
+    background-color: #C3FDB8;
+}
+
+.live.map .state_in_progress div {
+    color: #000000;
+}
+
+.live.map .state_processed {
+    background-color: #15C200;
+}
+
+.live.map .state_processed div {
+    color: #000000;
+}
+
+.live.map .state_canceled {
+    background-color: #f77;
+}
+
+.live.map .state_canceled div {
+    color: #000000;
+}
+
+.live.map .state_invalid {
+    background-color: #FF4500;
+}
+
+.live.map .state_invalid div {
+    color: #000000;
+}
+
+.live.map .state_noop {
+    background-color: #FFFFAA;
+}
+
+.live.map .state_noop div {
+    color: #000000;
 }
 
 .live.map .node g div {
     width: 200px;
     height: 40px;
     color: #fff;
-}
-
-.live.map .node g div span.consumers {
-    display: inline-block;
-    width: 20px;
 }
 
 .live.map .edgeLabel text {
@@ -120,6 +104,11 @@ svg {
 
 .live.map .edgePath path {
     stroke: #999;
-    stroke-width: 1.5px;
+    stroke-width: 2px;
     fill: #999;
+}
+
+.action_mini_button {
+    display: inline-block;
+    width: 25px;
 }

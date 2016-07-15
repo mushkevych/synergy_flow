@@ -56,12 +56,12 @@ function render_flow_header(element, mx_flow, process_name) {
         + '<li title="Timeperiod"><i class="fa-li fa fa-clock-o"></i>' + mx_flow.timeperiod + '</li>'
         + '<li title="State"><i class="fa-li fa fa-flag-o"></i>' + mx_flow.state + '</li>'
         + '</ul>'));
-    element.append('<div class="clear"></div>');
     element.append($('<div></div>').append(uow_button)
-                                   .append(event_log_button)
                                    .append(uow_log_button)
-                                   .append(recover_button)
+                                   .append(event_log_button));
+    element.append($('<div></div>').append(recover_button)
                                    .append(reprocess_button));
+    element.append('<div class="clear"></div>');
 }
 
 
@@ -92,19 +92,17 @@ function render_flow_graph(steps, element) {
     function draw(isUpdate) {
         for (var step_name in steps) {
             var step = steps[step_name];
-            var className = step.consumers ? "running" : "stopped";
-            if (step.count > 10000) {
-                className += " warn";
-            }
+
+            var css_pre_completed = step.is_pre_completed ? "complete" : "pending";
+            var css_main_completed = step.is_main_completed ? "complete" : "pending";
+            var css_post_completed = step.is_post_completed ? "complete" : "pending";
 
             var html = "<div>";
-            html += "<span class=status>" + step.state + "</span>";
-            html += "<span class=consumers>" + step.consumers + "</span>";
+            html += "<span class=" + step.state + "></span>";
+            html += "<span class=\"pre_actions actions_status " + css_pre_completed + "\"></span>";
+            html += "<span class=\"actions_status " + css_main_completed + "\"></span>";
+            html += "<span class=\"actions_status " + css_post_completed + "\"></span>";
             html += "<span class=name>" + step_name + "</span>";
-            html += "<span class=is_pre_completed>" + step.is_pre_completed + "</span>";
-            html += "<span class=is_main_completed>" + step.is_main_completed + "</span>";
-            html += "<span class=is_post_completed>" + step.is_post_completed + "</span>";
-            html += "<span class=queue><span class=counter>" + step.count + "</span></span>";
             html += "</div>";
 
             g.setNode(step_name, {
@@ -113,7 +111,7 @@ function render_flow_graph(steps, element) {
                 rx: 5,
                 ry: 5,
                 padding: 0,
-                class: className
+                class: step.state
             });
 
             if (step.previous_nodes) {
@@ -121,13 +119,13 @@ function render_flow_graph(steps, element) {
                     var arrayLength = step.previous_nodes.length;
                     for (var i = 0; i < arrayLength; i++) {
                         g.setEdge(step.previous_nodes[i], step_name, {
-                            label: step.inputThroughput + "/s",
+                            label: step.step_name + "/s",
                             width: 40
                         });
                     }
                 } else {
                     g.setEdge(step.previous_nodes, step_name, {
-                        label: step.inputThroughput + "/s",
+                        label: step.step_name + "/s",
                         width: 40
                     });
                 }
@@ -137,8 +135,8 @@ function render_flow_graph(steps, element) {
         inner.call(render, g);
 
         // Zoom and scale to fit
-        var graphWidth = g.graph().width + 80;
-        var graphHeight = g.graph().height + 40;
+        var graphWidth = g.graph().width + 240;
+        var graphHeight = g.graph().height + 160;
         var width = parseInt(svg.style("width").replace(/px/, ""));
         var height = parseInt(svg.style("height").replace(/px/, ""));
         var zoomScale = Math.min(width / graphWidth, height / graphHeight);
@@ -148,35 +146,5 @@ function render_flow_graph(steps, element) {
         zoom.event(isUpdate ? svg.transition().duration(500) : d3.select("svg"));
     }
 
-    /*
-     * DEAD ELEPHANT mock functions go here
-     */
-
     draw();
 }
-
-/*  DEAD ELEPHANT
-
-    // Do some mock queue status updates
-    setInterval(function () {
-        var stoppedWorker1Count = steps["step 3"].count;
-        var stoppedWorker2Count = steps["etl_dim"].count;
-        for (var id in steps) {
-            steps[id].count = Math.ceil(Math.random() * 3);
-            if (steps[id].inputThroughput) steps[id].inputThroughput = Math.ceil(Math.random() * 250);
-        }
-        steps["step 3"].count = stoppedWorker1Count + Math.ceil(Math.random() * 100);
-        steps["etl_dim"].count = stoppedWorker2Count + Math.ceil(Math.random() * 100);
-        draw(true);
-    }, 1000);
-
-    // Do a mock change of worker configuration
-    setInterval(function () {
-        steps["step 2"] = {
-            "consumers": 0,
-            "count": 0,
-            "previous_nodes": "start",
-            "inputThroughput": 50
-        }
-    }, 5000);
-*/
