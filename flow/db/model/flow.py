@@ -4,6 +4,8 @@ from odm.document import BaseDocument
 from odm.fields import StringField, ObjectIdField, DictField, DateTimeField
 
 TIMEPERIOD = 'timeperiod'
+START_TIMEPERIOD = 'start_timeperiod'
+END_TIMEPERIOD = 'end_timeperiod'
 FLOW_NAME = 'flow_name'
 STATE = 'state'
 
@@ -40,6 +42,8 @@ class Flow(BaseDocument):
     db_id = ObjectIdField('_id', null=True)
     flow_name = StringField(FLOW_NAME)
     timeperiod = StringField(TIMEPERIOD)
+    start_timeperiod = StringField(START_TIMEPERIOD)
+    end_timeperiod = StringField(END_TIMEPERIOD)
     state = StringField(STATE, choices=[STATE_EMBRYO, STATE_IN_PROGRESS, STATE_PROCESSED, STATE_NOOP, STATE_INVALID])
 
     created_at = DateTimeField(CREATED_AT)

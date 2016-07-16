@@ -29,6 +29,8 @@ class FlowGraph(ContextDriven):
         # format: {step_name:String -> node:FlowGraphNode}
         self._dict = OrderedDict()
         self.flow_dao = None
+
+        # list of step names, yielded for processing
         self.yielded = list()
 
     def __getitem__(self, key):
@@ -116,6 +118,17 @@ class FlowGraph(ContextDriven):
         # return *self* to allow chained *append*
         return self
 
+    def all_dependant_steps(self, step_name):
+        """
+        :param step_name: name of the step to inspect
+        :return: list of all step names, that are dependent on current step
+        """
+        dependent_on = list()
+        for child_node in self[step_name]._next:
+            dependent_on.append(child_node.step_name)
+            dependent_on.extend(self.all_dependant_steps(child_node.step_name))
+        return dependent_on
+
     def is_step_unblocked(self, step_name):
         """
         :param step_name: name of the step to inspect
@@ -180,7 +193,7 @@ class FlowGraph(ContextDriven):
             assert isinstance(s, Step)
             if s.is_processed:
                 self[s.step_name].step_entry = s
-                self.yielded.append(s)
+                self.yielded.append(s.step_name)
             else:
                 step_dao.remove(s.key)
 

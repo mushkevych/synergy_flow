@@ -93,7 +93,7 @@ svg {
 
 .live.map .node g div {
     width: 200px;
-    height: 40px;
+    height: 70px;
     color: #fff;
 }
 
@@ -111,4 +111,5 @@ svg {
 .action_mini_button {
     display: inline-block;
     width: 25px;
+    padding: 1px;
 }

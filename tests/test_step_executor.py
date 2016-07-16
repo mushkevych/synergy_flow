@@ -10,12 +10,15 @@ from flow.core.step_executor import StepExecutor
 from flow.core.simple_actions import FailureAction, IdentityAction
 
 TEST_PRESET_TIMEPERIOD = '2016060107'
+TEST_START_TIMEPERIOD = '2016060107'
+TEST_END_TIMEPERIOD = '2016060108'
 
 
 class StepExecutorTest(unittest.TestCase):
     def setUp(self):
         flow_name = 'ut_flow_name'
-        self.context = ExecutionContext(flow_name, TEST_PRESET_TIMEPERIOD, settings.settings)
+        self.context = ExecutionContext(flow_name, TEST_PRESET_TIMEPERIOD, TEST_START_TIMEPERIOD, TEST_END_TIMEPERIOD,
+                                        settings.settings)
         self.ephemeral_cluster = EphemeralCluster('unit test cluster', self.context)
 
     def tearDown(self):

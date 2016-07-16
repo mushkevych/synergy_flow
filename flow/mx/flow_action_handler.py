@@ -1,7 +1,11 @@
 __author__ = 'Bohdan Mushkevych'
 
+from datetime import datetime
+
 from synergy.conf import settings, context
 from synergy.mx.base_request_handler import BaseRequestHandler, valid_action_request
+from synergy.db.model import unit_of_work
+from synergy.db.model.unit_of_work import UnitOfWork
 from werkzeug.utils import cached_property
 
 from flow.conf import flows
@@ -37,11 +41,13 @@ class FlowActionHandler(BaseRequestHandler):
     @property
     def flow_graph_obj(self):
         _flow_graph_obj = copy.deepcopy(flows.flows[self.flow_name])
-        _flow_graph_obj.context = ExecutionContext(self.flow_name, self.timeperiod, settings.settings)
+        _flow_graph_obj.context = ExecutionContext(self.flow_name, self.timeperiod, None, None, settings.settings)
 
         try:
             flow_entry = self.flow_dao.get_one([self.flow_name, self.timeperiod])
             _flow_graph_obj.context.flow_entry = flow_entry
+            _flow_graph_obj.context.start_timeperiod = flow_entry.start_timeperiod
+            _flow_graph_obj.context.end_timeperiod = flow_entry.end_timeperiod
 
             steps = self.step_dao.get_all_by_flow_id(flow_entry.db_id)
             for s in steps:
@@ -69,8 +75,32 @@ class FlowActionHandler(BaseRequestHandler):
         rest_model = create_rest_step(graph_node_obj)
         return rest_model.document
 
+    def _submit_mq_request(self, process_name, step_name, run_mode):
+        uow = UnitOfWork()
+        uow.process_name = process_name
+        uow.timeperiod = self.flow_graph_obj.timeperiod
+        uow.start_timeperiod = self.flow_graph_obj.start_timeperiod
+        uow.end_timeperiod = self.flow_graph_obj.end_timeperiod
+        uow.submitted_at = datetime.utcnow()
+        uow.source = context.process_context[process_name].source
+        uow.sink = context.process_context[process_name].sink
+        uow.state = unit_of_work.STATE_REQUESTED
+        uow.unit_of_work_type = unit_of_work.TYPE_MANAGED
+        uow.number_of_retries = 0
+        uow.arguments = context.process_context[process_name].arguments
+        uow.db_id = self.uow_dao.insert(uow)
+
+        msg = 'SynergyCreated: UOW {0} for {1}@{2}.'.format(uow.db_id, process_name, start_timeperiod)
+        self._log_message(INFO, process_name, start_timeperiod, msg)
+        return uow
+
     @valid_action_request
     def action_recover(self):
+        """
+        - create UOW with appropriate run mode
+        - locate appropriate Queue for given process
+        - submit UOW
+        """
         pass
 
     @valid_action_request

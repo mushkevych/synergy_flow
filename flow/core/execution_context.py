@@ -50,10 +50,22 @@ class ExecutionContext(object):
         - timeperiod boundaries of the run
         - environment-specific settings, where the flow is run
     """
-    def __init__(self, flow_name, timeperiod, settings, number_of_clusters=2, flow_entry=None):
+    def __init__(self, flow_name, timeperiod, start_timeperiod, end_timeperiod,
+                 settings, number_of_clusters=2, flow_entry=None):
+        """
+        :param flow_name: name of the flow
+        :param timeperiod: job's timeperiod
+        :param start_timeperiod: lower inclusive boundary of time-window to process
+        :param end_timeperiod: upper exclusive boundary of time-window to process
+        :param settings: key-value dictionary of environment-specific settings
+        :param number_of_clusters: number of clusters to spawn
+        :param flow_entry: data model (db record) representing flow state
+        """
         assert isinstance(settings, dict)
 
         self.flow_name = flow_name
+        self.start_timeperiod = start_timeperiod
+        self.end_timeperiod = end_timeperiod
         self.timeperiod = timeperiod
         self.settings = settings
         self.number_of_clusters = number_of_clusters

@@ -16,12 +16,15 @@ from flow.core.execution_context import ExecutionContext
 from flow.core.ephemeral_cluster import EphemeralCluster
 
 TEST_PRESET_TIMEPERIOD = '2016060107'
+TEST_START_TIMEPERIOD = '2016060107'
+TEST_END_TIMEPERIOD = '2016060108'
 
 
 class FlowGraphTest(unittest.TestCase):
     def setUp(self):
         flow_name = 'ut_flow_name'
-        self.context = ExecutionContext(flow_name, TEST_PRESET_TIMEPERIOD, settings.settings)
+        self.context = ExecutionContext(flow_name, TEST_PRESET_TIMEPERIOD, TEST_START_TIMEPERIOD, TEST_END_TIMEPERIOD,
+                                        settings.settings)
 
     def tearDown(self):
         pass
@@ -61,7 +64,8 @@ class FlowGraphTest(unittest.TestCase):
             step.step_executor.is_post_completed = True
             step.mark_success()
 
-        self.assertListEqual(steps_order, ['step_1', 'step_2', 'step_3', 'step_4', 'step_5'])
+        self.assertListEqual(steps_order, ['step_1', 'step_2', 'step_3', 'step_4',
+                                           'step_5', 'step_6', 'step_7', 'step_8'])
 
     @mock.patch('flow.core.flow_graph.FlowDao')
     @mock.patch('flow.core.flow_graph.StepDao')
@@ -82,6 +86,16 @@ class FlowGraphTest(unittest.TestCase):
             step.run(ephemeral_cluster)
 
         self.assertListEqual(steps_order, ['step_1', 'step_2', 'step_3', 'step_4'])
+
+    def test_all_dependant_steps(self):
+        """ method verifies if iterator interrupted by failed step """
+        the_flow = flows.flows[ut_flows.UNIT_TEST_FLOW_SIMPLE]
+        self.assertSetEqual(set(the_flow.all_dependant_steps('step_1')),
+                            {'step_2', 'step_3', 'step_4', 'step_5', 'step_6', 'step_7', 'step_8'})
+        self.assertSetEqual(set(the_flow.all_dependant_steps('step_2')),
+                            {'step_3', 'step_4', 'step_5', 'step_6', 'step_7', 'step_8'})
+        self.assertSetEqual(set(the_flow.all_dependant_steps('step_3')), {'step_5'})
+        self.assertSetEqual(set(the_flow.all_dependant_steps('step_6')), {'step_7', 'step_8'})
 
 
 if __name__ == '__main__':

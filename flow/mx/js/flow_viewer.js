@@ -1,31 +1,3 @@
-// function applies given "action" to the job record identified by "process_name+timeperiod"
-function process_job(action, tree_name, process_name, timeperiod) {
-    /**
-     * function do_the_call performs communication with the server and parses response
-     */
-    function do_the_call() {
-        var params = {'process_name': process_name, 'timeperiod': timeperiod};
-        $.get('/' + action + '/', params, function (response) {
-            if (response !== undefined && response !== null) {
-                Alertify.log("response: " + response.responseText, null, 1500, null);
-            }
-            Alertify.log("tree view is being refreshed", null, 1500, null);
-
-            var tree_refresh_button = document.getElementById('refresh_button_' + tree_name);
-            tree_refresh_button.click();
-        });
-    }
-
-    var msg = 'You are about to ' + action + ' ' + timeperiod + ' for ' + process_name;
-    Alertify.confirm(msg, function (e) {
-        if (!e) {
-            return;
-        }
-        do_the_call();
-    });
-}
-
-
 function render_flow_header(element, mx_flow, process_name) {
     var uow_button = $('<button class="action_button"><i class="fa fa-file-code-o"></i>&nbsp;Uow</button>').click(function (e) {
         var params = { action: 'action/get_uow', timeperiod: mx_flow.timeperiod, process_name: process_name };
@@ -38,10 +10,10 @@ function render_flow_header(element, mx_flow, process_name) {
         window.open(viewer_url, 'Object Viewer', 'width=800,height=480,screenX=400,screenY=200,scrollbars=1');
     });
     var recover_button = $('<button class="action_button"><i class="fa fa-share-square-o"></i>&nbsp;Recover</button>').click(function (e) {
-        process_job('flow/action/recover', null, process_name, mx_flow.timeperiod, mx_flow.flow_name);
+        process_job('flow/action/recover', null, process_name, mx_flow.timeperiod, mx_flow.flow_name, null);
     });
     var reprocess_button = $('<button class="action_button"><i class="fa fa-repeat"></i>&nbsp;Reprocess</button>').click(function (e) {
-        process_job('action/reprocess', null, process_name, mx_flow.timeperiod, mx_flow.flow_name);
+        process_job('action/reprocess', null, process_name, mx_flow.timeperiod, mx_flow.flow_name, null);
     });
     var uow_log_button = $('<button class="action_button"><i class="fa fa-file-text-o"></i>&nbsp;Uow&nbsp;Log</button>').click(function (e) {
         var params = { action: 'action/get_uow_log', timeperiod: mx_flow.timeperiod, process_name: process_name };
@@ -68,11 +40,11 @@ function render_flow_header(element, mx_flow, process_name) {
 function render_flow_graph(steps, element) {
 
     // Set up zoom support
-    var svg = d3.select("svg"),
-        inner = svg.select("g"),
-        zoom = d3.behavior.zoom().on("zoom", function () {
-            inner.attr("transform", "translate(" + d3.event.translate + ")" +
-                "scale(" + d3.event.scale + ")");
+    var svg = d3.select('svg'),
+        inner = svg.select('g'),
+        zoom = d3.behavior.zoom().on('zoom', function () {
+            inner.attr('transform', 'translate(' + d3.event.translate + ")" +
+                'scale(' + d3.event.scale + ')');
         });
 
     svg.call(zoom);
@@ -90,6 +62,7 @@ function render_flow_graph(steps, element) {
     });
 
     function draw(isUpdate) {
+        var step_index = 0;
         for (var step_name in steps) {
             var step = steps[step_name];
 
@@ -97,7 +70,9 @@ function render_flow_graph(steps, element) {
             var css_main_completed = step.is_main_completed ? "complete" : "pending";
             var css_post_completed = step.is_post_completed ? "complete" : "pending";
 
-            var html = "<div>";
+            var html = "<div id=step_" + step_index + ">";
+            step_index += 1;
+
             html += "<span class=" + step.state + "></span>";
             html += "<span class=\"pre_actions actions_status " + css_pre_completed + "\"></span>";
             html += "<span class=\"actions_status " + css_main_completed + "\"></span>";
@@ -132,7 +107,32 @@ function render_flow_graph(steps, element) {
             }
         }
 
+        // renderer draws the final graph
         inner.call(render, g);
+
+        // now that the graph nodes are rendered, add action buttons to them
+        step_index = 0;
+        for (var step_name in steps) {
+            if (step_name == "start" || step_name == "finish") {
+                continue;
+            }
+
+            var step_log = $('<button class="action_mini_button" title="Get step log"><i class="fa fa-file-code-o"></i></button>').click(function (e) {
+                process_job('flow/action/get_step_log', null, process_name, mx_flow.timeperiod, mx_flow.flow_name, step_name);
+            });
+            var run_one = $('<button class="action_mini_button" title="Rerun this step only"><i class="fa fa-play-circle-o"></i></button>').click(function (e) {
+                process_job('flow/action/run_one', null, process_name, mx_flow.timeperiod, mx_flow.flow_name, step_name);
+            });
+            var run_from = $('<button class="action_mini_button" title="Rerun flow from this step"><i class="fa fa-forward"></i></button>').click(function (e) {
+                process_job('flow/action/run_from', null, process_name, mx_flow.timeperiod, mx_flow.flow_name, step_name);
+            });
+            var details = $('<button class="action_mini_button" title="Step details"><i class="fa fa-ellipsis-h"></i></button>').click(function (e) {
+                alert('details form TBD');
+            });
+
+            $("#step_" + step_index).append(step_log).append(run_one).append(run_from).append(details);
+            step_index += 1;
+        }
 
         // Zoom and scale to fit
         var graphWidth = g.graph().width + 240;

@@ -14,12 +14,15 @@ from flow.core.execution_context import ExecutionContext
 from flow.core.ephemeral_cluster import EphemeralCluster
 
 TEST_PRESET_TIMEPERIOD = '2016060107'
+TEST_START_TIMEPERIOD = '2016060107'
+TEST_END_TIMEPERIOD = '2016060108'
 
 
 class EphemeralClusterTest(unittest.TestCase):
     def setUp(self):
         flow_name = 'ut_flow_name'
-        self.context = ExecutionContext(flow_name, TEST_PRESET_TIMEPERIOD, settings.settings)
+        self.context = ExecutionContext(flow_name, TEST_PRESET_TIMEPERIOD, TEST_START_TIMEPERIOD, TEST_END_TIMEPERIOD,
+                                        settings.settings)
         self.ephemeral_cluster = EphemeralCluster('unit test cluster', self.context)
 
     def tearDown(self):

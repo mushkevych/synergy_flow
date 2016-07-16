@@ -23,10 +23,11 @@ class FlowDriver(AbstractUowAwareWorker):
             self.logger.info('starting Flow: {0} {{'.format(flow_name))
             execution_engine = ExecutionEngine(self.logger, flow_name)
 
-            context = ExecutionContext(flow_name, uow.timeperiod, settings.settings)
+            context = ExecutionContext(flow_name, uow.timeperiod, uow.start_timeperiod, uow.end_timeperiod,
+                                       settings.settings)
             if run_mode == RUN_MODE_RECOVERY:
                 execution_engine.recover(context)
-            elif run_mode == RUN_MODE_ONE_STEP:
+            elif run_mode == RUN_MODE_RUN_ONE:
                 step_name = uow.arguments.get(ARGUMENT_STEP_NAME)
                 execution_engine.run_one(context, step_name)
             elif run_mode == RUN_MODE_RUN_FROM:
