@@ -22,7 +22,7 @@ svg {
     fill: #666;
 }
 
-.live.map .actions_status {
+.live.map .action_status {
     height: 100%;
     width: 15px;
     display: block;
@@ -33,62 +33,6 @@ svg {
 .live.map .pre_actions {
     border-top-left-radius: 5px;
     border-bottom-left-radius: 5px;
-}
-
-.live.map .complete {
-    background-color: #7f7;
-}
-
-.live.map .pending {
-    background-color: #ffed68;
-}
-
-.live.map .state_embryo {
-    background-color: #D5F5FF;
-}
-
-.live.map .state_embryo div {
-    color: #000000;
-}
-
-.live.map .state_in_progress {
-    background-color: #C3FDB8;
-}
-
-.live.map .state_in_progress div {
-    color: #000000;
-}
-
-.live.map .state_processed {
-    background-color: #15C200;
-}
-
-.live.map .state_processed div {
-    color: #000000;
-}
-
-.live.map .state_canceled {
-    background-color: #f77;
-}
-
-.live.map .state_canceled div {
-    color: #000000;
-}
-
-.live.map .state_invalid {
-    background-color: #FF4500;
-}
-
-.live.map .state_invalid div {
-    color: #000000;
-}
-
-.live.map .state_noop {
-    background-color: #FFFFAA;
-}
-
-.live.map .state_noop div {
-    color: #000000;
 }
 
 .live.map .node g div {
@@ -112,4 +56,61 @@ svg {
     display: inline-block;
     width: 25px;
     padding: 1px;
+}
+
+.step_action_statuses {
+    float: left;
+    width: 20%;
+}
+
+.step_details {
+    float: left;
+    width: 80%;
+}
+
+.step_title {
+    position: absolute;
+    z-index: 1;
+}
+
+.step_duration {
+    position: absolute;
+    z-index: 2;
+}
+
+.step_action_buttons {
+    position: absolute;
+    z-index: 3;
+}
+
+.action_complete {
+    background-color: #7f7;
+}
+
+.action_pending {
+    background-color: #747cff;
+}
+
+.state_embryo {
+    background-color: #D5F5FF;
+}
+
+.state_in_progress {
+    background-color: #C3FDB8;
+}
+
+.state_processed {
+    background-color: #15C200;
+}
+
+.state_canceled {
+    background-color: #f77;
+}
+
+.state_invalid {
+    background-color: #FF4500;
+}
+
+.state_noop {
+    background-color: #FFFFAA;
 }

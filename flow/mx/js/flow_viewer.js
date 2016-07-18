@@ -56,7 +56,7 @@ function render_flow_graph(steps, element) {
     g.setGraph({
         nodesep: 70,
         ranksep: 50,
-        rankdir: "LR",
+        rankdir: 'LR',
         marginx: 20,
         marginy: 20
     });
@@ -66,22 +66,26 @@ function render_flow_graph(steps, element) {
         for (var step_name in steps) {
             var step = steps[step_name];
 
-            var css_pre_completed = step.is_pre_completed ? "complete" : "pending";
-            var css_main_completed = step.is_main_completed ? "complete" : "pending";
-            var css_post_completed = step.is_post_completed ? "complete" : "pending";
+            var css_pre_completed = step.is_pre_completed ? "action_complete" : "action_pending";
+            var css_main_completed = step.is_main_completed ? "action_complete" : "action_pending";
+            var css_post_completed = step.is_post_completed ? "action_complete" : "action_pending";
 
-            var html = "<div id=step_" + step_index + ">";
+            var html = '<div id=step_' + step_index + '>';
+            html += '<div id=step_' + step_index + '_action_status style="step_action_statuses">';
+            html += '<span class="pre_actions action_status "' + css_pre_completed + '"></span>';
+            html += '<span class="action_status "' + css_main_completed + '"></span>';
+            html += '<span class="action_status "' + css_post_completed + '"></span>';
+            html += '</div>';
+            html += '<div style="step_details">';
+            html += '<div id=step_' + step_index + '_title style="step_details step_title"></div>';
+            html += '<div id=step_' + step_index + '_duration style="step_details step_duration"></div>';
+            html += '<div id=step_' + step_index + '_action_buttons style="step_details step_action_buttons"></div>';
+            html += '</div>';
+            html += '</div>';
             step_index += 1;
 
-            html += "<span class=" + step.state + "></span>";
-            html += "<span class=\"pre_actions actions_status " + css_pre_completed + "\"></span>";
-            html += "<span class=\"actions_status " + css_main_completed + "\"></span>";
-            html += "<span class=\"actions_status " + css_post_completed + "\"></span>";
-            html += "<span class=name>" + step_name + "</span>";
-            html += "</div>";
-
             g.setNode(step_name, {
-                labelType: "html",
+                labelType: 'html',
                 label: html,
                 rx: 5,
                 ry: 5,
@@ -94,13 +98,13 @@ function render_flow_graph(steps, element) {
                     var arrayLength = step.previous_nodes.length;
                     for (var i = 0; i < arrayLength; i++) {
                         g.setEdge(step.previous_nodes[i], step_name, {
-                            label: step.step_name + "/s",
+                            label: step.step_name + '/s',
                             width: 40
                         });
                     }
                 } else {
                     g.setEdge(step.previous_nodes, step_name, {
-                        label: step.step_name + "/s",
+                        label: step.step_name + '/s',
                         width: 40
                     });
                 }
@@ -110,10 +114,13 @@ function render_flow_graph(steps, element) {
         // renderer draws the final graph
         inner.call(render, g);
 
-        // now that the graph nodes are rendered, add action buttons to them
+        // now that the graph nodes are rendered, add:
+        // - step name
+        // - step duration
+        // - action buttons
         step_index = 0;
-        for (var step_name in steps) {
-            if (step_name == "start" || step_name == "finish") {
+        for (step_name in steps) {
+            if (step_name == 'start' || step_name == 'finish') {
                 continue;
             }
 
@@ -130,20 +137,22 @@ function render_flow_graph(steps, element) {
                 alert('details form TBD');
             });
 
-            $("#step_" + step_index).append(step_log).append(run_one).append(run_from).append(details);
+            $('#step_' + step_index + '_title').append('<span class=text>' + step_name + '</span>');
+            $('#step_' + step_index + '_duration').append('<span class=text>' + 1000 + '</span>');
+            $('#step_' + step_index + '_action_buttons').append(step_log).append(run_one).append(run_from).append(details);
             step_index += 1;
         }
 
         // Zoom and scale to fit
         var graphWidth = g.graph().width + 240;
         var graphHeight = g.graph().height + 160;
-        var width = parseInt(svg.style("width").replace(/px/, ""));
-        var height = parseInt(svg.style("height").replace(/px/, ""));
+        var width = parseInt(svg.style('width').replace(/px/, ''));
+        var height = parseInt(svg.style('height').replace(/px/, ''));
         var zoomScale = Math.min(width / graphWidth, height / graphHeight);
         var translate = [(width / 2) - ((graphWidth * zoomScale) / 2), (height / 2) - ((graphHeight * zoomScale) / 2)];
         zoom.translate(translate);
         zoom.scale(zoomScale);
-        zoom.event(isUpdate ? svg.transition().duration(500) : d3.select("svg"));
+        zoom.event(isUpdate ? svg.transition().duration(500) : d3.select('svg'));
     }
 
     draw();
