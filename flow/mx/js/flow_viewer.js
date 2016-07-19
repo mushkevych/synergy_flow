@@ -70,16 +70,16 @@ function render_flow_graph(steps, element) {
             var css_main_completed = step.is_main_completed ? "action_complete" : "action_pending";
             var css_post_completed = step.is_post_completed ? "action_complete" : "action_pending";
 
-            var html = '<div id=step_' + step_index + '>';
-            html += '<div id=step_' + step_index + '_action_status style="step_action_statuses">';
-            html += '<span class="pre_actions action_status "' + css_pre_completed + '"></span>';
-            html += '<span class="action_status "' + css_main_completed + '"></span>';
-            html += '<span class="action_status "' + css_post_completed + '"></span>';
+            var html = '<div id=step_' + step_index + ' style="position:relative;">';
+            html += '<div id=step_' + step_index + '_action_status class="step_action_statuses">';
+            html += '<span class="pre_actions action_status ' + css_pre_completed + '"></span>';
+            html += '<span class="action_status ' + css_main_completed + '"></span>';
+            html += '<span class="action_status ' + css_post_completed + '"></span>';
             html += '</div>';
-            html += '<div style="step_details">';
-            html += '<div id=step_' + step_index + '_title style="step_details step_title"></div>';
-            html += '<div id=step_' + step_index + '_duration style="step_details step_duration"></div>';
-            html += '<div id=step_' + step_index + '_action_buttons style="step_details step_action_buttons"></div>';
+            html += '<div class="step_details">';
+            html += '<div id=step_' + step_index + '_title class="step_details step_title"></div>';
+            html += '<div id=step_' + step_index + '_duration class="step_details step_duration"></div>';
+            html += '<div id=step_' + step_index + '_action_buttons class="step_details step_action_buttons"></div>';
             html += '</div>';
             html += '</div>';
             step_index += 1;
@@ -120,10 +120,6 @@ function render_flow_graph(steps, element) {
         // - action buttons
         step_index = 0;
         for (step_name in steps) {
-            if (step_name == 'start' || step_name == 'finish') {
-                continue;
-            }
-
             var step_log = $('<button class="action_mini_button" title="Get step log"><i class="fa fa-file-code-o"></i></button>').click(function (e) {
                 process_job('flow/action/get_step_log', null, process_name, mx_flow.timeperiod, mx_flow.flow_name, step_name);
             });
@@ -138,8 +134,10 @@ function render_flow_graph(steps, element) {
             });
 
             $('#step_' + step_index + '_title').append('<span class=text>' + step_name + '</span>');
-            $('#step_' + step_index + '_duration').append('<span class=text>' + 1000 + '</span>');
-            $('#step_' + step_index + '_action_buttons').append(step_log).append(run_one).append(run_from).append(details);
+            if (step_name != 'start' && step_name != 'finish') {
+                $('#step_' + step_index + '_duration').append('<span class=text>' + 1000 + '</span>');
+                $('#step_' + step_index + '_action_buttons').append(step_log).append(run_one).append(run_from).append(details);
+            }
             step_index += 1;
         }
 
