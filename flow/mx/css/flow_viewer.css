@@ -23,8 +23,8 @@ svg {
 }
 
 .live.map .action_status {
-    height: 100%;
     width: 15px;
+    height: 100%;
     display: block;
     float: left;
     margin-right: 2px;
@@ -36,8 +36,8 @@ svg {
 }
 
 .live.map .node g div {
-    width: 200px;
-    height: 70px;
+    width: 220px;
+    height: 75px;
     color: #fff;
 }
 
@@ -52,32 +52,24 @@ svg {
     fill: #999;
 }
 
-.step_action_statuses {
-    float: left;
-    width: 30%!important;
+/* visual container for a single step */
+.step_container {
+    display: inline;
 }
 
-.step_details {
-    float: left;
-    width: 70%!important;
+/* vertical section, hosting either action statuses or step details*/
+.step_section {
+    height: 100%;
+    float:left;
+    display: block;
 }
 
-.step_title {
-    position: absolute;
-    z-index: 1;
-    top: 0px;
+/* style for a single step detail row */
+.step_detail {
 }
 
-.step_duration {
-    position: absolute;
-    z-index: 2;
-    top: 22px;
-}
-
-.step_action_buttons {
-    position: absolute;
-    z-index: 3;
-    top: 44px;
+.right_margin {
+    margin-left: 10px;
 }
 
 .action_complete {
@@ -117,3 +109,52 @@ svg {
     width: 25px;
     padding: 1px;
 }
+
+.new_line {
+    display: table-row;
+}
+
+/*
+http://jsfiddle.net/pyq3C/
+
+#container {
+    width: 400px;
+    height: 75px;
+    background-color: grey;
+}
+.step_container {
+    width: 100%;
+    height: 100%;
+    display: inline;
+}
+.first {
+    height: 100%;
+    background-color: orange;
+    float:left;
+    display: block;
+}
+.second {
+    height: 100%;
+    background-color: green;
+    float:left;
+    display: block;
+}
+.detail {
+    clear: both;
+}
+
+<div id="container">
+    <div class="step_container">
+        <div class="first">
+            <div class="detail">Sample Text 1</div>
+            <div class="detail">Sample Text 2</div>
+            <div class="detail">Sample Text 3</div>
+        </div>
+        <div class="second">
+            <div class="detail">TTTTXXXXXXCCCCC LLLLLLL</div>
+            <div class="detail">TTTTXXXXXXCCCCC LLLLLLL</div>
+            <div class="detail">TTTTXXXXXXCCCCC LLLLLLL</div>
+        </div>
+    </div>
+</div>
+*/

@@ -38,6 +38,13 @@ def action_run_one_step(request, **values):
     return Response(status=NO_CONTENT)
 
 
+@expose('/flow/action/run_from_step/')
+def action_run_from(request, **values):
+    handler = FlowActionHandler(request, **values)
+    handler.action_run_from_step()
+    return Response(status=NO_CONTENT)
+
+
 @expose('/flow/action/get_step_log/')
 def action_get_step_log(request, **values):
     handler = FlowActionHandler(request, **values)

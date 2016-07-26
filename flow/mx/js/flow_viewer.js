@@ -1,11 +1,11 @@
 function render_flow_header(element, mx_flow, process_name) {
     var uow_button = $('<button class="action_button"><i class="fa fa-file-code-o"></i>&nbsp;Uow</button>').click(function (e) {
-        var params = { action: 'action/get_uow', timeperiod: mx_flow.timeperiod, process_name: process_name };
+        var params = {action: 'action/get_uow', timeperiod: mx_flow.timeperiod, process_name: process_name};
         var viewer_url = '/viewer/object/?' + $.param(params);
         window.open(viewer_url, 'Object Viewer', 'width=450,height=400,screenX=400,screenY=200,scrollbars=1');
     });
     var event_log_button = $('<button class="action_button"><i class="fa fa-th-list"></i>&nbsp;Event&nbsp;Log</button>').click(function (e) {
-        var params = { action: 'action/get_event_log', timeperiod: mx_flow.timeperiod, process_name: process_name };
+        var params = {action: 'action/get_event_log', timeperiod: mx_flow.timeperiod, process_name: process_name};
         var viewer_url = '/viewer/object/?' + $.param(params);
         window.open(viewer_url, 'Object Viewer', 'width=800,height=480,screenX=400,screenY=200,scrollbars=1');
     });
@@ -16,23 +16,28 @@ function render_flow_header(element, mx_flow, process_name) {
         process_job('action/reprocess', null, process_name, mx_flow.timeperiod, mx_flow.flow_name, null);
     });
     var uow_log_button = $('<button class="action_button"><i class="fa fa-file-text-o"></i>&nbsp;Uow&nbsp;Log</button>').click(function (e) {
-        var params = { action: 'action/get_uow_log', timeperiod: mx_flow.timeperiod, process_name: process_name };
+        var params = {action: 'action/get_uow_log', timeperiod: mx_flow.timeperiod, process_name: process_name};
         var viewer_url = '/viewer/object/?' + $.param(params);
         window.open(viewer_url, 'Object Viewer', 'width=800,height=480,screenX=400,screenY=200,scrollbars=1');
     });
 
-    // try element.$el
-    element.append($('<div class="tile_component"></div>').append('<ul class="fa-ul">'
+    var container = $('<div class="step_container"></div>');
+
+    container.append($('<div class="step_section right_margin"></div>').append('<ul class="fa-ul">'
         + '<li title="Process Name"><i class="fa-li fa fa-terminal"></i>' + process_name + '</li>'
         + '<li title="Workflow Name"><i class="fa-li fa fa-random"></i>' + mx_flow.flow_name + '</li>'
         + '<li title="Timeperiod"><i class="fa-li fa fa-clock-o"></i>' + mx_flow.timeperiod + '</li>'
         + '<li title="State"><i class="fa-li fa fa-flag-o"></i>' + mx_flow.state + '</li>'
         + '</ul>'));
-    element.append($('<div></div>').append(uow_button)
-                                   .append(uow_log_button)
-                                   .append(event_log_button));
-    element.append($('<div></div>').append(recover_button)
-                                   .append(reprocess_button));
+    container.append($('<div class="step_section"></div>')
+        .append($('<div></div>').append(uow_button))
+        .append($('<div></div>').append(uow_log_button))
+        .append($('<div></div>').append(event_log_button)));
+    container.append($('<div class="step_section"></div>')
+        .append($('<div></div>').append(recover_button))
+        .append($('<div></div>').append(reprocess_button)));
+
+    element.append(container);
     element.append('<div class="clear"></div>');
 }
 
@@ -70,16 +75,16 @@ function render_flow_graph(steps, element) {
             var css_main_completed = step.is_main_completed ? "action_complete" : "action_pending";
             var css_post_completed = step.is_post_completed ? "action_complete" : "action_pending";
 
-            var html = '<div id=step_' + step_index + ' style="position:relative;">';
-            html += '<div id=step_' + step_index + '_action_status class="step_action_statuses">';
+            var html = '<div id=step_' + step_index + ' class="step_container">';
+            html += '<div id=step_' + step_index + '_action_status class="step_section">';
             html += '<span class="pre_actions action_status ' + css_pre_completed + '"></span>';
             html += '<span class="action_status ' + css_main_completed + '"></span>';
             html += '<span class="action_status ' + css_post_completed + '"></span>';
             html += '</div>';
-            html += '<div class="step_details">';
-            html += '<div id=step_' + step_index + '_title class="step_details step_title"></div>';
-            html += '<div id=step_' + step_index + '_duration class="step_details step_duration"></div>';
-            html += '<div id=step_' + step_index + '_action_buttons class="step_details step_action_buttons"></div>';
+            html += '<div class="step_section">';
+            html += '<div id=step_' + step_index + '_title class="step_detail"></div>';
+            html += '<div id=step_' + step_index + '_duration class="step_detail"></div>';
+            html += '<div id=step_' + step_index + '_action_buttons class="step_detail"></div>';
             html += '</div>';
             html += '</div>';
             step_index += 1;
@@ -124,10 +129,10 @@ function render_flow_graph(steps, element) {
                 process_job('flow/action/get_step_log', null, process_name, mx_flow.timeperiod, mx_flow.flow_name, step_name);
             });
             var run_one = $('<button class="action_mini_button" title="Rerun this step only"><i class="fa fa-play-circle-o"></i></button>').click(function (e) {
-                process_job('flow/action/run_one', null, process_name, mx_flow.timeperiod, mx_flow.flow_name, step_name);
+                process_job('flow/action/run_one_step', null, process_name, mx_flow.timeperiod, mx_flow.flow_name, step_name);
             });
             var run_from = $('<button class="action_mini_button" title="Rerun flow from this step"><i class="fa fa-forward"></i></button>').click(function (e) {
-                process_job('flow/action/run_from', null, process_name, mx_flow.timeperiod, mx_flow.flow_name, step_name);
+                process_job('flow/action/run_from_step', null, process_name, mx_flow.timeperiod, mx_flow.flow_name, step_name);
             });
             var details = $('<button class="action_mini_button" title="Step details"><i class="fa fa-ellipsis-h"></i></button>').click(function (e) {
                 alert('details form TBD');

@@ -75,36 +75,40 @@ class FlowActionHandler(BaseRequestHandler):
         rest_model = create_rest_step(graph_node_obj)
         return rest_model.document
 
-    def _submit_mq_request(self, process_name, step_name, run_mode):
-        uow = UnitOfWork()
-        uow.process_name = process_name
-        uow.timeperiod = self.flow_graph_obj.timeperiod
-        uow.start_timeperiod = self.flow_graph_obj.start_timeperiod
-        uow.end_timeperiod = self.flow_graph_obj.end_timeperiod
-        uow.submitted_at = datetime.utcnow()
-        uow.source = context.process_context[process_name].source
-        uow.sink = context.process_context[process_name].sink
-        uow.state = unit_of_work.STATE_REQUESTED
-        uow.unit_of_work_type = unit_of_work.TYPE_MANAGED
-        uow.number_of_retries = 0
-        uow.arguments = context.process_context[process_name].arguments
-        uow.db_id = self.uow_dao.insert(uow)
-
-        msg = 'SynergyCreated: UOW {0} for {1}@{2}.'.format(uow.db_id, process_name, start_timeperiod)
-        self._log_message(INFO, process_name, start_timeperiod, msg)
-        return uow
-
     @valid_action_request
     def action_recover(self):
         """
-        - create UOW with appropriate run mode
-        - locate appropriate Queue for given process
+        - verify that the flow is not running for given context (timeperiod)
+        - transfer job into STATE_ON_HOLD
+        - create UOW with arguments['run_mode']='run_mode_recovery' and uow_type='TBD'
+        - locate appropriate MQ Queue
         - submit UOW
+        NOTICE: perform extensive logging of every step
         """
         pass
 
     @valid_action_request
     def action_run_one_step(self):
+        """
+        - verify that the flow is not running for given context (timeperiod)
+        - transfer job into STATE_ON_HOLD
+        - create UOW with arguments['run_mode']='run_mode_run_one' and uow_type='TBD'
+        - locate appropriate MQ Queue
+        - submit UOW
+        NOTICE: perform extensive logging of every step
+        """
+        pass
+
+    @valid_action_request
+    def action_run_from_step(self):
+        """
+        - verify that the flow is not running for given context (timeperiod)
+        - transfer job into STATE_ON_HOLD
+        - create UOW with arguments['run_mode']='run_mode_run_from' and uow_type='TBD'
+        - locate appropriate MQ Queue
+        - submit UOW
+        NOTICE: perform extensive logging of every step
+        """
         pass
 
     @valid_action_request
