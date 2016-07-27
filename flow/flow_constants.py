@@ -8,3 +8,6 @@ RUN_MODE_NOMINAL = 'run_mode_nominal'
 
 STEP_NAME_START = 'start'
 STEP_NAME_FINISH = 'finish'
+
+COLLECTION_STEP = 'step'
+COLLECTION_FLOW = 'flow'

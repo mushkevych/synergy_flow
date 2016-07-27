@@ -1,18 +1,14 @@
 __author__ = 'Bohdan Mushkevych'
 
-from datetime import datetime
-
 from synergy.conf import settings, context
 from synergy.mx.base_request_handler import BaseRequestHandler, valid_action_request
-from synergy.db.model import unit_of_work
-from synergy.db.model.unit_of_work import UnitOfWork
 from werkzeug.utils import cached_property
 
 from flow.conf import flows
-from flow.flow_constants import ARGUMENT_FLOW_NAME
 from flow.core.execution_context import ExecutionContext
 from flow.db.dao.flow_dao import FlowDao
 from flow.db.dao.step_dao import StepDao
+from flow.flow_constants import ARGUMENT_FLOW_NAME
 from flow.mx.rest_model_factory import *
 
 
@@ -113,4 +109,8 @@ class FlowActionHandler(BaseRequestHandler):
 
     @valid_action_request
     def action_get_step_log(self):
+        pass
+
+    @valid_action_request
+    def action_get_flow_log(self):
         pass

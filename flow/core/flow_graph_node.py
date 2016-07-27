@@ -3,6 +3,7 @@ __author__ = 'Bohdan Mushkevych'
 from datetime import datetime
 
 from flow.core.execution_context import ContextDriven, get_step_logger
+from synergy.system.log_recording_handler import LogRecordingHandler
 
 from flow.db.model.step import Step, STATE_EMBRYO, STATE_INVALID, STATE_PROCESSED, STATE_IN_PROGRESS
 from flow.db.dao.step_dao import StepDao
@@ -17,6 +18,7 @@ class FlowGraphNode(ContextDriven):
         self.step_executor = step_executor
         self.step_dao = None
         self.step_entry = None
+        self.log_recording_handler = None
 
         # attributes _prev and _next contains FlowGraphNodes that precedes and follows this node
         # these are managed by the FlowGraph.append
@@ -50,17 +52,26 @@ class FlowGraphNode(ContextDriven):
         self.step_entry.state = STATE_IN_PROGRESS
         self.step_dao.update(self.step_entry)
 
+        # enable log recording into DB
+        self.log_recording_handler = LogRecordingHandler(self.get_logger(), self.step_entry.db_id)
+        self.log_recording_handler.attach()
+
+    def _mark_finish(self, state):
+        assert self.is_context_set is True
+        self.step_entry.finished_at = datetime.utcnow()
+        self.step_entry.state = state
+        self.step_dao.update(self.step_entry)
+
+        if self.log_recording_handler:
+            self.log_recording_handler.detach()
+
     def mark_failure(self):
         """ perform step post-failure activities, such as db update """
-        self.step_entry.finished_at = datetime.utcnow()
-        self.step_entry.state = STATE_INVALID
-        self.step_dao.update(self.step_entry)
+        self._mark_finish(STATE_INVALID)
 
     def mark_success(self):
         """ perform activities in case of the step successful completion """
-        self.step_entry.finished_at = datetime.utcnow()
-        self.step_entry.state = STATE_PROCESSED
-        self.step_dao.update(self.step_entry)
+        self._mark_finish(STATE_PROCESSED)
 
     def run(self, execution_cluster):
         assert self.is_context_set is True

@@ -11,6 +11,7 @@ from flow.core.flow_graph_node import FlowGraphNode
 from flow.db.dao.flow_dao import FlowDao
 from flow.db.dao.step_dao import StepDao
 from flow.db.model.step import Step
+from synergy.system.log_recording_handler import LogRecordingHandler
 
 from flow.db.model.flow import Flow, STATE_EMBRYO, STATE_INVALID, STATE_PROCESSED, STATE_IN_PROGRESS
 
@@ -29,6 +30,7 @@ class FlowGraph(ContextDriven):
         # format: {step_name:String -> node:FlowGraphNode}
         self._dict = OrderedDict()
         self.flow_dao = None
+        self.log_recording_handler = None
 
         # list of step names, yielded for processing
         self.yielded = list()
@@ -204,16 +206,23 @@ class FlowGraph(ContextDriven):
         self.context.flow_entry.state = STATE_IN_PROGRESS
         self.flow_dao.update(self.context.flow_entry)
 
-    def mark_failure(self):
-        """ perform flow post-failure activities, such as db update """
+        # enable log recording into DB
+        self.log_recording_handler = LogRecordingHandler(self.get_logger(), self.context.flow_entry.db_id)
+        self.log_recording_handler.attach()
+
+    def _mark_finish(self, state):
         assert self.is_context_set is True
         self.context.flow_entry.finished_at = datetime.utcnow()
-        self.context.flow_entry.state = STATE_INVALID
+        self.context.flow_entry.state = state
         self.flow_dao.update(self.context.flow_entry)
+
+        if self.log_recording_handler:
+            self.log_recording_handler.detach()
+
+    def mark_failure(self):
+        """ perform flow post-failure activities, such as db update """
+        self._mark_completion(STATE_INVALID)
 
     def mark_success(self):
         """ perform activities in case of the flow successful completion """
-        assert self.is_context_set is True
-        self.context.flow_entry.finished_at = datetime.utcnow()
-        self.context.flow_entry.state = STATE_PROCESSED
-        self.flow_dao.update(self.context.flow_entry)
+        self._mark_completion(STATE_PROCESSED)

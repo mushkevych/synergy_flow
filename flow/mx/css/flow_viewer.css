@@ -60,12 +60,20 @@ svg {
 /* vertical section, hosting either action statuses or step details*/
 .step_section {
     height: 100%;
-    float:left;
+    float: left;
     display: block;
 }
 
 /* style for a single step detail row */
 .step_detail {
+}
+
+.width_30pct {
+    width: 30% !important;
+}
+
+.width_70pct {
+    width: 70% !important;
 }
 
 .right_margin {

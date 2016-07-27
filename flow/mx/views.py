@@ -51,6 +51,12 @@ def action_get_step_log(request, **values):
     return Response(response=json.dumps(handler.action_get_step_log()), mimetype='application/json')
 
 
+@expose('/flow/action/get_flow_log/')
+def action_get_flow_log(request, **values):
+    handler = FlowActionHandler(request, **values)
+    return Response(response=json.dumps(handler.action_get_flow_log()), mimetype='application/json')
+
+
 @expose('/viewer/flow/')
 def flow_viewer(request, **values):
     details = FlowActionHandler(request, **values)

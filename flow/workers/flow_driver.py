@@ -14,7 +14,7 @@ class FlowDriver(AbstractUowAwareWorker):
     """starts Synergy Flow processing job, supervises its execution and updates unit_of_work"""
 
     def __init__(self, process_name):
-        super(FlowDriver, self).__init__(process_name)
+        super(FlowDriver, self).__init__(process_name, perform_db_logging=True)
 
     def _process_uow(self, uow):
         flow_name = uow.arguments[ARGUMENT_FLOW_NAME]

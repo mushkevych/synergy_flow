@@ -15,9 +15,9 @@ from flow.core.ephemeral_cluster import EphemeralCluster
 
 def launch_cluster(logger, context, cluster_name):
     if context.settings['cluster_type'] == 'emr':
-        cluster = EmrCluster(logger, cluster_name)
+        cluster = EmrCluster(cluster_name, context)
     else:
-        cluster = EphemeralCluster(logger, cluster_name)
+        cluster = EphemeralCluster(cluster_name, context)
 
     cluster.launch()
     return cluster

@@ -20,6 +20,11 @@ function render_flow_header(element, mx_flow, process_name) {
         var viewer_url = '/viewer/object/?' + $.param(params);
         window.open(viewer_url, 'Object Viewer', 'width=800,height=480,screenX=400,screenY=200,scrollbars=1');
     });
+    var flow_log_button = $('<button class="action_button"><i class="fa fa-file-text-o"></i>&nbsp;Flow&nbsp;Log</button>').click(function (e) {
+        var params = {action: 'flow/action/get_flow_log', timeperiod: mx_flow.timeperiod, process_name: process_name, flow_name: mx_flow.flow_name};
+        var viewer_url = '/viewer/object/?' + $.param(params);
+        window.open(viewer_url, 'Object Viewer', 'width=800,height=480,screenX=400,screenY=200,scrollbars=1');
+    });
 
     var container = $('<div class="step_container"></div>');
 
@@ -30,10 +35,11 @@ function render_flow_header(element, mx_flow, process_name) {
         + '<li title="State"><i class="fa-li fa fa-flag-o"></i>' + mx_flow.state + '</li>'
         + '</ul>'));
     container.append($('<div class="step_section"></div>')
-        .append($('<div></div>').append(uow_button))
         .append($('<div></div>').append(uow_log_button))
+        .append($('<div></div>').append(flow_log_button))
         .append($('<div></div>').append(event_log_button)));
     container.append($('<div class="step_section"></div>')
+        .append($('<div></div>').append(uow_button))
         .append($('<div></div>').append(recover_button))
         .append($('<div></div>').append(reprocess_button)));
 
@@ -76,12 +82,12 @@ function render_flow_graph(steps, element) {
             var css_post_completed = step.is_post_completed ? "action_complete" : "action_pending";
 
             var html = '<div id=step_' + step_index + ' class="step_container">';
-            html += '<div id=step_' + step_index + '_action_status class="step_section">';
+            html += '<div id=step_' + step_index + '_action_status class="step_section width_30pct">';
             html += '<span class="pre_actions action_status ' + css_pre_completed + '"></span>';
             html += '<span class="action_status ' + css_main_completed + '"></span>';
             html += '<span class="action_status ' + css_post_completed + '"></span>';
             html += '</div>';
-            html += '<div class="step_section">';
+            html += '<div class="step_section width_70pct">';
             html += '<div id=step_' + step_index + '_title class="step_detail"></div>';
             html += '<div id=step_' + step_index + '_duration class="step_detail"></div>';
             html += '<div id=step_' + step_index + '_action_buttons class="step_detail"></div>';

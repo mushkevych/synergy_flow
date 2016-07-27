@@ -1,10 +1,8 @@
 __author__ = 'Bohdan Mushkevych'
 
 from synergy.db.dao.base_dao import BaseDao
+from flow.flow_constants import COLLECTION_FLOW
 from flow.db.model.flow import Flow, FLOW_NAME, TIMEPERIOD
-
-
-COLLECTION_FLOW = 'flow'
 
 
 class FlowDao(BaseDao):
