@@ -1,7 +1,8 @@
 __author__ = 'Bohdan Mushkevych'
 
 from synergy.conf import settings, context
-from synergy.mx.base_request_handler import BaseRequestHandler, valid_action_request
+from synergy.db.dao.log_recording_dao import LogRecordingDao
+from synergy.mx.base_request_handler import BaseRequestHandler, valid_action_request, safe_json_response
 from werkzeug.utils import cached_property
 
 from flow.conf import flows
@@ -17,6 +18,7 @@ class FlowActionHandler(BaseRequestHandler):
         super(FlowActionHandler, self).__init__(request, **values)
         self.flow_dao = FlowDao(self.logger)
         self.step_dao = StepDao(self.logger)
+        self.log_recording_dao = LogRecordingDao(self.logger)
 
         self.process_name = self.request_arguments.get('process_name')
         self.flow_name = self.request_arguments.get('flow_name')
@@ -33,6 +35,16 @@ class FlowActionHandler(BaseRequestHandler):
         if self.is_request_valid:
             self.flow_name = self.flow_name.strip()
             self.timeperiod = self.timeperiod.strip()
+
+    @property
+    def flow_id(self):
+        flow_entry = self.flow_dao.get_one([self.flow_name, self.timeperiod])
+        return flow_entry.db_id
+
+    @property
+    def step_id(self):
+        step_entry = self.step_dao.get_one([self.flow_name, self.step_name, self.timeperiod])
+        return step_entry.db_id
 
     @property
     def flow_graph_obj(self):
@@ -108,9 +120,19 @@ class FlowActionHandler(BaseRequestHandler):
         pass
 
     @valid_action_request
+    @safe_json_response
     def action_get_step_log(self):
-        pass
+        try:
+            resp = self.log_recording_dao.get_one(self.step_id).document
+        except (TypeError, LookupError):
+            resp = {'response': 'no related step log'}
+        return resp
 
     @valid_action_request
+    @safe_json_response
     def action_get_flow_log(self):
-        pass
+        try:
+            resp = self.log_recording_dao.get_one(self.flow_id).document
+        except (TypeError, LookupError):
+            resp = {'response': 'no related flow log'}
+        return resp

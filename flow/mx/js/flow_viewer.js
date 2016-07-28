@@ -63,7 +63,6 @@ function render_flow_graph(steps, element) {
 
     // Left-to-right layout
     var g = new dagreD3.graphlib.Graph();
-
     g.setGraph({
         nodesep: 70,
         ranksep: 50,
@@ -83,18 +82,21 @@ function render_flow_graph(steps, element) {
 
             var html = '<div id=step_' + step_index + ' class="step_container">';
             html += '<div id=step_' + step_index + '_action_status class="step_section width_30pct">';
-            html += '<span class="pre_actions action_status ' + css_pre_completed + '"></span>';
-            html += '<span class="action_status ' + css_main_completed + '"></span>';
-            html += '<span class="action_status ' + css_post_completed + '"></span>';
+            if (step_name != 'start' && step_name != 'finish') {
+                html += '<span class="pre_actions action_status ' + css_pre_completed + '"></span>';
+                html += '<span class="action_status ' + css_main_completed + '"></span>';
+                html += '<span class="action_status ' + css_post_completed + '"></span>';
+            }
             html += '</div>';
             html += '<div class="step_section width_70pct">';
-            html += '<div id=step_' + step_index + '_title class="step_detail"></div>';
-            html += '<div id=step_' + step_index + '_duration class="step_detail"></div>';
-            html += '<div id=step_' + step_index + '_action_buttons class="step_detail"></div>';
+            html += '<div id=step_' + step_index + '_title class="step_detail width_70pct"></div>';
+            html += '<div id=step_' + step_index + '_duration class="step_detail width_70pct"></div>';
+            html += '<div id=step_' + step_index + '_action_buttons class="step_detail width_70pct"></div>';
             html += '</div>';
             html += '</div>';
             step_index += 1;
 
+            // setNode(node_name, dict_value)
             g.setNode(step_name, {
                 labelType: 'html',
                 label: html,
@@ -125,6 +127,26 @@ function render_flow_graph(steps, element) {
         // renderer draws the final graph
         inner.call(render, g);
 
+        // assign run-time function to render tooltip
+        inner.selectAll('g.node')
+            .each(function (step_name) {
+                if (step_name == 'start' || step_name == 'finish') {
+                    // no tooltip is desired for terminal points
+                    return false;
+                }
+
+                $(this).tipsy({
+                    gravity: 'w', opacity: 1, html: true,
+                    title: function () {
+                        var html = '<p class="name">' + step_name + '</p>';
+                        html += '<p class="description">' + formatJSON(steps[step_name].pre_actions) + '</p>';
+                        html += '<p class="description">' + formatJSON(steps[step_name].main_action) + '</p>';
+                        html += '<p class="description">' + formatJSON(steps[step_name].post_actions) + '</p>';
+                        return html;
+                    }
+                });
+            });
+
         // now that the graph nodes are rendered, add:
         // - step name
         // - step duration
@@ -132,7 +154,9 @@ function render_flow_graph(steps, element) {
         step_index = 0;
         for (step_name in steps) {
             var step_log = $('<button class="action_mini_button" title="Get step log"><i class="fa fa-file-code-o"></i></button>').click(function (e) {
-                process_job('flow/action/get_step_log', null, process_name, mx_flow.timeperiod, mx_flow.flow_name, step_name);
+                var params = {action: 'flow/action/get_step_log', timeperiod: mx_flow.timeperiod, process_name: process_name, flow_name: mx_flow.flow_name};
+                var viewer_url = '/viewer/object/?' + $.param(params);
+                window.open(viewer_url, 'Object Viewer', 'width=800,height=480,screenX=400,screenY=200,scrollbars=1');
             });
             var run_one = $('<button class="action_mini_button" title="Rerun this step only"><i class="fa fa-play-circle-o"></i></button>').click(function (e) {
                 process_job('flow/action/run_one_step', null, process_name, mx_flow.timeperiod, mx_flow.flow_name, step_name);
@@ -140,14 +164,11 @@ function render_flow_graph(steps, element) {
             var run_from = $('<button class="action_mini_button" title="Rerun flow from this step"><i class="fa fa-forward"></i></button>').click(function (e) {
                 process_job('flow/action/run_from_step', null, process_name, mx_flow.timeperiod, mx_flow.flow_name, step_name);
             });
-            var details = $('<button class="action_mini_button" title="Step details"><i class="fa fa-ellipsis-h"></i></button>').click(function (e) {
-                alert('details form TBD');
-            });
 
             $('#step_' + step_index + '_title').append('<span class=text>' + step_name + '</span>');
             if (step_name != 'start' && step_name != 'finish') {
                 $('#step_' + step_index + '_duration').append('<span class=text>' + 1000 + '</span>');
-                $('#step_' + step_index + '_action_buttons').append(step_log).append(run_one).append(run_from).append(details);
+                $('#step_' + step_index + '_action_buttons').append(step_log).append(run_one).append(run_from);
             }
             step_index += 1;
         }
