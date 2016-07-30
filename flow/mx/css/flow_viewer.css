@@ -119,8 +119,10 @@ svg {
     padding: 1px;
 }
 
-.new_line {
-    display: table-row;
+.user_message {
+    margin-top: 150px;
+    text-align: center;
+    float: none;
 }
 
 /* This styles the title of the tooltip */

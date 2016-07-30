@@ -25,6 +25,9 @@
 <div id="flow_header" class="tile_component">
 </div>
 
+<div id="user_message" class="clear user_message">
+</div>
+
 <div class="live map">
     <svg>
         <g/>
@@ -38,6 +41,11 @@
 <script type="text/javascript">
     var mx_flow = {{ flow_details|jsonify|safe }};
     var process_name = "{{ process_name|safe }}";
+
+    // if the mx_flow is not available for this process
+    if (Object.keys(mx_flow).length === 0) {
+        render_empty_response($("#user_message"), process_name);
+    }
 
     $(document).ready(function () {
         render_flow_header($("#flow_header"), mx_flow, process_name);

@@ -1,14 +1,15 @@
 __author__ = 'Bohdan Mushkevych'
 
 import copy
+from datetime import datetime
 
-from flow.flow_constants import STEP_NAME_START, STEP_NAME_FINISH
 from flow.core.abstract_action import AbstractAction
 from flow.core.flow_graph import FlowGraph
 from flow.core.flow_graph_node import FlowGraphNode
 from flow.db.model import flow, step
-from flow.mx.terminal_graph_node import TerminalGraphNode
+from flow.flow_constants import STEP_NAME_START, STEP_NAME_FINISH
 from flow.mx.rest_model import *
+from flow.mx.terminal_graph_node import TerminalGraphNode
 
 
 def create_rest_action(action_obj):
@@ -34,6 +35,19 @@ def create_rest_step(graph_node_obj):
         next_nodes=[x.step_name for x in graph_node_obj._next]
     )
 
+    def _compute_duration():
+        if step_entry.started_at and step_entry.finished_at:
+            # step has finished
+            delta = step_entry.finished_at - step_entry.started_at
+            return 3600 * 24 * delta.days + delta.seconds
+        elif step_entry.started_at and step_entry.is_in_progress:
+            # step is still running
+            delta = datetime.utcnow() - step_entry.started_at
+            return 3600 * 24 * delta.days + delta.seconds
+        else:
+            # step has never ran
+            return 0
+
     step_entry = graph_node_obj.step_entry
     if step_entry:
         rest_model.db_id = step_entry.db_id
@@ -44,9 +58,11 @@ def create_rest_step(graph_node_obj):
         rest_model.started_at = step_entry.started_at
         rest_model.finished_at = step_entry.finished_at
         rest_model.related_flow = step_entry.related_flow
+        rest_model.duration = _compute_duration()
     else:
         # defaults
         rest_model.state = step.STATE_EMBRYO
+        rest_model.duration = 0
 
     return rest_model
 

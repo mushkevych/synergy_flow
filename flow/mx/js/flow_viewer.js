@@ -1,3 +1,10 @@
+/* @author "Bohdan Mushkevych" */
+
+function render_empty_response(element, process_name) {
+    element.append('<b>no workflow was found for process ' + process_name + '</b>');
+}
+
+
 function render_flow_header(element, mx_flow, process_name) {
     var uow_button = $('<button class="action_button"><i class="fa fa-file-code-o"></i>&nbsp;Uow</button>').click(function (e) {
         var params = {action: 'action/get_uow', timeperiod: mx_flow.timeperiod, process_name: process_name};
@@ -165,9 +172,9 @@ function render_flow_graph(steps, element) {
                 process_job('flow/action/run_from_step', null, process_name, mx_flow.timeperiod, mx_flow.flow_name, step_name);
             });
 
-            $('#step_' + step_index + '_title').append('<span class=text>' + step_name + '</span>');
+            $('#step_' + step_index + '_title').append('<span class="text">' + step_name + '</span>');
             if (step_name != 'start' && step_name != 'finish') {
-                $('#step_' + step_index + '_duration').append('<span class=text>' + 1000 + '</span>');
+                $('#step_' + step_index + '_duration').append('<span class="text">' + steps[step_name].duration  + '</span>');
                 $('#step_' + step_index + '_action_buttons').append(step_log).append(run_one).append(run_from);
             }
             step_index += 1;

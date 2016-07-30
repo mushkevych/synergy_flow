@@ -1,6 +1,6 @@
 __author__ = 'Bohdan Mushkevych'
 
-from odm.fields import BooleanField, StringField, DictField, ListField, NestedDocumentField
+from odm.fields import BooleanField, StringField, DictField, ListField, NestedDocumentField, IntegerField
 from odm.document import BaseDocument
 
 from flow.db.model.flow import Flow
@@ -19,6 +19,7 @@ FIELD_STEPS = 'steps'
 FIELD_GRAPH = 'graph'
 FIELD_PREVIOUS_NODES = 'previous_nodes'
 FIELD_NEXT_NODES = 'next_nodes'
+FIELD_DURATION = 'duration'
 
 
 class RestAction(BaseDocument):
@@ -30,6 +31,7 @@ class RestStep(Step):
     is_pre_completed = BooleanField(FIELD_IS_PRE_COMPLETED)
     is_main_completed = BooleanField(FIELD_IS_MAIN_COMPLETED)
     is_post_completed = BooleanField(FIELD_IS_POST_COMPLETED)
+    duration = IntegerField(FIELD_DURATION)
 
     pre_actions = ListField(FIELD_PRE_ACTIONS)
     main_action = NestedDocumentField(FIELD_MAIN_ACTION, RestAction, null=True)

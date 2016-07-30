@@ -61,3 +61,7 @@ class Step(BaseDocument):
     @property
     def is_processed(self):
         return self.state == STATE_PROCESSED
+
+    @property
+    def is_in_progress(self):
+        return self.state == STATE_IN_PROGRESS
