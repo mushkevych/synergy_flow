@@ -13,35 +13,52 @@ It represents a Directed Acyclic Graph (DAG) where each node is an execution ste
 and edge represents dependencies between steps and hence - order of the execution.
 
 Each step consist of three groups of actions:
-- pre: actions that has to be executed before the main
+- pre: actions that have to be executed before the main
 - main: single main action
-- post: actions that has to be executed after the main
+- post: actions that have to be executed after the main
 
 
 Processing and Recovery:
 ---------
 
-`ExecutionEngine` exposes two main methods:
+`ExecutionEngine` exposes four main methods:
 
 `run`
 - spawns clusters
-- locates existing flow record or creates one
-- purges all existing step records, if they exist
-- starts the flow
-- terminates clusters after the flow is completed or terminated
+- locate existing flow record or create one
+- purge all existing step records, if they exist
+- start the flow
+- terminate clusters after the flow is completed or terminated
 
 `recover`
-- spawns clusters
-- locates existing flow record or creates one
-- scans for existing step records and loads all successful ones
-- triggers the execution from the last successful step
-- terminates clusters after the flow is completed or terminated
+- verify that the flow has failed before
+- spawn clusters
+- locate the failed steps and reset their state
+- start the flow processing from the last known successful step
+- terminate clusters after the flow has completed or failed
+
+`run_one`
+- verify that the flow has steps preceding to the one completed
+- spawn at most 1 cluster
+- reset state for the requested node
+- start the step processing
+- terminate clusters after the step has completed or failed
+
+`run_from`
+- verify that the flow has steps preceding to the one completed
+- reset state for the requested node
+- locate the failed steps and reset their state
+- locate all steps derived from this step and reset their states
+- compute the number of steps to process and spawn clusters as ratio:
+  cluster_number = max(1, (steps_to_run/total_steps) * nominal_cluster_number)
+- start the flow processing from the given step
+- terminate clusters after the flow has completed or failed
 
 
 Context:
 ---------
 
-SynergyFlow revolves around the concept of a Context - a structure of names,
+Synergy Flow revolves around the concept of a Context - a structure of names,
 credentials and environment-specific settings for the Flow execution.
 
 
@@ -73,11 +90,18 @@ step_name.log file itself is structured as:
     step.action LEVEL   message
 
 
+MX:
+---------
+
+Synergy Flow is integrated with the Synergy Scheduler 1.17+, and run-time workflow window is shown in response to *workflow* button 
+
 Roadmap:
 ---------
 
 - add the *rollback* to `AbstractAction` interface and incorporate it into the `action's` life-cycle
-- add *flows* tab to the Synergy Scheduler; MX should provide ability to reprocess/continue the flow
+- integrate Synergy Flow `recover`, `run_one` and `run_from` with the state machines
+- evaluate whether it makes sense to extend UOW **primary key** by UOW_TYPE to carry RUN_MODE uow:
+`[process_name, timeperiod, start_id, end_id, uow_type]`
 - evaluate whether it makes sense to extend Flow **primary key** by UOW_ID:
 `[flow_name, timeperiod, uow_id]`
 
@@ -105,7 +129,8 @@ Wiki Links
 [Wiki Home Page](https://github.com/mushkevych/synergy_flow/wiki)
 
 
-Os-Level Dependencies
+Dependencies
 ---------
 1. linux/unix
+1. Synergy Scheduler 1.17+
 1. python 2.7+ / 3.4+

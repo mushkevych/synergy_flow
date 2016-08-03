@@ -46,7 +46,9 @@ class FlowGraphTest(unittest.TestCase):
     @mock.patch('flow.core.flow_graph.StepDao')
     @mock.patch('flow.core.flow_graph_node.StepDao')
     @mock.patch('flow.core.flow_graph.LogRecordingHandler')
-    def test_simple_iterator(self, flow_flow_dao, flow_step_dao, step_step_dao, log_recording_handler):
+    @mock.patch('flow.core.flow_graph_node.LogRecordingHandler')
+    def test_simple_iterator(self, flow_flow_dao, flow_step_dao, step_step_dao,
+                             flow_recording_handler, step_recording_handler):
         """ method tests happy-flow for the iterator """
         the_flow = flows.flows[ut_flows.UNIT_TEST_FLOW_SIMPLE]
         the_flow.set_context(self.context)
@@ -72,7 +74,9 @@ class FlowGraphTest(unittest.TestCase):
     @mock.patch('flow.core.flow_graph.StepDao')
     @mock.patch('flow.core.flow_graph_node.StepDao')
     @mock.patch('flow.core.flow_graph.LogRecordingHandler')
-    def test_interrupted_iterator(self, flow_flow_dao, flow_step_dao, step_step_dao, log_recording_handler):
+    @mock.patch('flow.core.flow_graph_node.LogRecordingHandler')
+    def test_interrupted_iterator(self, flow_flow_dao, flow_step_dao, step_step_dao,
+                                  flow_recording_handler, step_recording_handler):
         """ method tests iterator interrupted by failed step """
         the_flow = flows.flows[ut_flows.UNIT_TEST_FLOW_FAILURE]
         the_flow.set_context(self.context)
