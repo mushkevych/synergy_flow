@@ -21,13 +21,16 @@ class AbstractCluster(object):
     def run_pig_step(self, uri_script, **kwargs):
         pass
 
-    def run_spark_step(self, uri_script, **kwargs):
+    def run_spark_step(self, uri_script, language, **kwargs):
         pass
 
     def run_hadoop_step(self, uri_script, **kwargs):
         pass
 
     def run_shell_command(self, uri_script, **kwargs):
+        pass
+
+    def run_filesystem_command(self, command):
         pass
 
     def launch(self):

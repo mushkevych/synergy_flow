@@ -82,6 +82,8 @@ class ContextDriven(object):
     def __init__(self):
         self.context = None
         self.flow_name = None
+        self.start_timeperiod = None
+        self.end_timeperiod = None
         self.timeperiod = None
         self.settings = None
         self.logger = None
@@ -91,6 +93,8 @@ class ContextDriven(object):
         assert isinstance(context, ExecutionContext)
         self.context = context
         self.flow_name = context.flow_name
+        self.start_timeperiod = context.start_timeperiod
+        self.end_timeperiod = context.end_timeperiod
         self.timeperiod = context.timeperiod
         self.settings = context.settings
         self.logger = self.get_logger()

@@ -11,7 +11,6 @@ import psycopg2
 from boto.exception import S3ResponseError
 
 from flow.core.abstract_action import AbstractAction
-from flow.core.abstract_cluster import AbstractCluster
 
 
 class ExportAction(AbstractAction):
@@ -86,21 +85,3 @@ class ExportAction(AbstractAction):
         if not file_uri:
             raise UserWarning('Table {0} was not exported. Aborting the action'.format(self.table_name))
         self.file_to_s3(file_uri)
-
-
-class PigAction(AbstractAction):
-    """ executes a pig script on the given cluster """
-    def __init__(self, uri_script, **kwargs):
-        super(PigAction, self).__init__('EMR Pig Action', kwargs)
-        self.uri_script = uri_script
-
-    def do(self, execution_cluster):
-        assert self.is_context_set is True
-        assert isinstance(execution_cluster, AbstractCluster)
-
-        is_successful = execution_cluster.run_pig_step(
-            uri_script=os.path.join(self.settings['s3_pig_lib_path'], self.uri_script),
-            s3_input_path='s3://synergy',
-            s3_output_path=self.settings['s3_output_bucket'])
-        if not is_successful:
-            raise UserWarning('Pig Action failed on {0}'.format(self.uri_script))
