@@ -9,13 +9,15 @@ except ImportError:
     import subprocess
 
 from flow.core.abstract_cluster import AbstractCluster
+from flow.core.ephemeral_filesystem import EphemeralFilesystem
 
 
 class EphemeralCluster(AbstractCluster):
     """ implementation of the abstract API for the local, non-distributed environment """
 
     def __init__(self, name, context, **kwargs):
-        super(EphemeralCluster, self).__init__(name, context, **kwargs)
+        filesystem = EphemeralFilesystem(name, context, **kwargs)
+        super(EphemeralCluster, self).__init__(name, context, filesystem, **kwargs)
 
     def _run(self, command):
         """ `https://docs.python.org/3.2/library/subprocess.html#frequently-used-arguments` """

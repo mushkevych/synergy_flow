@@ -5,6 +5,7 @@ from qds_sdk.commands import SparkCommand, PigCommand, ShellCommand
 
 from synergy.conf import settings
 from flow.core.abstract_cluster import AbstractCluster
+from flow.core.s3_filesystem import S3Filesystem
 
 
 def read_file_content(file_uri):
@@ -17,7 +18,8 @@ class QuboleCluster(AbstractCluster):
     """ implementation of the Qubole API """
 
     def __init__(self, name, context, **kwargs):
-        super(QuboleCluster, self).__init__(name, context, kwargs=kwargs)
+        filesystem = S3Filesystem(name, context, **kwargs)
+        super(QuboleCluster, self).__init__(name, context, filesystem, kwargs=kwargs)
         Qubole.configure(api_token=settings.settings['qds_api_token'])
 
     def run_pig_step(self, uri_script, **kwargs):

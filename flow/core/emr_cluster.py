@@ -9,6 +9,7 @@ from boto.emr.step import InstallPigStep
 from boto.emr.step import PigStep
 
 from flow.core.abstract_cluster import AbstractCluster, ClusterError
+from flow.core.s3_filesystem import S3Filesystem
 
 # `http://docs.aws.amazon.com/ElasticMapReduce/latest/DeveloperGuide/ProcessingCycle.html`_
 CLUSTER_STATE_COMPLETED = 'COMPLETED'
@@ -33,7 +34,8 @@ STEP_STATE_INTERRUPTED = 'INTERRUPTED'
 class EmrCluster(AbstractCluster):
     """ implementation of the abstract API for the case of AWS EMR """
     def __init__(self, name, context, **kwargs):
-        super(EmrCluster, self).__init__(name, context, **kwargs)
+        filesystem = S3Filesystem(name, context, **kwargs)
+        super(EmrCluster, self).__init__(name, context, filesystem, **kwargs)
 
         self.jobflow_id = None  # it is both ClusterId and the JobflowId
 
