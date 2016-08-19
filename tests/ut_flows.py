@@ -16,8 +16,6 @@ def register_flows():
     fa_rmdir = RmdirAction('/tmp/trash/')
     sa_identity = IdentityAction()
     sa_failure = FailureAction()
-    # pig_action = PigAction('/some/path/to/pig_script.pig')
-    # export_action = ExportAction('some_postgres_table')
 
     flow_simple = FlowGraph(UNIT_TEST_FLOW_SIMPLE)
     flows.flows[UNIT_TEST_FLOW_SIMPLE] = flow_simple

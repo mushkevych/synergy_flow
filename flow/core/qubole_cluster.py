@@ -18,9 +18,13 @@ class QuboleCluster(AbstractCluster):
     """ implementation of the Qubole API """
 
     def __init__(self, name, context, **kwargs):
-        filesystem = S3Filesystem(name, context, **kwargs)
-        super(QuboleCluster, self).__init__(name, context, filesystem, kwargs=kwargs)
+        super(QuboleCluster, self).__init__(name, context, kwargs=kwargs)
+        self._filesystem = S3Filesystem(self.logger, context, **kwargs)
         Qubole.configure(api_token=settings.settings['qds_api_token'])
+
+    @property
+    def filesystem(self):
+        return self._filesystem
 
     def run_pig_step(self, uri_script, **kwargs):
         program_body = read_file_content(uri_script)

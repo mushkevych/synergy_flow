@@ -1,16 +1,14 @@
 __author__ = 'Bohdan Mushkevych'
 
-from flow.core.execution_context import ExecutionContext, get_cluster_logger
+from flow.core.execution_context import ExecutionContext
 
 
 class AbstractFilesystem(object):
     """ abstraction for filesystem """
-    def __init__(self, cluster_name, context, **kwargs):
+    def __init__(self, logger, context, **kwargs):
         assert isinstance(context, ExecutionContext)
-
-        self.cluster_name = cluster_name
         self.context = context
-        self.logger = get_cluster_logger(context.flow_name, self.cluster_name, context.settings)
+        self.logger = logger
         self.kwargs = {} if not kwargs else kwargs
 
     def mkdir(self, uri_path, **kwargs):

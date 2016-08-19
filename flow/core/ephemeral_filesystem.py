@@ -8,8 +8,8 @@ from flow.core.abstract_filesystem import AbstractFilesystem
 
 class EphemeralFilesystem(AbstractFilesystem):
     """ implementation of local filesystem """
-    def __init__(self, cluster_name, context, **kwargs):
-        super(EphemeralFilesystem, self).__init__(cluster_name, context, **kwargs)
+    def __init__(self, logger, context, **kwargs):
+        super(EphemeralFilesystem, self).__init__(logger, context, **kwargs)
 
     def __del__(self):
         pass

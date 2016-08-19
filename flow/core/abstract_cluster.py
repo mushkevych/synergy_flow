@@ -1,7 +1,6 @@
 __author__ = 'Bohdan Mushkevych'
 
 from flow.core.execution_context import ExecutionContext, get_cluster_logger
-from flow.core.abstract_filesystem import AbstractFilesystem
 
 
 class ClusterError(Exception):
@@ -11,19 +10,18 @@ class ClusterError(Exception):
 class AbstractCluster(object):
     """ abstraction for action execution environment
         API sequence is to launch the cluster, perform one or more steps/commands and terminate """
-    def __init__(self, name, context, filesystem, **kwargs):
+    def __init__(self, name, context, **kwargs):
         assert isinstance(context, ExecutionContext)
-        assert isinstance(filesystem, AbstractFilesystem)
 
         self.name = name
         self.context = context
-        self._filesystem = filesystem
         self.logger = get_cluster_logger(context.flow_name, self.name, context.settings)
         self.kwargs = {} if not kwargs else kwargs
 
     @property
     def filesystem(self):
-        return self._filesystem
+        raise NotImplementedError('property *filesystem* must be implemented by the {0}'
+                                  .format(self.__class__.__name__))
 
     def run_pig_step(self, uri_script, **kwargs):
         pass

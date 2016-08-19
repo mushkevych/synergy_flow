@@ -34,8 +34,8 @@ STEP_STATE_INTERRUPTED = 'INTERRUPTED'
 class EmrCluster(AbstractCluster):
     """ implementation of the abstract API for the case of AWS EMR """
     def __init__(self, name, context, **kwargs):
-        filesystem = S3Filesystem(name, context, **kwargs)
-        super(EmrCluster, self).__init__(name, context, filesystem, **kwargs)
+        super(EmrCluster, self).__init__(name, context, **kwargs)
+        self._filesystem = S3Filesystem(self.logger, context, **kwargs)
 
         self.jobflow_id = None  # it is both ClusterId and the JobflowId
 
@@ -43,6 +43,10 @@ class EmrCluster(AbstractCluster):
         self.conn = boto.emr.connect_to_region(region_name=context.settings['aws_region'],
                                                aws_access_key_id=context.settings['aws_access_key_id'],
                                                aws_secret_access_key=context.settings['aws_secret_access_key'])
+
+    @property
+    def filesystem(self):
+        return self._filesystem
 
     def run_pig_step(self, uri_script, **kwargs):
         """

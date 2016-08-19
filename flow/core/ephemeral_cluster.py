@@ -16,8 +16,12 @@ class EphemeralCluster(AbstractCluster):
     """ implementation of the abstract API for the local, non-distributed environment """
 
     def __init__(self, name, context, **kwargs):
-        filesystem = EphemeralFilesystem(name, context, **kwargs)
-        super(EphemeralCluster, self).__init__(name, context, filesystem, **kwargs)
+        super(EphemeralCluster, self).__init__(name, context, **kwargs)
+        self._filesystem = EphemeralFilesystem(self.logger, context, **kwargs)
+
+    @property
+    def filesystem(self):
+        return self._filesystem
 
     def _run(self, command):
         """ `https://docs.python.org/3.2/library/subprocess.html#frequently-used-arguments` """

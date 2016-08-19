@@ -11,8 +11,8 @@ from flow.core.abstract_filesystem import AbstractFilesystem
 
 class S3Filesystem(AbstractFilesystem):
     """ implementation of AWS S3 filesystem """
-    def __init__(self, cluster_name, context, **kwargs):
-        super(S3Filesystem, self).__init__(cluster_name, context, **kwargs)
+    def __init__(self, logger, context, **kwargs):
+        super(S3Filesystem, self).__init__(logger, context, **kwargs)
         try:
             self.s3_connection = boto.connect_s3(context.settings['aws_access_key_id'],
                                                  context.settings['aws_secret_access_key'])
