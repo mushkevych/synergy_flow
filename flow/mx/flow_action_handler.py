@@ -1,16 +1,23 @@
+from synergy.scheduler.scheduler_constants import STATE_MACHINE_FREERUN
+
 __author__ = 'Bohdan Mushkevych'
 
 from synergy.conf import settings, context
 from synergy.db.dao.log_recording_dao import LogRecordingDao
 from synergy.mx.base_request_handler import BaseRequestHandler, valid_action_request, safe_json_response
+from synergy.scheduler.thread_handler import FreerunThreadHandler
 from werkzeug.utils import cached_property
 
 from flow.conf import flows
 from flow.core.execution_context import ExecutionContext
 from flow.db.dao.flow_dao import FlowDao
 from flow.db.dao.step_dao import StepDao
-from flow.flow_constants import ARGUMENT_FLOW_NAME
+from flow.flow_constants import *
 from flow.mx.rest_model_factory import *
+
+
+class FlowRequest(object):
+    pass
 
 
 class FlowActionHandler(BaseRequestHandler):
@@ -20,17 +27,22 @@ class FlowActionHandler(BaseRequestHandler):
         self.step_dao = StepDao(self.logger)
         self.log_recording_dao = LogRecordingDao(self.logger)
 
-        self.process_name = self.request_arguments.get('process_name')
-        self.flow_name = self.request_arguments.get('flow_name')
+        self.process_name = self.request_arguments.get(ARGUMENT_PROCESS_NAME)
+        self.flow_name = self.request_arguments.get(ARGUMENT_FLOW_NAME)
         if not self.flow_name and self.process_name:
             process_entry = context.process_context[self.process_name]
             self.flow_name = process_entry.arguments.get(ARGUMENT_FLOW_NAME)
 
-        self.step_name = self.request_arguments.get('step_name')
-        self.timeperiod = self.request_arguments.get('timeperiod')
+        self.step_name = self.request_arguments.get(ARGUMENT_STEP_NAME)
+        self.timeperiod = self.request_arguments.get(ARGUMENT_TIMEPERIOD)
+        self.start_timeperiod = self.request_arguments.get(ARGUMENT_START_TIMEPERIOD)
+        self.end_timeperiod = self.request_arguments.get(ARGUMENT_END_TIMEPERIOD)
         self.is_request_valid = True if self.flow_name \
                                         and self.flow_name in flows.flows \
-                                        and self.timeperiod else False
+                                        and self.timeperiod \
+                                        and self.start_timeperiod \
+                                        and self.end_timeperiod \
+            else False
 
         if self.is_request_valid:
             self.flow_name = self.flow_name.strip()
@@ -86,36 +98,47 @@ class FlowActionHandler(BaseRequestHandler):
     @valid_action_request
     def action_recover(self):
         """
-        - verify that the flow is not running for given context (timeperiod)
-        - transfer job into STATE_ON_HOLD
-        - create UOW with arguments['run_mode']='run_mode_recovery' and uow_type='TBD'
-        - locate appropriate MQ Queue
-        - submit UOW
-        NOTICE: perform extensive logging of every step
+        - make sure that the job is either finalized or in progress
+          i.e. the job is in [STATE_IN_PROGRESS, STATE_NOOP, STATE_PROCESSED, STATE_SKIPPED]
+        - TBD: set a special flag, understood by governing State Machine and GC that the
+          related_uow is either in [STATE_PROCESSED, STATE_INVALID, STATE_CANCELED]
+        - invalidate the UOW and trigger the GC
+        :return {'response': 'OK'} if the UOW was submitted and {'response': 'Job is still active'} otherwise
         """
         pass
 
     @valid_action_request
     def action_run_one_step(self):
         """
-        - verify that the flow is not running for given context (timeperiod)
-        - transfer job into STATE_ON_HOLD
-        - create UOW with arguments['run_mode']='run_mode_run_one' and uow_type='TBD'
-        - locate appropriate MQ Queue
-        - submit UOW
-        NOTICE: perform extensive logging of every step
+        - make sure that the job is finalized
+          i.e. the job is in [STATE_NOOP, STATE_PROCESSED, STATE_SKIPPED]
+        - submit a FREERUN UOW for given (process_name::flow_name::step_name, timeperiod)
+        :return {'response': 'OK'} if the UOW was submitted and {'response': 'Job is still active'} otherwise
         """
-        pass
+        flow_request = FlowRequest()
+        flow_request.schedulable_name = flow_request.schedulable_name
+        flow_request.timeperiod = flow_request.timeperiod
+        flow_request.start_timeperiod = flow_request.start_timeperiod
+        flow_request.end_timeperiod = flow_request.end_timeperiod
+        flow_request.arguments = {
+            ARGUMENT_FLOW_NAME: self.flow_name,
+            ARGUMENT_STEP_NAME: self.step_name,
+            ARGUMENT_RUN_MODE: RUN_MODE_RUN_ONE
+        }
+
+        freerun_handler = self.scheduler.freerun_handler[self.flow_name]
+        assert isinstance(freerun_handler, FreerunThreadHandler)
+
+        state_machine = self.scheduler.timetable.state_machines[STATE_MACHINE_FREERUN]
+        state_machine.manage_schedulable(freerun_handler.process_entry, flow_request)
 
     @valid_action_request
     def action_run_from_step(self):
         """
-        - verify that the flow is not running for given context (timeperiod)
-        - transfer job into STATE_ON_HOLD
-        - create UOW with arguments['run_mode']='run_mode_run_from' and uow_type='TBD'
-        - locate appropriate MQ Queue
-        - submit UOW
-        NOTICE: perform extensive logging of every step
+        - make sure that the job is finalized
+          i.e. the job is in [STATE_NOOP, STATE_PROCESSED, STATE_SKIPPED]
+        - submit a FREERUN UOW for given (process_name::flow_name::step_name, timeperiod)
+        :return {'response': 'OK'} if the UOW was submitted and {'response': 'Job is still active'} otherwise
         """
         pass
 
