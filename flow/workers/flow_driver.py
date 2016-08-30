@@ -1,3 +1,5 @@
+from model.flow import RUN_MODE_RECOVERY, RUN_MODE_NOMINAL
+
 __author__ = 'Bohdan Mushkevych'
 
 from synergy.conf import settings
@@ -46,7 +48,7 @@ class FlowDriver(AbstractUowAwareWorker):
                 uow_status = unit_of_work.STATE_INVALID
 
         except Exception:
-            self.logger.error('Exception on flow execution: {0}'.format(flow_name), exc_info=True)
+            self.logger.error('Exception on workflow execution: {0}'.format(flow_name), exc_info=True)
             uow_status = unit_of_work.STATE_INVALID
         finally:
             self.logger.info('}')

@@ -1,7 +1,7 @@
 from distutils.core import setup
 
 setup(name='synergy_flow',
-      version='0.6',
+      version='0.7',
       description='Synergy Flow',
       author='Bohdan Mushkevych',
       author_email='mushkevych@gmail.com',
@@ -21,6 +21,7 @@ setup(name='synergy_flow',
           'Operating System :: POSIX',
           'Programming Language :: Python :: 2.7',
           'Programming Language :: Python :: 3.4',
+          'Programming Language :: Python :: 3.5',
       ],
       requires=['synergy_scheduler', 'synergy_odm', 'mock', 'pymongo', 'boto', 'psycopg2', 'subprocess32']
       )

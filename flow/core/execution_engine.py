@@ -1,3 +1,5 @@
+from model.flow import RUN_MODE_RECOVERY, RUN_MODE_NOMINAL
+
 __author__ = 'Bohdan Mushkevych'
 
 import copy
@@ -49,7 +51,8 @@ class ExecutionEngine(object):
         assert isinstance(flow_name, FlowGraph)
         self.logger = logger
         if flow_name not in flows.flows:
-            raise ValueError('flow {0} not registered among flows: {1}'.format(flow_name, list(flows.flows.keys())))
+            raise ValueError('workflow {0} not registered among workflows: {1}'
+                             .format(flow_name, list(flows.flows.keys())))
 
         self.flow_graph_obj = copy.deepcopy(flows.flows[flow_name])
 

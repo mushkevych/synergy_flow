@@ -1,11 +1,11 @@
-from synergy.scheduler.scheduler_constants import STATE_MACHINE_FREERUN
-
 __author__ = 'Bohdan Mushkevych'
 
 from synergy.conf import settings, context
 from synergy.db.dao.log_recording_dao import LogRecordingDao
+from synergy.db.model.freerun_process_entry import freerun_context_entry
 from synergy.mx.base_request_handler import BaseRequestHandler, valid_action_request, safe_json_response
-from synergy.scheduler.thread_handler import FreerunThreadHandler
+from synergy.scheduler.scheduler_constants import STATE_MACHINE_FREERUN
+from synergy.system import time_helper
 from werkzeug.utils import cached_property
 
 from flow.conf import flows
@@ -16,8 +16,31 @@ from flow.flow_constants import *
 from flow.mx.rest_model_factory import *
 
 
+RESPONSE_OK = {'response': 'OK'}
+RESPONSE_NOT_OK = {'response': 'Job is not finished'}
+
+
 class FlowRequest(object):
-    pass
+    def __init__(self, process_name, flow_name, step_name, run_mode, timeperiod, start_timeperiod, end_timeperiod):
+        self.process_name = process_name
+        self.flow_name = flow_name
+        self.step_name = step_name
+        self.run_mode = run_mode
+        self.timeperiod = timeperiod
+        self.start_timeperiod = start_timeperiod
+        self.end_timeperiod = end_timeperiod
+
+    @property
+    def schedulable_name(self):
+        return '{0}::{1}::{2}'.format(self.process_name, self.flow_name, self.step_name)
+
+    @property
+    def arguments(self):
+        return {
+            ARGUMENT_FLOW_NAME: self.flow_name,
+            ARGUMENT_STEP_NAME: self.step_name,
+            ARGUMENT_RUN_MODE: self.run_mode
+        }
 
 
 class FlowActionHandler(BaseRequestHandler):
@@ -47,6 +70,35 @@ class FlowActionHandler(BaseRequestHandler):
         if self.is_request_valid:
             self.flow_name = self.flow_name.strip()
             self.timeperiod = self.timeperiod.strip()
+
+    def _get_tree_node(self):
+        tree = self.scheduler.timetable.get_tree(self.process_name)
+        if tree is None:
+            raise UserWarning('No Timetable tree is registered for process {0}'.format(self.process_name))
+
+        time_qualifier = context.process_context[self.process_name].time_qualifier
+        self.timeperiod = time_helper.cast_to_time_qualifier(time_qualifier, self.timeperiod)
+        node = tree.get_node(self.process_name, self.timeperiod)
+        return node
+
+    @property
+    def job_record(self):
+        node = self._get_tree_node()
+        return node.job_record
+
+    @property
+    def freerun_process_entry(self):
+        entry_name = '{0}::{1}'.format(self.flow_name, self.step_name)
+        classname = context.process_context[self.process_name].classname
+        return freerun_context_entry(
+            self.process_name,
+            entry_name,
+            classname=classname,
+            token=entry_name,
+            trigger_frequency='every {0}'.format(SECONDS_IN_CENTURY),
+            is_on=False,
+            description='Runtime freerun object to facilitate CUSTOM RUN MODES for workflow',
+        )
 
     @property
     def flow_id(self):
@@ -98,49 +150,52 @@ class FlowActionHandler(BaseRequestHandler):
     @valid_action_request
     def action_recover(self):
         """
-        - make sure that the job is either finalized or in progress
+        - make sure that the job is either finished or in progress
           i.e. the job is in [STATE_IN_PROGRESS, STATE_NOOP, STATE_PROCESSED, STATE_SKIPPED]
         - TBD: set a special flag, understood by governing State Machine and GC that the
           related_uow is either in [STATE_PROCESSED, STATE_INVALID, STATE_CANCELED]
         - invalidate the UOW and trigger the GC
-        :return {'response': 'OK'} if the UOW was submitted and {'response': 'Job is still active'} otherwise
+        :return RESPONSE_OK if the UOW was submitted and RESPONSE_NOT_OK otherwise
         """
         pass
 
     @valid_action_request
     def action_run_one_step(self):
         """
-        - make sure that the job is finalized
+        - make sure that the job is finished
           i.e. the job is in [STATE_NOOP, STATE_PROCESSED, STATE_SKIPPED]
         - submit a FREERUN UOW for given (process_name::flow_name::step_name, timeperiod)
-        :return {'response': 'OK'} if the UOW was submitted and {'response': 'Job is still active'} otherwise
+        :return RESPONSE_OK if the UOW was submitted and RESPONSE_NOT_OK otherwise
         """
-        flow_request = FlowRequest()
-        flow_request.schedulable_name = flow_request.schedulable_name
-        flow_request.timeperiod = flow_request.timeperiod
-        flow_request.start_timeperiod = flow_request.start_timeperiod
-        flow_request.end_timeperiod = flow_request.end_timeperiod
-        flow_request.arguments = {
-            ARGUMENT_FLOW_NAME: self.flow_name,
-            ARGUMENT_STEP_NAME: self.step_name,
-            ARGUMENT_RUN_MODE: RUN_MODE_RUN_ONE
-        }
+        if not self.job_record or not self.job_record.is_finished:
+            return RESPONSE_NOT_OK
 
-        freerun_handler = self.scheduler.freerun_handler[self.flow_name]
-        assert isinstance(freerun_handler, FreerunThreadHandler)
+        flow_request = FlowRequest(self.process_name, self.flow_name, self.step_name,
+                                   RUN_MODE_RUN_ONE,
+                                   self.timeperiod, self.start_timeperiod, self.end_timeperiod)
 
         state_machine = self.scheduler.timetable.state_machines[STATE_MACHINE_FREERUN]
-        state_machine.manage_schedulable(freerun_handler.process_entry, flow_request)
+        state_machine.manage_schedulable(self.freerun_process_entry, flow_request)
+        return RESPONSE_OK
 
     @valid_action_request
     def action_run_from_step(self):
         """
-        - make sure that the job is finalized
+        - make sure that the job is finished
           i.e. the job is in [STATE_NOOP, STATE_PROCESSED, STATE_SKIPPED]
         - submit a FREERUN UOW for given (process_name::flow_name::step_name, timeperiod)
-        :return {'response': 'OK'} if the UOW was submitted and {'response': 'Job is still active'} otherwise
+        :return RESPONSE_OK if the UOW was submitted and RESPONSE_NOT_OK otherwise
         """
-        pass
+        if not self.job_record or not self.job_record.is_finished:
+            return RESPONSE_NOT_OK
+
+        flow_request = FlowRequest(self.process_name, self.flow_name, self.step_name,
+                                   RUN_MODE_RUN_FROM,
+                                   self.timeperiod, self.start_timeperiod, self.end_timeperiod)
+
+        state_machine = self.scheduler.timetable.state_machines[STATE_MACHINE_FREERUN]
+        state_machine.manage_schedulable(self.freerun_process_entry, flow_request)
+        return RESPONSE_OK
 
     @valid_action_request
     @safe_json_response
@@ -157,5 +212,5 @@ class FlowActionHandler(BaseRequestHandler):
         try:
             resp = self.log_recording_dao.get_one(self.flow_id).document
         except (TypeError, LookupError):
-            resp = {'response': 'no related flow log'}
+            resp = {'response': 'no related workflow log'}
         return resp

@@ -1,13 +1,14 @@
 __author__ = 'Bohdan Mushkevych'
 
 from odm.document import BaseDocument
-from odm.fields import StringField, ObjectIdField, DictField, DateTimeField
+from odm.fields import StringField, ObjectIdField, DateTimeField
 
 TIMEPERIOD = 'timeperiod'
 START_TIMEPERIOD = 'start_timeperiod'
 END_TIMEPERIOD = 'end_timeperiod'
 FLOW_NAME = 'flow_name'
 STATE = 'state'
+RUN_MODE = 'run_mode'
 
 CREATED_AT = 'created_at'
 STARTED_AT = 'started_at'
@@ -44,6 +45,7 @@ class Flow(BaseDocument):
     timeperiod = StringField(TIMEPERIOD)
     start_timeperiod = StringField(START_TIMEPERIOD)
     end_timeperiod = StringField(END_TIMEPERIOD)
+    run_mode = StringField(RUN_MODE, choices=[RUN_MODE_NOMINAL, RUN_MODE_RECOVERY])
     state = StringField(STATE, choices=[STATE_EMBRYO, STATE_IN_PROGRESS, STATE_PROCESSED, STATE_NOOP, STATE_INVALID])
 
     created_at = DateTimeField(CREATED_AT)
@@ -59,3 +61,7 @@ class Flow(BaseDocument):
         """ :param value: tuple (name of the flow, timeperiod as string in Synergy Data format) """
         self.flow_name = value[0]
         self.timeperiod = value[1]
+
+
+RUN_MODE_RECOVERY = 'run_mode_recovery'
+RUN_MODE_NOMINAL = 'run_mode_nominal'
