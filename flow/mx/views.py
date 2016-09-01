@@ -9,7 +9,7 @@ import json
 from werkzeug.wrappers import Response
 
 from synergy.mx.utils import render_template, expose
-from flow.mx.flow_action_handler import FlowActionHandler
+from flow.mx.flow_action_handler import FlowActionHandler, RUN_MODE_RUN_ONE, RUN_MODE_RUN_FROM
 
 
 @expose('/flow/details/step/')
@@ -24,25 +24,25 @@ def details_flow(request, **values):
     return Response(response=json.dumps(details.flow_details), mimetype='application/json')
 
 
-@expose('/flow/action/recover/')
-def action_flow_recover(request, **values):
+@expose('/flow/action/run_mode/')
+def action_run_mode(request, **values):
     handler = FlowActionHandler(request, **values)
-    handler.action_recover()
+    handler.action_set_run_mode()
     return Response(status=NO_CONTENT)
 
 
 @expose('/flow/action/run_one_step/')
 def action_run_one_step(request, **values):
     handler = FlowActionHandler(request, **values)
-    handler.action_run_one_step()
-    return Response(status=NO_CONTENT)
+    return Response(response=json.dumps(handler.perform_freerun_action(RUN_MODE_RUN_ONE)),
+                    mimetype='application/json')
 
 
 @expose('/flow/action/run_from_step/')
 def action_run_from(request, **values):
     handler = FlowActionHandler(request, **values)
-    handler.action_run_from_step()
-    return Response(status=NO_CONTENT)
+    return Response(response=json.dumps(handler.perform_freerun_action(RUN_MODE_RUN_FROM)),
+                    mimetype='application/json')
 
 
 @expose('/flow/action/get_step_log/')

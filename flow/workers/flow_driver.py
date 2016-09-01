@@ -1,5 +1,3 @@
-from model.flow import RUN_MODE_RECOVERY, RUN_MODE_NOMINAL
-
 __author__ = 'Bohdan Mushkevych'
 
 from synergy.conf import settings

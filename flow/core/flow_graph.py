@@ -221,8 +221,8 @@ class FlowGraph(ContextDriven):
 
     def mark_failure(self):
         """ perform flow post-failure activities, such as db update """
-        self._mark_completion(STATE_INVALID)
+        self._mark_finish(STATE_INVALID)
 
     def mark_success(self):
         """ perform activities in case of the flow successful completion """
-        self._mark_completion(STATE_PROCESSED)
+        self._mark_finish(STATE_PROCESSED)

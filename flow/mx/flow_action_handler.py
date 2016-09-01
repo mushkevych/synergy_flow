@@ -1,12 +1,14 @@
 __author__ = 'Bohdan Mushkevych'
 
 from synergy.conf import settings, context
+from synergy.db.dao.unit_of_work_dao import UnitOfWorkDao
 from synergy.db.dao.log_recording_dao import LogRecordingDao
 from synergy.db.model.freerun_process_entry import freerun_context_entry
 from synergy.mx.base_request_handler import BaseRequestHandler, valid_action_request, safe_json_response
 from synergy.scheduler.scheduler_constants import STATE_MACHINE_FREERUN
 from synergy.system import time_helper
 from werkzeug.utils import cached_property
+
 
 from flow.conf import flows
 from flow.core.execution_context import ExecutionContext
@@ -48,6 +50,7 @@ class FlowActionHandler(BaseRequestHandler):
         super(FlowActionHandler, self).__init__(request, **values)
         self.flow_dao = FlowDao(self.logger)
         self.step_dao = StepDao(self.logger)
+        self.uow_dao = UnitOfWorkDao(self.logger)
         self.log_recording_dao = LogRecordingDao(self.logger)
 
         self.process_name = self.request_arguments.get(ARGUMENT_PROCESS_NAME)
@@ -58,18 +61,17 @@ class FlowActionHandler(BaseRequestHandler):
 
         self.step_name = self.request_arguments.get(ARGUMENT_STEP_NAME)
         self.timeperiod = self.request_arguments.get(ARGUMENT_TIMEPERIOD)
-        self.start_timeperiod = self.request_arguments.get(ARGUMENT_START_TIMEPERIOD)
-        self.end_timeperiod = self.request_arguments.get(ARGUMENT_END_TIMEPERIOD)
         self.is_request_valid = True if self.flow_name \
                                         and self.flow_name in flows.flows \
                                         and self.timeperiod \
-                                        and self.start_timeperiod \
-                                        and self.end_timeperiod \
-            else False
+                                else False
 
         if self.is_request_valid:
             self.flow_name = self.flow_name.strip()
             self.timeperiod = self.timeperiod.strip()
+
+        self.run_mode = self.request_arguments.get(ARGUMENT_RUN_MODE, '')
+        self.run_mode = self.run_mode.strip()
 
     def _get_tree_node(self):
         tree = self.scheduler.timetable.get_tree(self.process_name)
@@ -85,6 +87,14 @@ class FlowActionHandler(BaseRequestHandler):
     def job_record(self):
         node = self._get_tree_node()
         return node.job_record
+
+    @property
+    def uow_record(self):
+        node = self._get_tree_node()
+        uow_id = node.job_record.related_unit_of_work
+        if not uow_id:
+            return None
+        return self.uow_dao.get_one(uow_id)
 
     @property
     def freerun_process_entry(self):
@@ -148,19 +158,16 @@ class FlowActionHandler(BaseRequestHandler):
         return rest_model.document
 
     @valid_action_request
-    def action_recover(self):
+    def action_set_run_mode(self):
         """
-        - make sure that the job is either finished or in progress
-          i.e. the job is in [STATE_IN_PROGRESS, STATE_NOOP, STATE_PROCESSED, STATE_SKIPPED]
-        - TBD: set a special flag, understood by governing State Machine and GC that the
-          related_uow is either in [STATE_PROCESSED, STATE_INVALID, STATE_CANCELED]
-        - invalidate the UOW and trigger the GC
-        :return RESPONSE_OK if the UOW was submitted and RESPONSE_NOT_OK otherwise
+        - set a flag for ProcessEntry.arguments[ARGUMENT_RUN_MODE] = RUN_MODE_RECOVERY
+        - trigger standard reprocessing
         """
-        pass
+        if not self.job_record:
+            return RESPONSE_NOT_OK
+        self.freerun_process_entry
 
-    @valid_action_request
-    def action_run_one_step(self):
+    def perform_freerun_action(self, run_mode):
         """
         - make sure that the job is finished
           i.e. the job is in [STATE_NOOP, STATE_PROCESSED, STATE_SKIPPED]
@@ -170,13 +177,20 @@ class FlowActionHandler(BaseRequestHandler):
         if not self.job_record or not self.job_record.is_finished:
             return RESPONSE_NOT_OK
 
+        # TODO: rewrite MX so that start_timeperiod and end_timeperiod are communicated to and from front-end
+        start_timeperiod = self.uow_record.start_timeperiod
+        end_timeperiod = self.uow_record.end_timeperiod
         flow_request = FlowRequest(self.process_name, self.flow_name, self.step_name,
-                                   RUN_MODE_RUN_ONE,
-                                   self.timeperiod, self.start_timeperiod, self.end_timeperiod)
+                                   run_mode,
+                                   self.timeperiod, start_timeperiod, end_timeperiod)
 
         state_machine = self.scheduler.timetable.state_machines[STATE_MACHINE_FREERUN]
         state_machine.manage_schedulable(self.freerun_process_entry, flow_request)
         return RESPONSE_OK
+
+    @valid_action_request
+    def action_run_one_step(self):
+        return self.perform_freerun_action(RUN_MODE_RUN_ONE)
 
     @valid_action_request
     def action_run_from_step(self):
@@ -186,16 +200,7 @@ class FlowActionHandler(BaseRequestHandler):
         - submit a FREERUN UOW for given (process_name::flow_name::step_name, timeperiod)
         :return RESPONSE_OK if the UOW was submitted and RESPONSE_NOT_OK otherwise
         """
-        if not self.job_record or not self.job_record.is_finished:
-            return RESPONSE_NOT_OK
-
-        flow_request = FlowRequest(self.process_name, self.flow_name, self.step_name,
-                                   RUN_MODE_RUN_FROM,
-                                   self.timeperiod, self.start_timeperiod, self.end_timeperiod)
-
-        state_machine = self.scheduler.timetable.state_machines[STATE_MACHINE_FREERUN]
-        state_machine.manage_schedulable(self.freerun_process_entry, flow_request)
-        return RESPONSE_OK
+        return self.perform_freerun_action(RUN_MODE_RUN_FROM)
 
     @valid_action_request
     @safe_json_response
