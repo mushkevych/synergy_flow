@@ -7,8 +7,6 @@ ARGUMENT_END_TIMEPERIOD = 'end_timeperiod'
 
 # Argument is present in uow.arguments dictionary
 ARGUMENT_RUN_MODE = 'run_mode'
-RUN_MODE_NOMINAL = 'run_mode_nominal'
-RUN_MODE_RECOVERY = 'run_mode_recovery'
 RUN_MODE_RUN_ONE = 'run_mode_run_one'
 RUN_MODE_RUN_FROM = 'run_mode_run_from'
 

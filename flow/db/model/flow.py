@@ -13,6 +13,10 @@ CREATED_AT = 'created_at'
 STARTED_AT = 'started_at'
 FINISHED_AT = 'finished_at'
 
+RUN_MODE = 'run_mode'
+RUN_MODE_NOMINAL = 'run_mode_nominal'
+RUN_MODE_RECOVERY = 'run_mode_recovery'
+
 # Flow can get into STATE_INVALID if:
 # a. related Job was marked for reprocessing via MX
 # b. have failed with an exception at the step level
@@ -44,6 +48,7 @@ class Flow(BaseDocument):
     timeperiod = StringField(TIMEPERIOD)
     start_timeperiod = StringField(START_TIMEPERIOD)
     end_timeperiod = StringField(END_TIMEPERIOD)
+    run_mode = StringField(RUN_MODE, choices=[RUN_MODE_NOMINAL, RUN_MODE_RECOVERY], default=RUN_MODE_NOMINAL)
     state = StringField(STATE, choices=[STATE_EMBRYO, STATE_IN_PROGRESS, STATE_PROCESSED, STATE_NOOP, STATE_INVALID])
 
     created_at = DateTimeField(CREATED_AT)

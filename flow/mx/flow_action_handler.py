@@ -1,5 +1,7 @@
 __author__ = 'Bohdan Mushkevych'
 
+from odm.errors import ValidationError
+
 from synergy.conf import settings, context
 from synergy.db.dao.unit_of_work_dao import UnitOfWorkDao
 from synergy.db.dao.log_recording_dao import LogRecordingDao
@@ -9,14 +11,12 @@ from synergy.scheduler.scheduler_constants import STATE_MACHINE_FREERUN
 from synergy.system import time_helper
 from werkzeug.utils import cached_property
 
-
 from flow.conf import flows
 from flow.core.execution_context import ExecutionContext
 from flow.db.dao.flow_dao import FlowDao
 from flow.db.dao.step_dao import StepDao
 from flow.flow_constants import *
 from flow.mx.rest_model_factory import *
-
 
 RESPONSE_OK = {'response': 'OK'}
 RESPONSE_NOT_OK = {'response': 'Job is not finished'}
@@ -99,26 +99,27 @@ class FlowActionHandler(BaseRequestHandler):
     @property
     def freerun_process_entry(self):
         entry_name = '{0}::{1}'.format(self.flow_name, self.step_name)
-        classname = context.process_context[self.process_name].classname
-        return freerun_context_entry(
-            self.process_name,
-            entry_name,
-            classname=classname,
-            token=entry_name,
-            trigger_frequency='every {0}'.format(SECONDS_IN_CENTURY),
-            is_on=False,
-            description='Runtime freerun object to facilitate CUSTOM RUN MODES for workflow',
-        )
+        if entry_name not in self.scheduler.freerun_handlers:
+            classname = context.process_context[self.process_name].classname
+            entry = freerun_context_entry(
+                self.process_name,
+                entry_name,
+                classname=classname,
+                token=entry_name,
+                trigger_frequency='every {0}'.format(SECONDS_IN_CENTURY),
+                is_on=False,
+                description='Runtime freerun object to facilitate CUSTOM RUN MODES for workflow'
+            )
+            self.scheduler.freerun_handlers[entry_name] = entry
+        return self.scheduler.freerun_handlers[entry_name]
 
     @property
-    def flow_id(self):
-        flow_entry = self.flow_dao.get_one([self.flow_name, self.timeperiod])
-        return flow_entry.db_id
+    def flow_record(self):
+        return self.flow_dao.get_one([self.flow_name, self.timeperiod])
 
     @property
-    def step_id(self):
-        step_entry = self.step_dao.get_one([self.flow_name, self.step_name, self.timeperiod])
-        return step_entry.db_id
+    def step_record(self):
+        return self.step_dao.get_one([self.flow_name, self.step_name, self.timeperiod])
 
     @property
     def flow_graph_obj(self):
@@ -158,14 +159,21 @@ class FlowActionHandler(BaseRequestHandler):
         return rest_model.document
 
     @valid_action_request
-    def action_set_run_mode(self):
+    def action_change_run_mode(self):
         """
         - set a flag for ProcessEntry.arguments[ARGUMENT_RUN_MODE] = RUN_MODE_RECOVERY
         - trigger standard reprocessing
         """
-        if not self.job_record:
+        if not self.job_record or not self.run_mode:
             return RESPONSE_NOT_OK
-        self.freerun_process_entry
+
+        try:
+            local_record = self.flow_record
+            local_record.run_mode = self.run_mode
+            self.flow_dao.update(local_record)
+            return RESPONSE_OK
+        except ValidationError:
+            return RESPONSE_NOT_OK
 
     def perform_freerun_action(self, run_mode):
         """
@@ -206,7 +214,7 @@ class FlowActionHandler(BaseRequestHandler):
     @safe_json_response
     def action_get_step_log(self):
         try:
-            resp = self.log_recording_dao.get_one(self.step_id).document
+            resp = self.log_recording_dao.get_one(self.step_record.db_id).document
         except (TypeError, LookupError):
             resp = {'response': 'no related step log'}
         return resp
@@ -215,7 +223,7 @@ class FlowActionHandler(BaseRequestHandler):
     @safe_json_response
     def action_get_flow_log(self):
         try:
-            resp = self.log_recording_dao.get_one(self.flow_id).document
+            resp = self.log_recording_dao.get_one(self.flow_record.db_id).document
         except (TypeError, LookupError):
             resp = {'response': 'no related workflow log'}
         return resp

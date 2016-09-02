@@ -6,6 +6,23 @@ function render_empty_response(element, process_name) {
 
 
 function render_flow_header(element, mx_flow, process_name) {
+    var change_run_mode_form = '<form method="GET" action="/action/change_interval/" onsubmit="xmlhttp.send(); return false;">'
+        + '<input type="hidden" name="process_name" value="' + mx_flow.process_name + '" />'
+        + '<input type="hidden" name="flow_name" value="' + mx_flow.flow_name + '" />'
+        + '<input type="hidden" name="timeperiod" value="' + mx_flow.timeperiod + '" />'
+        + '<select name="run_mode">'
+        + '<option value="run_mode_nominal">Start from beginning</option>'
+        + '<option value="run_mode_recovery">Continue from last successful step</option>'
+        + '</select>'
+        + '<input type="submit" title="Apply" class="fa-input" value="&#xf00c;"/>'
+        + '</form>';
+
+    var run_mode_block = '<div class="table_layout">'
+        + '<div class="table_layout_element">On failure:</div>'
+        + '<div class="table_layout_element">&nbsp;</div>'
+        + '<div class="table_layout_element">' + change_run_mode_form + '</div>'
+        + '</div>';
+
     var uow_button = $('<button class="action_button"><i class="fa fa-file-code-o"></i>&nbsp;Uow</button>').click(function (e) {
         var params = {action: 'action/get_uow', timeperiod: mx_flow.timeperiod, process_name: process_name};
         var viewer_url = '/viewer/object/?' + $.param(params);
@@ -15,9 +32,6 @@ function render_flow_header(element, mx_flow, process_name) {
         var params = {action: 'action/get_event_log', timeperiod: mx_flow.timeperiod, process_name: process_name};
         var viewer_url = '/viewer/object/?' + $.param(params);
         window.open(viewer_url, 'Object Viewer', 'width=800,height=480,screenX=400,screenY=200,scrollbars=1');
-    });
-    var recover_button = $('<button class="action_button"><i class="fa fa-share-square-o"></i>&nbsp;Recover</button>').click(function (e) {
-        process_job('flow/action/recover', null, process_name, mx_flow.timeperiod, mx_flow.flow_name, null);
     });
     var reprocess_button = $('<button class="action_button"><i class="fa fa-repeat"></i>&nbsp;Reprocess</button>').click(function (e) {
         process_job('action/reprocess', null, process_name, mx_flow.timeperiod, mx_flow.flow_name, null);
@@ -40,14 +54,14 @@ function render_flow_header(element, mx_flow, process_name) {
         + '<li title="Workflow Name"><i class="fa-li fa fa-random"></i>' + mx_flow.flow_name + '</li>'
         + '<li title="Timeperiod"><i class="fa-li fa fa-clock-o"></i>' + mx_flow.timeperiod + '</li>'
         + '<li title="State"><i class="fa-li fa fa-flag-o"></i>' + mx_flow.state + '</li>'
-        + '</ul>'));
+        + '</ul>'
+        + run_mode_block));
+
     container.append($('<div class="step_section"></div>')
         .append($('<div></div>').append(uow_log_button))
         .append($('<div></div>').append(flow_log_button))
-        .append($('<div></div>').append(event_log_button)));
-    container.append($('<div class="step_section"></div>')
+        .append($('<div></div>').append(event_log_button))
         .append($('<div></div>').append(uow_button))
-        .append($('<div></div>').append(recover_button))
         .append($('<div></div>').append(reprocess_button)));
 
     element.append(container);
