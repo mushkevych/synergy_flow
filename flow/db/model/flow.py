@@ -48,8 +48,14 @@ class Flow(BaseDocument):
     timeperiod = StringField(TIMEPERIOD)
     start_timeperiod = StringField(START_TIMEPERIOD)
     end_timeperiod = StringField(END_TIMEPERIOD)
-    run_mode = StringField(RUN_MODE, choices=[RUN_MODE_NOMINAL, RUN_MODE_RECOVERY], default=RUN_MODE_NOMINAL)
     state = StringField(STATE, choices=[STATE_EMBRYO, STATE_IN_PROGRESS, STATE_PROCESSED, STATE_NOOP, STATE_INVALID])
+
+    # run_mode override rules:
+    # - default value is read from ProcessEntry.arguments['run_mode']
+    # - if the ProcessEntry.arguments['run_mode'] is None then run_mode is assumed `run_mode_nominal`
+    # - Flow.run_mode, if specified, overrides ProcessEntry.arguments['run_mode']
+    # - UOW.arguments['run_mode'] overrides Flow.run_mode
+    run_mode = StringField(RUN_MODE, choices=[RUN_MODE_NOMINAL, RUN_MODE_RECOVERY])
 
     created_at = DateTimeField(CREATED_AT)
     started_at = DateTimeField(STARTED_AT)

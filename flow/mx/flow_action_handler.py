@@ -13,6 +13,7 @@ from werkzeug.utils import cached_property
 
 from flow.conf import flows
 from flow.core.execution_context import ExecutionContext
+from flow.db.model.flow import RUN_MODE_NOMINAL
 from flow.db.dao.flow_dao import FlowDao
 from flow.db.dao.step_dao import StepDao
 from flow.flow_constants import *
@@ -150,6 +151,10 @@ class FlowActionHandler(BaseRequestHandler):
     @cached_property
     def process_name(self):
         return self.process_name
+
+    @cached_property
+    def active_run_mode(self):
+        return self.flow_dao.managed_run_mode(self.process_name, self.flow_name, self.timeperiod)
 
     @cached_property
     @valid_action_request

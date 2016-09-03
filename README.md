@@ -93,17 +93,30 @@ step_name.log file itself is structured as:
 MX:
 ---------
 
-Synergy Flow is integrated with the Synergy Scheduler 1.17+, and run-time workflow window is shown in response to *workflow* button 
+Synergy Flow is integrated with the Synergy Scheduler and run-time workflow window is shown in response to *workflow* button 
+
+
+Run Modes and integration with the Synergy Scheduler:
+---------
+
+Synergy Flow run modes are broken into two groups:
+- `run_mode_recover` and `run_mode_nominal`  
+  These are **managed** run modes.  
+  They have direct effect on the Job state and are covered by Scheduler's Garbage Collector. 
+  In other words - the UOW must succeed for the Job to be transferred to the finished state, 
+  and if the UOW fails, the Scheduler will attempt automatic recovery 
+- `run_mode_run_one` and `run_mode_run_from`  
+  These are **freerun** run modes.  
+  They require **finished** Job to be run on, and are completely invisible to that Job. 
+  In other words - if the **freerun** UOW fails and corrupts processed data, the underlying Job 
+  is not notified of this and will not attempt automatic reprocessing.  
+  Hence - it is a user's responsibility to trigger **freerun** UOW and control its state and possible collateral damage
+
 
 Roadmap:
 ---------
 
-- add the *rollback* to `AbstractAction` interface and incorporate it into the `action's` life-cycle
-- integrate Synergy Flow `recover`, `run_one` and `run_from` with the state machines
-- evaluate whether it makes sense to extend UOW **primary key** by UOW_TYPE to carry RUN_MODE uow:
-`[process_name, timeperiod, start_id, end_id, uow_type]`
-- evaluate whether it makes sense to extend Flow **primary key** by UOW_ID:
-`[flow_name, timeperiod, uow_id]`
+- consider adding the *rollback* to `AbstractAction` interface and incorporating it into the `action's` life-cycle
 
 License:
 ---------
@@ -132,5 +145,5 @@ Wiki Links
 Dependencies
 ---------
 1. linux/unix
-1. Synergy Scheduler 1.17+
+1. Synergy Scheduler 1.18+
 1. python 2.7+ / 3.4+

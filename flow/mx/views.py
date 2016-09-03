@@ -24,10 +24,10 @@ def details_flow(request, **values):
     return Response(response=json.dumps(details.flow_details), mimetype='application/json')
 
 
-@expose('/flow/action/run_mode/')
-def action_run_mode(request, **values):
+@expose('/flow/action/change_run_mode/')
+def action_change_run_mode(request, **values):
     handler = FlowActionHandler(request, **values)
-    handler.action_set_run_mode()
+    handler.action_change_run_mode()
     return Response(status=NO_CONTENT)
 
 
@@ -62,4 +62,5 @@ def flow_viewer(request, **values):
     details = FlowActionHandler(request, **values)
     return render_template('flow_viewer.html',
                            flow_details=details.flow_details,
-                           process_name=details.process_name)
+                           process_name=details.process_name,
+                           active_run_mode=details.active_run_mode)

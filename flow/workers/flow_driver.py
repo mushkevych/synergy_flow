@@ -20,27 +20,10 @@ class FlowDriver(AbstractUowAwareWorker):
         super(FlowDriver, self).__init__(process_name, perform_db_logging=True)
         self.flow_dao = FlowDao(self.logger)
 
-    def _managed_run_mode(self, process_name, flow_name, timeperiod):
-        # retrieve default run_mode value from the process_context
-        process_entry = context.process_context[process_name]
-        run_mode = process_entry.arguments.get(ARGUMENT_RUN_MODE, RUN_MODE_NOMINAL)
-
-        try:
-            # fetch existing Flow from the DB
-            # if present, run_mode overrides default one
-            db_key = [flow_name, timeperiod]
-            flow_entry = self.flow_dao.get_one(db_key)
-            run_mode = flow_entry.run_mode
-        except LookupError:
-            # no flow record for given key was present in the database
-            # use default one
-            pass
-        return run_mode
-
     def _process_uow(self, uow):
         flow_name = uow.arguments[ARGUMENT_FLOW_NAME]
         if uow.unit_of_work_type == TYPE_MANAGED:
-            run_mode = self._managed_run_mode(self.process_name, flow_name, uow.timeperiod)
+            run_mode = self.flow_dao.managed_run_mode(self.process_name, flow_name, uow.timeperiod)
         else:
             run_mode = uow.arguments.get(ARGUMENT_RUN_MODE)
 

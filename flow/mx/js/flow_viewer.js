@@ -5,14 +5,17 @@ function render_empty_response(element, process_name) {
 }
 
 
-function render_flow_header(element, mx_flow, process_name) {
-    var change_run_mode_form = '<form method="GET" action="/action/change_interval/" onsubmit="xmlhttp.send(); return false;">'
+function render_flow_header(element, mx_flow, process_name, active_run_mode) {
+    var is_run_mode_nominal = ('run_mode_nominal' == active_run_mode) ? 'selected' : '';
+    var is_run_mode_recovery = ('run_mode_recovery' == active_run_mode) ? 'selected' : '';
+
+    var change_run_mode_form = '<form method="GET" action="/flow/action/change_run_mode/" onsubmit="xmlhttp.send(); return false;">'
         + '<input type="hidden" name="process_name" value="' + mx_flow.process_name + '" />'
         + '<input type="hidden" name="flow_name" value="' + mx_flow.flow_name + '" />'
         + '<input type="hidden" name="timeperiod" value="' + mx_flow.timeperiod + '" />'
         + '<select name="run_mode">'
-        + '<option value="run_mode_nominal">Start from beginning</option>'
-        + '<option value="run_mode_recovery">Continue from last successful step</option>'
+        + '<option value="run_mode_nominal" ' + is_run_mode_nominal +  '>Start from beginning</option>'
+        + '<option value="run_mode_recovery" ' + is_run_mode_recovery + '>Continue from last successful step</option>'
         + '</select>'
         + '<input type="submit" title="Apply" class="fa-input" value="&#xf00c;"/>'
         + '</form>';
@@ -54,17 +57,18 @@ function render_flow_header(element, mx_flow, process_name) {
         + '<li title="Workflow Name"><i class="fa-li fa fa-random"></i>' + mx_flow.flow_name + '</li>'
         + '<li title="Timeperiod"><i class="fa-li fa fa-clock-o"></i>' + mx_flow.timeperiod + '</li>'
         + '<li title="State"><i class="fa-li fa fa-flag-o"></i>' + mx_flow.state + '</li>'
-        + '</ul>'
-        + run_mode_block));
+        + '</ul>'));
 
     container.append($('<div class="step_section"></div>')
         .append($('<div></div>').append(uow_log_button))
         .append($('<div></div>').append(flow_log_button))
-        .append($('<div></div>').append(event_log_button))
+        .append($('<div></div>').append(event_log_button)));
+    container.append($('<div class="step_section"></div>')
         .append($('<div></div>').append(uow_button))
         .append($('<div></div>').append(reprocess_button)));
 
     element.append(container);
+    element.append($('<div class="step_container"></div>').append(run_mode_block));
     element.append('<div class="clear"></div>');
 }
 
