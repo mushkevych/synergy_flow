@@ -10,7 +10,7 @@ function render_flow_header(element, mx_flow, process_name, active_run_mode) {
     var is_run_mode_recovery = ('run_mode_recovery' == active_run_mode) ? 'selected' : '';
 
     var change_run_mode_form = '<form method="GET" action="/flow/action/change_run_mode/" onsubmit="xmlhttp.send(); return false;">'
-        + '<input type="hidden" name="process_name" value="' + mx_flow.process_name + '" />'
+        + '<input type="hidden" name="process_name" value="' + process_name + '" />'
         + '<input type="hidden" name="flow_name" value="' + mx_flow.flow_name + '" />'
         + '<input type="hidden" name="timeperiod" value="' + mx_flow.timeperiod + '" />'
         + '<select name="run_mode">'
@@ -20,10 +20,10 @@ function render_flow_header(element, mx_flow, process_name, active_run_mode) {
         + '<input type="submit" title="Apply" class="fa-input" value="&#xf00c;"/>'
         + '</form>';
 
-    var run_mode_block = '<div class="table_layout">'
-        + '<div class="table_layout_element">On failure:</div>'
-        + '<div class="table_layout_element">&nbsp;</div>'
-        + '<div class="table_layout_element">' + change_run_mode_form + '</div>'
+    var run_mode_block = '<div class="header_layout">'
+        + '<div class="header_layout_element ">On failure:</div>'
+        + '<div class="header_layout_element ">&nbsp;</div>'
+        + '<div class="header_layout_element ">' + change_run_mode_form + '</div>'
         + '</div>';
 
     var uow_button = $('<button class="action_button"><i class="fa fa-file-code-o"></i>&nbsp;Uow</button>').click(function (e) {

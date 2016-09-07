@@ -3,7 +3,9 @@
 [![PyPI version](https://img.shields.io/pypi/v/synergy_flow.svg)](https://pypi.python.org/pypi/synergy_flow)
 [![Build Status](https://travis-ci.org/mushkevych/synergy_flow.svg?branch=master)](https://travis-ci.org/mushkevych/synergy_flow)
 
-Simple Workflow Engine, capable of running on a local desktop or multiple concurrent EMR clusters
+Simple Workflow Engine advocates "write once, run everywhere" approach in regard to workflow and clusters. 
+It features separate concepts for Action, Step, Workflow and Execution Cluster.  
+Framework supports local desktop environment (for testing at least), multiple concurrent EMR clusters, Qubole cluster.
 
 Concepts:
 ---------
@@ -113,11 +115,6 @@ Synergy Flow run modes are broken into two groups:
   Hence - it is a user's responsibility to trigger **freerun** UOW and control its state and possible collateral damage
 
 
-Roadmap:
----------
-
-- consider adding the *rollback* to `AbstractAction` interface and incorporating it into the `action's` life-cycle
-
 License:
 ---------
 
@@ -140,6 +137,12 @@ Metafile:
 Wiki Links
 ---------
 [Wiki Home Page](https://github.com/mushkevych/synergy_flow/wiki)
+
+
+Roadmap:
+---------
+
+- consider adding `rollback` method to `AbstractAction` interface and incorporating it into the `action's` life-cycle
 
 
 Dependencies

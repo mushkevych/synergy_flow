@@ -177,7 +177,7 @@ class FlowActionHandler(BaseRequestHandler):
             local_record.run_mode = self.run_mode
             self.flow_dao.update(local_record)
             return RESPONSE_OK
-        except ValidationError:
+        except (ValidationError, LookupError):
             return RESPONSE_NOT_OK
 
     def perform_freerun_action(self, run_mode):
