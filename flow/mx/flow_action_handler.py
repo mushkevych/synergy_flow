@@ -13,7 +13,6 @@ from werkzeug.utils import cached_property
 
 from flow.conf import flows
 from flow.core.execution_context import ExecutionContext
-from flow.db.model.flow import RUN_MODE_NOMINAL
 from flow.db.dao.flow_dao import FlowDao
 from flow.db.dao.step_dao import StepDao
 from flow.flow_constants import *
@@ -173,12 +172,20 @@ class FlowActionHandler(BaseRequestHandler):
             return RESPONSE_NOT_OK
 
         try:
+            msg = 'MX: setting RUN MODE for {0}@{1} -> {2} to {3}'\
+                .format(self.process_name, self.timeperiod, self.flow_name, self.run_mode)
+            self.scheduler.timetable.add_log_entry(self.process_name, self.timeperiod, msg)
+            self.logger.info(msg + ' {')
+
             local_record = self.flow_record
             local_record.run_mode = self.run_mode
             self.flow_dao.update(local_record)
+
             return RESPONSE_OK
         except (ValidationError, LookupError):
             return RESPONSE_NOT_OK
+        finally:
+            self.logger.info('}')
 
     def perform_freerun_action(self, run_mode):
         """

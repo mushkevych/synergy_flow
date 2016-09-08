@@ -59,6 +59,7 @@ function render_flow_header(element, mx_flow, process_name, active_run_mode) {
         + '<li title="State"><i class="fa-li fa fa-flag-o"></i>' + mx_flow.state + '</li>'
         + '</ul>'));
 
+    container.append($('<div class="step_section">&nbsp;</div>'));
     container.append($('<div class="step_section"></div>')
         .append($('<div></div>').append(uow_log_button))
         .append($('<div></div>').append(flow_log_button))
