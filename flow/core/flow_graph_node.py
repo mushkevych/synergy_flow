@@ -2,7 +2,7 @@ __author__ = 'Bohdan Mushkevych'
 
 from datetime import datetime
 
-from flow.core.execution_context import ContextDriven, get_step_logger
+from flow.core.execution_context import ContextDriven, get_step_logger, valid_context
 from synergy.system.log_recording_handler import LogRecordingHandler
 
 from flow.db.model.step import Step, STATE_EMBRYO, STATE_INVALID, STATE_PROCESSED, STATE_IN_PROGRESS
@@ -57,7 +57,6 @@ class FlowGraphNode(ContextDriven):
         self.log_recording_handler.attach()
 
     def _mark_finish(self, state):
-        assert self.is_context_set is True
         self.step_entry.finished_at = datetime.utcnow()
         self.step_entry.state = state
         self.step_dao.update(self.step_entry)
@@ -73,24 +72,13 @@ class FlowGraphNode(ContextDriven):
         """ perform activities in case of the step successful completion """
         self._mark_finish(STATE_PROCESSED)
 
+    @valid_context
     def run(self, execution_cluster):
-        assert self.is_context_set is True
         self.mark_start()
 
-        self.step_executor.do_pre(execution_cluster)
-        if not self.step_executor.is_pre_completed:
+        self.step_executor.do(execution_cluster)
+        if self.step_executor.is_complete:
+            self.mark_success()
+        else:
             self.mark_failure()
-            return False
-
-        self.step_executor.do_main(execution_cluster)
-        if not self.step_executor.is_main_completed:
-            self.mark_failure()
-            return False
-
-        self.step_executor.do_post(execution_cluster)
-        if not self.step_executor.is_post_completed:
-            self.mark_failure()
-            return False
-
-        self.mark_success()
         return self.step_executor.is_complete

@@ -1,9 +1,7 @@
 __author__ = 'Bohdan Mushkevych'
 
 import time
-
 from flow.core.abstract_action import AbstractAction
-from flow.core.abstract_cluster import AbstractCluster
 
 
 class SleepAction(AbstractAction):
@@ -11,7 +9,7 @@ class SleepAction(AbstractAction):
         super(SleepAction, self).__init__('Sleep Action')
         self.seconds = seconds
 
-    def do(self, execution_cluster):
+    def run(self, execution_cluster):
         time.sleep(self.seconds)
 
 
@@ -20,7 +18,7 @@ class ShellCommandAction(AbstractAction):
         super(ShellCommandAction, self).__init__('Shell Command Action')
         self.shell_command = shell_command
 
-    def do(self, execution_cluster):
+    def run(self, execution_cluster):
         execution_cluster.run_shell_command(self.shell_command)
 
 
@@ -29,7 +27,7 @@ class IdentityAction(AbstractAction):
     def __init__(self):
         super(IdentityAction, self).__init__('Identity Action')
 
-    def do(self, execution_cluster):
+    def run(self, execution_cluster):
         self.logger.info('identity action: *do* completed')
 
 
@@ -38,7 +36,7 @@ class FailureAction(AbstractAction):
     def __init__(self):
         super(FailureAction, self).__init__('Failure Action')
 
-    def do(self, execution_cluster):
+    def run(self, execution_cluster):
         raise UserWarning('failure action: raising exception')
 
 
@@ -48,10 +46,7 @@ class PigAction(AbstractAction):
         super(PigAction, self).__init__('Pig Action', kwargs)
         self.uri_script = uri_script
 
-    def do(self, execution_cluster):
-        assert self.is_context_set is True
-        assert isinstance(execution_cluster, AbstractCluster)
-
+    def run(self, execution_cluster):
         is_successful = execution_cluster.run_pig_step(
             uri_script=self.uri_script,
             start_timeperiod=self.start_timeperiod,
@@ -69,10 +64,7 @@ class SparkAction(AbstractAction):
         self.uri_script = uri_script
         self.language = language
 
-    def do(self, execution_cluster):
-        assert self.is_context_set is True
-        assert isinstance(execution_cluster, AbstractCluster)
-
+    def run(self, execution_cluster):
         is_successful = execution_cluster.run_spark_step(
             uri_script=self.uri_script,
             language=self.language,

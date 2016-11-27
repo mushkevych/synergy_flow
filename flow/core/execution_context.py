@@ -1,6 +1,7 @@
 __author__ = 'Bohdan Mushkevych'
 
 import os
+import functools
 from synergy.system.system_logger import Logger
 
 
@@ -43,6 +44,17 @@ def get_step_logger(flow_name, step_name, settings):
 def get_action_logger(flow_name, step_name, action_name, settings):
     logger = get_step_logger(flow_name, step_name, settings)
     return logger.getChild(action_name)
+
+
+def valid_context(method):
+    """ wraps method with verification for is_context_set """
+    @functools.wraps(method)
+    def _wrapper(self, *args, **kwargs):
+        assert isinstance(self, ContextDriven)
+        assert self.is_context_set is True, \
+            'ERROR: Calling {0}.{1} without initialized context'.format(self.__class__.__name__, method.__name__)
+        return method(self, *args, **kwargs)
+    return _wrapper
 
 
 class ExecutionContext(object):

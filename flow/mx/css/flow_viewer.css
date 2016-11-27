@@ -81,14 +81,24 @@ svg {
     margin-left: 10px;
 }
 
-.action_complete {
+/* actionset runtime states */
+.actionset_failed {
+    background-color: #ff0000;
+}
+
+.actionset_complete {
+    background-color: #00ff00;
+}
+
+.actionset_running {
     background-color: #7f7;
 }
 
-.action_pending {
+.actionset_pending {
     background-color: #747cff;
 }
 
+/* execution step persistent states */
 .state_embryo {
     background-color: #D5F5FF;
 }

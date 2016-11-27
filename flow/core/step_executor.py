@@ -2,7 +2,14 @@ __author__ = 'Bohdan Mushkevych'
 
 import copy
 from flow.core.abstract_action import AbstractAction
-from flow.core.execution_context import ContextDriven, get_step_logger
+from flow.core.execution_context import ContextDriven, get_step_logger, valid_context
+
+# NOTICE: actionset states carry different names (pending vs embryo, etc),
+# as they have no persistence and have different CSS coloring schema
+ACTIONSET_PENDING = 'actionset_pending'
+ACTIONSET_RUNNING = 'actionset_running'
+ACTIONSET_COMPLETE = 'actionset_complete'
+ACTIONSET_FAILED = 'actionset_failed'
 
 
 def validate_action_param(param, klass):
@@ -12,60 +19,69 @@ def validate_action_param(param, klass):
         'Expected list of {0}. Not all elements of the list were of this type'.format(klass.__name__)
 
 
-class StepExecutor(ContextDriven):
-    """ helper class for the GraphNode, encapsulating means to run and track action progress
-        NOTICE: during __init__ all actions are cloned
-                so that set_context can be applied to an action in concurrency-safe manner """
-    def __init__(self, step_name, main_action, pre_actions=None, post_actions=None):
-        super(StepExecutor, self).__init__()
-
-        if pre_actions is None: pre_actions = []
-        if post_actions is None: post_actions = []
+class Actionset(ContextDriven):
+    """ set of Actions to be performed together """
+    def __init__(self, actions, step_name):
+        super(Actionset, self).__init__()
+        if actions is None: actions = []
+        validate_action_param(actions, AbstractAction)
 
         self.step_name = step_name
+        self.actions = copy.deepcopy(actions)
+        self.state = ACTIONSET_PENDING
+
+    def get_logger(self):
+        return get_step_logger(self.flow_name, self.step_name, self.settings)
+
+    @valid_context
+    def do(self, execution_cluster):
+        self.state = ACTIONSET_RUNNING
+        for action in self.actions:
+            try:
+                action.set_context(self.context, step_name=self.step_name)
+                action.do(execution_cluster)
+            except Exception as e:
+                self.state = ACTIONSET_FAILED
+                self.logger.error('Execution Error: {0}'.format(e), exc_info=True)
+                raise
+            finally:
+                action.cleanup()
+        self.state = ACTIONSET_COMPLETE
+
+
+class StepExecutor(ContextDriven):
+    """ Step runner class for the GraphNode, encapsulating means to run and track execution progress
+        NOTICE: during __init__ all actions are cloned
+                so that set_context can be applied to an action in concurrency-safe manner """
+    def __init__(self, step_name, main_action, pre_actions=None, post_actions=None, skip=False):
+        super(StepExecutor, self).__init__()
         assert isinstance(main_action, AbstractAction)
-        self.main_action = copy.deepcopy(main_action)
 
-        self.is_pre_completed = False
-        self.is_main_completed = False
-        self.is_post_completed = False
-
-        validate_action_param(pre_actions, AbstractAction)
-        self.pre_actions = copy.deepcopy(pre_actions)
-
-        validate_action_param(post_actions, AbstractAction)
-        self.post_actions = copy.deepcopy(post_actions)
+        self.step_name = step_name
+        self.pre_actionset = Actionset(pre_actions, step_name)
+        self.main_actionset = Actionset([main_action], step_name)
+        self.post_actionset = Actionset(post_actions, step_name)
+        self.skip = skip
 
     def get_logger(self):
         return get_step_logger(self.flow_name, self.step_name, self.settings)
 
     @property
     def is_complete(self):
-        return self.is_pre_completed and self.is_main_completed and self.is_post_completed
+        return self.pre_actionset.state == ACTIONSET_COMPLETE \
+               and self.main_actionset.state == ACTIONSET_COMPLETE \
+               and self.post_actionset.state == ACTIONSET_COMPLETE
 
-    def _do(self, actions, execution_cluster):
-        assert self.is_context_set is True
-        is_success = True
-        for action in actions:
-            try:
-                action.set_context(self.context, step_name=self.step_name)
-                action.do(execution_cluster)
-            except Exception as e:
-                is_success = False
-                self.logger.error('Execution Error: {0}'.format(e), exc_info=True)
-                break
-            finally:
-                action.cleanup()
-        return is_success
+    @valid_context
+    def do(self, execution_cluster):
+        if self.skip:
+            for block in [self.pre_actionset, self.main_actionset, self.post_actionset]:
+                block.state.is_success = ACTIONSET_COMPLETE
+            return
 
-    def do_pre(self, execution_cluster):
-        self.is_pre_completed = self._do(self.pre_actions, execution_cluster)
-        return self.is_pre_completed
-
-    def do_main(self, execution_cluster):
-        self.is_main_completed = self._do([self.main_action], execution_cluster)
-        return self.is_main_completed
-
-    def do_post(self, execution_cluster):
-        self.is_post_completed = self._do(self.post_actions, execution_cluster)
-        return self.is_post_completed
+        try:
+            for block in [self.pre_actionset, self.main_actionset, self.post_actionset]:
+                block.set_context(self.context)
+                block.do(execution_cluster, self.skip)
+        except:
+            pass

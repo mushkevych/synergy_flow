@@ -10,6 +10,7 @@ import boto.s3.key
 import psycopg2
 from boto.exception import S3ResponseError
 
+from flow.core.execution_context import valid_context
 from flow.core.abstract_action import AbstractAction
 
 
@@ -79,8 +80,8 @@ class ExportAction(AbstractAction):
         s3_key.key = self.timeperiod + '/' + self.table_name + '.csv'
         s3_key.set_contents_from_file(fp=file_uri, rewind=True)
 
-    def do(self, execution_cluster):
-        assert self.is_context_set is True
+    @valid_context
+    def run(self, execution_cluster):
         file_uri = self.table_to_file()
         if not file_uri:
             raise UserWarning('Table {0} was not exported. Aborting the action'.format(self.table_name))

@@ -1,5 +1,3 @@
-from model.flow import RUN_MODE_RECOVERY, RUN_MODE_NOMINAL
-
 __author__ = 'Bohdan Mushkevych'
 
 import copy
@@ -7,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from flow.conf import flows
 from flow.flow_constants import *
-from flow.db.model import step
+from flow.db.model import step, flow
 from flow.core.abstract_cluster import AbstractCluster
 from flow.core.emr_cluster import EmrCluster
 from flow.core.flow_graph import FlowGraph
@@ -99,7 +97,7 @@ class ExecutionEngine(object):
               steps for concurrent execution (if permitted by the Graph layout)
             - terminating clusters after the flow has completed or failed
         """
-        self.logger.info('starting Engine in {0}: {{'.format(RUN_MODE_NOMINAL))
+        self.logger.info('starting Engine in {0}: {{'.format(flow.RUN_MODE_NOMINAL))
 
         try:
             self.flow_graph_obj.set_context(context)
@@ -126,7 +124,7 @@ class ExecutionEngine(object):
             - starting the flow processing from the last known successful step
             - terminating clusters after the flow has completed or failed
         """
-        self.logger.info('starting Engine in {0}: {{'.format(RUN_MODE_RECOVERY))
+        self.logger.info('starting Engine in {0}: {{'.format(flow.RUN_MODE_RECOVERY))
 
         try:
             self.flow_graph_obj.set_context(context)

@@ -102,16 +102,12 @@ function render_flow_graph(steps, element) {
         for (var step_name in steps) {
             var step = steps[step_name];
 
-            var css_pre_completed = step.is_pre_completed ? "action_complete" : "action_pending";
-            var css_main_completed = step.is_main_completed ? "action_complete" : "action_pending";
-            var css_post_completed = step.is_post_completed ? "action_complete" : "action_pending";
-
             var html = '<div id=step_' + step_index + ' class="step_container">';
             html += '<div id=step_' + step_index + '_action_status class="step_section width_30pct">';
             if (step_name != 'start' && step_name != 'finish') {
-                html += '<span class="pre_actions action_status ' + css_pre_completed + '"></span>';
-                html += '<span class="action_status ' + css_main_completed + '"></span>';
-                html += '<span class="action_status ' + css_post_completed + '"></span>';
+                html += '<span class="pre_actions action_status ' + step.pre_actionset.state + '"></span>';
+                html += '<span class="action_status ' + step.main_actionset.state + '"></span>';
+                html += '<span class="action_status ' + step.post_actionset.state + '"></span>';
             }
             html += '</div>';
             html += '<div class="step_section width_70pct">';
@@ -164,10 +160,11 @@ function render_flow_graph(steps, element) {
                 $(this).tipsy({
                     gravity: 'w', opacity: 1, html: true,
                     title: function () {
+                        var step = steps[step_name];
                         var html = '<p class="name">' + step_name + '</p>';
-                        html += '<p class="description">' + formatJSON(steps[step_name].pre_actions) + '</p>';
-                        html += '<p class="description">' + formatJSON(steps[step_name].main_action) + '</p>';
-                        html += '<p class="description">' + formatJSON(steps[step_name].post_actions) + '</p>';
+                        html += '<p class="description">' + formatJSON(step.pre_actionset.actions) + '</p>';
+                        html += '<p class="description">' + formatJSON(step.main_actionset.actions) + '</p>';
+                        html += '<p class="description">' + formatJSON(step.post_actionset.actions) + '</p>';
                         return html;
                     }
                 });

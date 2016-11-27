@@ -5,7 +5,7 @@ from collections import OrderedDict
 from datetime import datetime
 
 from flow.flow_constants import STEP_NAME_START, STEP_NAME_FINISH
-from flow.core.execution_context import ContextDriven, get_flow_logger
+from flow.core.execution_context import ContextDriven, get_flow_logger, valid_context
 from flow.core.step_executor import StepExecutor
 from flow.core.flow_graph_node import FlowGraphNode
 from flow.db.dao.flow_dao import FlowDao
@@ -84,7 +84,12 @@ class FlowGraph(ContextDriven):
     def __contains__(self, item):
         return item in self._dict
 
-    def append(self, name, dependent_on_names, main_action, pre_actions=None, post_actions=None):
+    def enlist(self, step_exec, dependent_on_names):
+        assert isinstance(step_exec, StepExecutor)
+        return self.append(step_exec.step_name, dependent_on_names, step_exec.main_actionset.actions,
+                           step_exec.pre_actionset.actions, step_exec.post_actionset.actions, step_exec.skip)
+
+    def append(self, name, dependent_on_names, main_action, pre_actions=None, post_actions=None, skip=False):
         """ method appends a new Node to the Graph,
             validates the input for non-existent references
             :return self to allow chained *append*
@@ -109,7 +114,8 @@ class FlowGraph(ContextDriven):
         node = FlowGraphNode(name, StepExecutor(step_name=name,
                                                 main_action=main_action,
                                                 pre_actions=pre_actions,
-                                                post_actions=post_actions))
+                                                post_actions=post_actions,
+                                                skip=skip))
 
         # link newly inserted node with the dependent_on nodes
         for dependent_on_name in dependent_on_names:
@@ -172,21 +178,21 @@ class FlowGraph(ContextDriven):
     def get_logger(self):
         return get_flow_logger(self.flow_name, self.settings)
 
+    @valid_context
     def clear_steps(self):
         """ method purges all steps related to given flow from the DB """
-        assert self.is_context_set is True
         assert self.context.flow_entry is not None
 
         step_dao = StepDao(self.logger)
         step_dao.remove_by_flow_id(self.context.flow_entry.db_id)
 
+    @valid_context
     def load_steps(self):
         """ method:
             1. loads all steps
             2. filters out successful and updates GraphNodes and self.yielded list accordingly
             3. removes failed steps from the DB
         """
-        assert self.is_context_set is True
         assert self.context.flow_entry is not None
 
         step_dao = StepDao(self.logger)
@@ -199,9 +205,9 @@ class FlowGraph(ContextDriven):
             else:
                 step_dao.remove(s.key)
 
+    @valid_context
     def mark_start(self):
         """ performs flow start-up, such as db and context updates """
-        assert self.is_context_set is True
         self.context.flow_entry.started_at = datetime.utcnow()
         self.context.flow_entry.state = STATE_IN_PROGRESS
         self.flow_dao.update(self.context.flow_entry)
@@ -210,8 +216,8 @@ class FlowGraph(ContextDriven):
         self.log_recording_handler = LogRecordingHandler(self.get_logger(), self.context.flow_entry.db_id)
         self.log_recording_handler.attach()
 
+    @valid_context
     def _mark_finish(self, state):
-        assert self.is_context_set is True
         self.context.flow_entry.finished_at = datetime.utcnow()
         self.context.flow_entry.state = state
         self.flow_dao.update(self.context.flow_entry)

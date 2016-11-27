@@ -6,6 +6,7 @@ from datetime import datetime
 from flow.core.abstract_action import AbstractAction
 from flow.core.flow_graph import FlowGraph
 from flow.core.flow_graph_node import FlowGraphNode
+from flow.core.step_executor import Actionset
 from flow.db.model import flow, step
 from flow.flow_constants import STEP_NAME_START, STEP_NAME_FINISH
 from flow.mx.rest_model import *
@@ -21,16 +22,23 @@ def create_rest_action(action_obj):
     return rest_model
 
 
+def create_rest_actionset(actionset_obj):
+    assert isinstance(actionset_obj, Actionset)
+    rest_model = RestActionset(
+        state=actionset_obj.state,
+        actions=[create_rest_action(x).document for x in actionset_obj.actions],
+    )
+    return rest_model
+
+
 def create_rest_step(graph_node_obj):
     assert isinstance(graph_node_obj, FlowGraphNode)
+    step_exec = graph_node_obj.step_executor
     rest_model = RestStep(
         step_name=graph_node_obj.step_name,
-        is_pre_completed=graph_node_obj.step_executor.is_pre_completed,
-        is_main_completed=graph_node_obj.step_executor.is_main_completed,
-        is_post_completed=graph_node_obj.step_executor.is_post_completed,
-        pre_actions=[create_rest_action(x).document for x in graph_node_obj.step_executor.pre_actions],
-        main_action=create_rest_action(graph_node_obj.step_executor.main_action),
-        post_actions=[create_rest_action(x).document for x in graph_node_obj.step_executor.post_actions],
+        pre_actionset=create_rest_actionset(step_exec.pre_actionset),
+        main_actionset=create_rest_actionset(step_exec.main_actionset),
+        post_actionset=create_rest_actionset(step_exec.post_actionset),
         previous_nodes=[x.step_name for x in graph_node_obj._prev],
         next_nodes=[x.step_name for x in graph_node_obj._next]
     )

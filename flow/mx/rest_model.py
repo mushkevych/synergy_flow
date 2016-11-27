@@ -9,12 +9,11 @@ from flow.db.model.step import Step
 
 FIELD_ACTION_NAME = 'action_name'
 FIELD_ACTION_KWARGS = 'kwargs'
-FIELD_IS_PRE_COMPLETED = 'is_pre_completed'
-FIELD_IS_MAIN_COMPLETED = 'is_main_completed'
-FIELD_IS_POST_COMPLETED = 'is_post_completed'
-FIELD_PRE_ACTIONS = 'pre_actions'
-FIELD_MAIN_ACTION = 'main_action'
-FIELD_POST_ACTIONS = 'post_actions'
+FIELD_STATE = 'state'
+FIELD_PRE_ACTIONSET = 'pre_actionset'
+FIELD_MAIN_ACTIONSET = 'main_actionset'
+FIELD_POST_ACTIONSET = 'post_actionset'
+FIELD_ACTIONS = 'actions'
 FIELD_STEPS = 'steps'
 FIELD_GRAPH = 'graph'
 FIELD_PREVIOUS_NODES = 'previous_nodes'
@@ -27,15 +26,16 @@ class RestAction(BaseDocument):
     kwargs = DictField(FIELD_ACTION_KWARGS)
 
 
-class RestStep(Step):
-    is_pre_completed = BooleanField(FIELD_IS_PRE_COMPLETED)
-    is_main_completed = BooleanField(FIELD_IS_MAIN_COMPLETED)
-    is_post_completed = BooleanField(FIELD_IS_POST_COMPLETED)
-    duration = IntegerField(FIELD_DURATION)
+class RestActionset(BaseDocument):
+    state = StringField(FIELD_STATE)
+    actions = ListField(FIELD_ACTIONS)
 
-    pre_actions = ListField(FIELD_PRE_ACTIONS)
-    main_action = NestedDocumentField(FIELD_MAIN_ACTION, RestAction, null=True)
-    post_actions = ListField(FIELD_POST_ACTIONS)
+
+class RestStep(Step):
+    pre_actionset = NestedDocumentField(FIELD_PRE_ACTIONSET, RestActionset)
+    main_actionset = NestedDocumentField(FIELD_MAIN_ACTIONSET, RestActionset)
+    post_actionset = NestedDocumentField(FIELD_POST_ACTIONSET, RestActionset)
+    duration = IntegerField(FIELD_DURATION)
 
     previous_nodes = ListField(FIELD_PREVIOUS_NODES)
     next_nodes = ListField(FIELD_NEXT_NODES)
