@@ -82,6 +82,6 @@ class StepExecutor(ContextDriven):
         try:
             for block in [self.pre_actionset, self.main_actionset, self.post_actionset]:
                 block.set_context(self.context)
-                block.do(execution_cluster, self.skip)
-        except:
+                block.do(execution_cluster)
+        except Exception as e:
             pass
