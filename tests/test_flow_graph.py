@@ -13,6 +13,7 @@ from synergy.conf import settings
 from flow.conf import flows
 from flow.core.flow_graph_node import FlowGraphNode
 from flow.core.execution_context import ExecutionContext
+from flow.core.step_executor import StepExecutor, ACTIONSET_COMPLETE
 from flow.core.ephemeral_cluster import EphemeralCluster
 
 TEST_PRESET_TIMEPERIOD = '2016060107'
@@ -62,9 +63,11 @@ class FlowGraphTest(unittest.TestCase):
 
             step.set_context(self.context)
             step.mark_start()
-            step.step_executor.is_pre_completed = True
-            step.step_executor.is_main_completed = True
-            step.step_executor.is_post_completed = True
+
+            assert isinstance(step.step_executor, StepExecutor)
+            step.step_executor.pre_actionset.state = ACTIONSET_COMPLETE
+            step.step_executor.main_actionset.state = ACTIONSET_COMPLETE
+            step.step_executor.post_actionset.state = ACTIONSET_COMPLETE
             step.mark_success()
 
         self.assertListEqual(steps_order, ['step_1', 'step_2', 'step_3', 'step_4',
