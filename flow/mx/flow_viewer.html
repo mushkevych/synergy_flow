@@ -12,7 +12,7 @@
     <script type="text/javascript" src="{{ url_for('flow/static', file='js/d3-3.5.17.min.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('flow/static', file='js/dagre-d3-0.4.17.min.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('flow/static', file='js/flow_viewer.js') }}"></script>
-    <script type="text/javascript" src="{{ url_for('static', file='js/jquery-3.1.0.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', file='js/jquery-3.1.1.min.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('flow/static', file='js/jquery.tipsy.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', file='js/mx_utils.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', file='js/alertify-0.3.17.trunk.js') }}"></script>
@@ -48,7 +48,7 @@
         render_empty_response($("#user_message"), process_name);
     }
 
-    $(document).ready(function () {
+    $(function () {  // former $(document).ready(function () {...})
         render_flow_header($("#flow_header"), mx_flow, process_name, active_run_mode);
         render_flow_graph(mx_flow.graph, d3.select("#flow"));
     });
