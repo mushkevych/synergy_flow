@@ -163,7 +163,7 @@ class FlowActionHandler(BaseRequestHandler):
         return rest_model.document
 
     @valid_action_request
-    def action_change_run_mode(self):
+    def set_run_mode(self):
         """
         - set a flag for ProcessEntry.arguments[ARGUMENT_RUN_MODE] = RUN_MODE_RECOVERY
         - trigger standard reprocessing
@@ -209,11 +209,11 @@ class FlowActionHandler(BaseRequestHandler):
         return RESPONSE_OK
 
     @valid_action_request
-    def action_run_one_step(self):
+    def run_one_step(self):
         return self.perform_freerun_action(RUN_MODE_RUN_ONE)
 
     @valid_action_request
-    def action_run_from_step(self):
+    def run_from_step(self):
         """
         - make sure that the job is finished
           i.e. the job is in [STATE_NOOP, STATE_PROCESSED, STATE_SKIPPED]
@@ -224,7 +224,7 @@ class FlowActionHandler(BaseRequestHandler):
 
     @valid_action_request
     @safe_json_response
-    def action_get_step_log(self):
+    def get_step_log(self):
         try:
             resp = self.log_recording_dao.get_one(self.step_record.db_id).document
         except (TypeError, LookupError):
@@ -233,7 +233,7 @@ class FlowActionHandler(BaseRequestHandler):
 
     @valid_action_request
     @safe_json_response
-    def action_get_flow_log(self):
+    def get_flow_log(self):
         try:
             resp = self.log_recording_dao.get_one(self.flow_record.db_id).document
         except (TypeError, LookupError):

@@ -1,7 +1,7 @@
 from distutils.core import setup
 
 setup(name='synergy_flow',
-      version='0.8',
+      version='0.9',
       description='Synergy Flow',
       author='Bohdan Mushkevych',
       author_email='mushkevych@gmail.com',
