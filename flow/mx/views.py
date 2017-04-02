@@ -12,54 +12,49 @@ from synergy.mx.utils import render_template, expose
 from flow.mx.flow_action_handler import FlowActionHandler, RUN_MODE_RUN_ONE, RUN_MODE_RUN_FROM
 
 
-# @expose('/flow/step/details/')
-@expose('/flow/details/step/')
+# for future use
+@expose('/flow/step/details/')
 def details_flow_step(request, **values):
     details = FlowActionHandler(request, **values)
     return Response(response=json.dumps(details.step_details), mimetype='application/json')
 
 
-# @expose('/flow/flow/details/')
-@expose('/flow/details/flow/')
+# for future use
+@expose('/flow/flow/details/')
 def details_flow(request, **values):
     details = FlowActionHandler(request, **values)
     return Response(response=json.dumps(details.flow_details), mimetype='application/json')
 
 
-# @expose('/flow/run/mode/')
-@expose('/flow/action/change_run_mode/')
-def action_change_run_mode(request, **values):
+@expose('/flow/run/mode/')
+def set_run_mode(request, **values):
     handler = FlowActionHandler(request, **values)
     handler.set_run_mode()
     return Response(status=NO_CONTENT)
 
 
-# @expose('/flow/run/one_step/')
-@expose('/flow/action/run_one_step/')
-def action_run_one_step(request, **values):
+@expose('/flow/run/one_step/')
+def run_one_step(request, **values):
     handler = FlowActionHandler(request, **values)
     return Response(response=json.dumps(handler.perform_freerun_action(RUN_MODE_RUN_ONE)),
                     mimetype='application/json')
 
 
-# @expose('/flow/run/from_step/')
-@expose('/flow/action/run_from_step/')
-def action_run_from(request, **values):
+@expose('/flow/run/from_step/')
+def run_from_step(request, **values):
     handler = FlowActionHandler(request, **values)
     return Response(response=json.dumps(handler.perform_freerun_action(RUN_MODE_RUN_FROM)),
                     mimetype='application/json')
 
 
-# @expose('/flow/step/log/')
-@expose('/flow/action/get_step_log/')
-def action_get_step_log(request, **values):
+@expose('/flow/step/log/')
+def get_step_log(request, **values):
     handler = FlowActionHandler(request, **values)
     return Response(response=json.dumps(handler.get_step_log()), mimetype='application/json')
 
 
-# @expose('/flow/flow/log/')
-@expose('/flow/action/get_flow_log/')
-def action_get_flow_log(request, **values):
+@expose('/flow/flow/log/')
+def get_flow_log(request, **values):
     handler = FlowActionHandler(request, **values)
     return Response(response=json.dumps(handler.get_flow_log()), mimetype='application/json')
 

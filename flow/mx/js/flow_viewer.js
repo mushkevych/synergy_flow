@@ -6,10 +6,11 @@ function render_empty_response(element, process_name) {
 
 
 function render_flow_header(element, mx_flow, process_name, active_run_mode) {
+    // TODO: need to pass information on whether the process is managed or freerun
     var is_run_mode_nominal = ('run_mode_nominal' == active_run_mode) ? 'selected' : '';
     var is_run_mode_recovery = ('run_mode_recovery' == active_run_mode) ? 'selected' : '';
 
-    var change_run_mode_form = '<form method="GET" action="/flow/action/change_run_mode/" onsubmit="xmlhttp.send(); return false;">'
+    var change_run_mode_form = '<form method="POST" action="/flow/run/mode/" onsubmit="xmlhttp.send(); return false;">'
         + '<input type="hidden" name="process_name" value="' + process_name + '" />'
         + '<input type="hidden" name="flow_name" value="' + mx_flow.flow_name + '" />'
         + '<input type="hidden" name="timeperiod" value="' + mx_flow.timeperiod + '" />'
@@ -27,25 +28,25 @@ function render_flow_header(element, mx_flow, process_name, active_run_mode) {
         + '</div>';
 
     var uow_button = $('<button class="action_button"><i class="fa fa-file-code-o"></i>&nbsp;Uow</button>').click(function (e) {
-        var params = {action: 'action/get_uow', timeperiod: mx_flow.timeperiod, process_name: process_name};
+        var params = {action: 'managed/uow', timeperiod: mx_flow.timeperiod, process_name: process_name};
         var viewer_url = '/viewer/object/?' + $.param(params);
         window.open(viewer_url, 'Object Viewer', 'width=450,height=400,screenX=400,screenY=200,scrollbars=1');
     });
     var event_log_button = $('<button class="action_button"><i class="fa fa-th-list"></i>&nbsp;Event&nbsp;Log</button>').click(function (e) {
-        var params = {action: 'action/get_event_log', timeperiod: mx_flow.timeperiod, process_name: process_name};
+        var params = {action: 'managed/log/event', timeperiod: mx_flow.timeperiod, process_name: process_name};
         var viewer_url = '/viewer/object/?' + $.param(params);
         window.open(viewer_url, 'Object Viewer', 'width=800,height=480,screenX=400,screenY=200,scrollbars=1');
     });
     var reprocess_button = $('<button class="action_button"><i class="fa fa-repeat"></i>&nbsp;Reprocess</button>').click(function (e) {
-        process_job('action/reprocess', null, process_name, mx_flow.timeperiod, mx_flow.flow_name, null);
+        process_job('tree/node/reprocess', null, process_name, mx_flow.timeperiod, mx_flow.flow_name, null);
     });
     var uow_log_button = $('<button class="action_button"><i class="fa fa-file-text-o"></i>&nbsp;Uow&nbsp;Log</button>').click(function (e) {
-        var params = {action: 'action/get_uow_log', timeperiod: mx_flow.timeperiod, process_name: process_name};
+        var params = {action: 'managed/log/uow', timeperiod: mx_flow.timeperiod, process_name: process_name};
         var viewer_url = '/viewer/object/?' + $.param(params);
         window.open(viewer_url, 'Object Viewer', 'width=800,height=480,screenX=400,screenY=200,scrollbars=1');
     });
     var flow_log_button = $('<button class="action_button"><i class="fa fa-file-text-o"></i>&nbsp;Flow&nbsp;Log</button>').click(function (e) {
-        var params = {action: 'flow/action/get_flow_log', timeperiod: mx_flow.timeperiod, process_name: process_name, flow_name: mx_flow.flow_name};
+        var params = {action: 'flow/flow/log', timeperiod: mx_flow.timeperiod, process_name: process_name, flow_name: mx_flow.flow_name};
         var viewer_url = '/viewer/object/?' + $.param(params);
         window.open(viewer_url, 'Object Viewer', 'width=800,height=480,screenX=400,screenY=200,scrollbars=1');
     });
@@ -177,15 +178,15 @@ function render_flow_graph(steps, element) {
         step_index = 0;
         for (step_name in steps) {
             var step_log = $('<button class="action_mini_button" title="Get step log"><i class="fa fa-file-code-o"></i></button>').click(function (e) {
-                var params = {action: 'flow/action/get_step_log', timeperiod: mx_flow.timeperiod, process_name: process_name, flow_name: mx_flow.flow_name};
+                var params = {action: 'flow/step/log', timeperiod: mx_flow.timeperiod, process_name: process_name, flow_name: mx_flow.flow_name};
                 var viewer_url = '/viewer/object/?' + $.param(params);
                 window.open(viewer_url, 'Object Viewer', 'width=800,height=480,screenX=400,screenY=200,scrollbars=1');
             });
             var run_one = $('<button class="action_mini_button" title="Rerun this step only"><i class="fa fa-play-circle-o"></i></button>').click(function (e) {
-                process_job('flow/action/run_one_step', null, process_name, mx_flow.timeperiod, mx_flow.flow_name, step_name);
+                process_job('flow/run/one_step', null, process_name, mx_flow.timeperiod, mx_flow.flow_name, step_name);
             });
             var run_from = $('<button class="action_mini_button" title="Rerun flow from this step"><i class="fa fa-forward"></i></button>').click(function (e) {
-                process_job('flow/action/run_from_step', null, process_name, mx_flow.timeperiod, mx_flow.flow_name, step_name);
+                process_job('flow/run/from_step', null, process_name, mx_flow.timeperiod, mx_flow.flow_name, step_name);
             });
 
             $('#step_' + step_index + '_title').append('<span class="text">' + step_name + '</span>');
