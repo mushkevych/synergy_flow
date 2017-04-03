@@ -98,6 +98,7 @@ class FlowActionHandler(BaseRequestHandler):
 
     @property
     def freerun_process_entry(self):
+        """ :returns run-time only instance of the FreerunProcessEntry """
         entry_name = '{0}::{1}'.format(self.flow_name, self.step_name)
         if entry_name not in self.scheduler.freerun_handlers:
             classname = context.process_context[self.process_name].classname
