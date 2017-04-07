@@ -3,6 +3,7 @@ __author__ = 'Bohdan Mushkevych'
 from odm.errors import ValidationError
 
 from synergy.conf import settings, context
+from synergy.db.dao.model.unit_of_work import TYPE_MANAGED, TYPE_FREERUN
 from synergy.db.dao.unit_of_work_dao import UnitOfWorkDao
 from synergy.db.dao.log_recording_dao import LogRecordingDao
 from synergy.db.model.freerun_process_entry import freerun_context_entry
@@ -54,6 +55,7 @@ class FlowActionHandler(BaseRequestHandler):
         self.log_recording_dao = LogRecordingDao(self.logger)
 
         self.process_name = self.request_arguments.get(ARGUMENT_PROCESS_NAME)
+        self.unit_of_work_type = self.request_arguments.get(ARGUMENT_UNIT_OF_WORK_TYPE, TYPE_MANAGED)
         self.flow_name = self.request_arguments.get(ARGUMENT_FLOW_NAME)
         if not self.flow_name and self.process_name:
             process_entry = context.process_context[self.process_name]
@@ -89,7 +91,20 @@ class FlowActionHandler(BaseRequestHandler):
         return node.job_record
 
     @property
-    def uow_record(self):
+    def managed_uow_record(self):
+        node = self._get_tree_node()
+        uow_id = node.job_record.related_unit_of_work
+        if not uow_id:
+            return None
+        return self.uow_dao.get_one(uow_id)
+
+    @property
+    def freerun_uow_record(self):
+        if self.freerun_process_entry.related
+
+        state_machine = self.scheduler.timetable.state_machines[STATE_MACHINE_FREERUN]
+        state_machine._find_flow_uow()
+
         node = self._get_tree_node()
         uow_id = node.job_record.related_unit_of_work
         if not uow_id:
@@ -152,6 +167,10 @@ class FlowActionHandler(BaseRequestHandler):
         return self.process_name
 
     @cached_property
+    def unit_of_work_type(self):
+        return self.unit_of_work_type
+
+    @cached_property
     def active_run_mode(self):
         return self.flow_dao.managed_run_mode(self.process_name, self.flow_name, self.timeperiod)
 
@@ -197,12 +216,10 @@ class FlowActionHandler(BaseRequestHandler):
         if not self.job_record or not self.job_record.is_finished:
             return RESPONSE_NOT_OK
 
-        # TODO: rewrite MX so that start_timeperiod and end_timeperiod are communicated to and from front-end
-        start_timeperiod = self.uow_record.start_timeperiod
-        end_timeperiod = self.uow_record.end_timeperiod
+        uow = self.managed_uow_record if self.unit_of_work_type == TYPE_MANAGED else self.freerun_uow_record
         flow_request = FlowRequest(self.process_name, self.flow_name, self.step_name,
                                    run_mode,
-                                   self.timeperiod, start_timeperiod, end_timeperiod)
+                                   self.timeperiod, uow.start_timeperiod, uow.end_timeperiod)
 
         state_machine = self.scheduler.timetable.state_machines[STATE_MACHINE_FREERUN]
         state_machine.manage_schedulable(self.freerun_process_entry, flow_request)
