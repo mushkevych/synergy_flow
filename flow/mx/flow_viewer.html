@@ -22,6 +22,19 @@
 
 <body>
 
+<div id="tabs-container">
+    <ul class="tabs-menu">
+        <li class="current"><a href="/">Managed</a></li>
+        <li><a href="/">Freeruns</a></li>
+    </ul>
+</div>
+
+<div class="tab">
+    <button class="tablinks" onclick="change_uow_type(event, 'managed')">Managed</button>
+    <button class="tablinks" onclick="change_uow_type(event, 'freerun')">Freerun</button>
+</div>
+
+
 <div id="flow_header" class="tile_component">
 </div>
 
@@ -37,6 +50,31 @@
 <form style="text-align: center">
     <input type="button" class="action_button fa-input" value="&#xf00d;&nbsp;Close" onclick="window.close()"/>
 </form>
+
+<script type="text/javascript">
+    function change_uow_type(evt, unit_of_work_type) {
+        if (evt.currentTarget.className.includes(" active")) {
+            // tab is currently active. avoid re-rendering it
+            return;
+        }
+
+        // Get all elements with class="tablinks" and remove the class "active"
+        var tablinks = document.getElementsByClassName("tablinks");
+        for (var i = 0; i < tablinks.length; i++) {
+            tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+
+        // add an "active" class to the button that opened the tab
+        evt.currentTarget.className += " active";
+
+        // request page for the
+        var params = { action: 'flow/details/flow', timeperiod: job_entry.timeperiod, process_name: job_entry.process_name, unit_of_work_type: unit_of_work_type};
+        var viewer_url = '/viewer/flow/?' + $.param(params);
+
+        // open url in the same window and the same tab
+        window.open(viewer_url, '_self');
+    }
+</script>
 
 <script type="text/javascript">
     var mx_flow = {{ flow_details|jsonify|safe }};
