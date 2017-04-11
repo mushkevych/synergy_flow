@@ -61,8 +61,9 @@ def get_flow_log(request, **values):
 
 @expose('/viewer/flow/')
 def flow_viewer(request, **values):
-    details = FlowActionHandler(request, **values)
+    handler = FlowActionHandler(request, **values)
     return render_template('flow_viewer.html',
-                           flow_details=details.flow_details,
-                           process_name=details.process_name,
-                           active_run_mode=details.active_run_mode)
+                           flow_details=handler.flow_details,
+                           process_name=handler.process_name,
+                           active_run_mode=handler.active_run_mode,
+                           freerun_uows=handler.freerun_uow_records)

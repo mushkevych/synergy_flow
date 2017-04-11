@@ -5,8 +5,11 @@ function render_empty_response(element, process_name) {
 }
 
 
-function render_flow_header(element, mx_flow, process_name, active_run_mode) {
-    // TODO: need to pass information on whether the process is managed or freerun
+function render_flow_header(element, mx_flow, process_name, active_run_mode, uow_type, uow_process_name) {
+}
+
+
+function render_flow_header(element, mx_flow, process_name, active_run_mode, uow_type, uow_process_name) {
     var is_run_mode_nominal = ('run_mode_nominal' == active_run_mode) ? 'selected' : '';
     var is_run_mode_recovery = ('run_mode_recovery' == active_run_mode) ? 'selected' : '';
 
@@ -28,7 +31,7 @@ function render_flow_header(element, mx_flow, process_name, active_run_mode) {
         + '</div>';
 
     var uow_button = $('<button class="action_button"><i class="fa fa-file-code-o"></i>&nbsp;Uow</button>').click(function (e) {
-        var params = {action: 'managed/uow', timeperiod: mx_flow.timeperiod, process_name: process_name};
+        var params = {action: uow_type + '/uow', timeperiod: mx_flow.timeperiod, process_name: process_name};
         var viewer_url = '/viewer/object/?' + $.param(params);
         window.open(viewer_url, 'Object Viewer', 'width=450,height=400,screenX=400,screenY=200,scrollbars=1');
     });

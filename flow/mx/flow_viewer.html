@@ -22,20 +22,12 @@
 
 <body>
 
-<div id="tabs-container">
-    <ul class="tabs-menu">
-        <li class="current"><a href="/">Managed</a></li>
-        <li><a href="/">Freeruns</a></li>
-    </ul>
-</div>
-
-<div class="tab">
-    <button class="tablinks" onclick="change_uow_type(event, 'managed')">Managed</button>
-    <button class="tablinks" onclick="change_uow_type(event, 'freerun')">Freerun</button>
-</div>
-
-
-<div id="flow_header" class="tile_component">
+<div id="flow_header">
+    <div id="tab_buttons" class="tab">
+        <button class="tablinks" onclick="change_tab(event, 'managed')">Managed</button>
+        <button class="tablinks" onclick="change_tab(event, 'freerun')">Freerun</button>
+        <!-- freerun buttons are added by the  -->
+    </div>
 </div>
 
 <div id="user_message" class="clear user_message">
@@ -52,27 +44,28 @@
 </form>
 
 <script type="text/javascript">
-    function change_uow_type(evt, unit_of_work_type) {
+    function change_tab(evt, tab_id) {
         if (evt.currentTarget.className.includes(" active")) {
             // tab is currently active. avoid re-rendering it
             return;
         }
 
-        // Get all elements with class="tablinks" and remove the class "active"
+        // hide all elements with class="tabcontent"
+        var i;
+        var tabcontent = document.getElementsByClassName("tabcontent");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].style.display = "none";
+        }
+
+        // remove class "active" from all elements with class="tablinks"
         var tablinks = document.getElementsByClassName("tablinks");
-        for (var i = 0; i < tablinks.length; i++) {
+        for (i = 0; i < tablinks.length; i++) {
             tablinks[i].className = tablinks[i].className.replace(" active", "");
         }
 
-        // add an "active" class to the button that opened the tab
+        // show the tab, and add an "active" class to the button that opened the tab
+        document.getElementById(tab_id).style.display = "block";
         evt.currentTarget.className += " active";
-
-        // request page for the
-        var params = { action: 'flow/details/flow', timeperiod: job_entry.timeperiod, process_name: job_entry.process_name, unit_of_work_type: unit_of_work_type};
-        var viewer_url = '/viewer/flow/?' + $.param(params);
-
-        // open url in the same window and the same tab
-        window.open(viewer_url, '_self');
     }
 </script>
 
@@ -80,6 +73,7 @@
     var mx_flow = {{ flow_details|jsonify|safe }};
     var process_name = "{{ process_name|safe }}";
     var active_run_mode = "{{ active_run_mode|safe }}";
+    var freerun_uows = {{ freerun_uows|jsonify|safe }};
 
     // if the mx_flow is not available for this process
     if (Object.keys(mx_flow).length === 0) {
@@ -87,7 +81,12 @@
     }
 
     $(function () {  // former $(document).ready(function () {...})
-        render_flow_header($("#flow_header"), mx_flow, process_name, active_run_mode);
+        render_flow_header($("#flow_header"), mx_flow, process_name, active_run_mode, "managed", process_name);
+
+        for (var freerun_uow in freerun_uows) {
+            <button class="tablinks" onclick="change_tab(event, 'managed')">Managed</button>
+            render_flow_header($("#flow_header"), mx_flow, process_name, active_run_mode, "freerun", freerun_uow.process_name);
+        }
         render_flow_graph(mx_flow.graph, d3.select("#flow"));
     });
 </script>
