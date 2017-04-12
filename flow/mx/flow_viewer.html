@@ -23,10 +23,8 @@
 <body>
 
 <div id="flow_header">
-    <div id="tab_buttons" class="tab">
-        <button class="tablinks" onclick="change_tab(event, 'managed')">Managed</button>
-        <button class="tablinks" onclick="change_tab(event, 'freerun')">Freerun</button>
-        <!-- freerun buttons are added by the  -->
+    <div id="tabs" class="tab">
+        <!-- buttons are added by the enlist_tab() function -->
     </div>
 </div>
 
@@ -44,32 +42,6 @@
 </form>
 
 <script type="text/javascript">
-    function change_tab(evt, tab_id) {
-        if (evt.currentTarget.className.includes(" active")) {
-            // tab is currently active. avoid re-rendering it
-            return;
-        }
-
-        // hide all elements with class="tabcontent"
-        var i;
-        var tabcontent = document.getElementsByClassName("tabcontent");
-        for (i = 0; i < tabcontent.length; i++) {
-            tabcontent[i].style.display = "none";
-        }
-
-        // remove class "active" from all elements with class="tablinks"
-        var tablinks = document.getElementsByClassName("tablinks");
-        for (i = 0; i < tablinks.length; i++) {
-            tablinks[i].className = tablinks[i].className.replace(" active", "");
-        }
-
-        // show the tab, and add an "active" class to the button that opened the tab
-        document.getElementById(tab_id).style.display = "block";
-        evt.currentTarget.className += " active";
-    }
-</script>
-
-<script type="text/javascript">
     var mx_flow = {{ flow_details|jsonify|safe }};
     var process_name = "{{ process_name|safe }}";
     var active_run_mode = "{{ active_run_mode|safe }}";
@@ -77,17 +49,23 @@
 
     // if the mx_flow is not available for this process
     if (Object.keys(mx_flow).length === 0) {
-        render_empty_response($("#user_message"), process_name);
+        renderEmptyResponse($("#user_message"), process_name);
     }
 
     $(function () {  // former $(document).ready(function () {...})
-        render_flow_header($("#flow_header"), mx_flow, process_name, active_run_mode, "managed", process_name);
+        enlistTabs($("#tabs"), "managed");
+        enlistTabContent($("#flow_header"), mx_flow, process_name, "managed", "type_managed", active_run_mode);
 
+        var entry_name;
         for (var freerun_uow in freerun_uows) {
-            <button class="tablinks" onclick="change_tab(event, 'managed')">Managed</button>
-            render_flow_header($("#flow_header"), mx_flow, process_name, active_run_mode, "freerun", freerun_uow.process_name);
+            entry_name = freerun_uow.process_name.substring(process_name.length + 2);  // +2 is to include divider "::"
+            enlistTabs($("#tabs"), entry_name);
+            enlistTabContent($("#flow_header"), mx_flow, process_name, entry_name, uow.unit_of_work_type, active_run_mode);
         }
-        render_flow_graph(mx_flow.graph, d3.select("#flow"));
+
+        // show "managed" tab
+        document.getElementById("tab_button_managed").click();
+        renderFlowGraph(mx_flow.graph);
     });
 </script>
 

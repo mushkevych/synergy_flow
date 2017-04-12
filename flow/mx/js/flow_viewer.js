@@ -1,21 +1,51 @@
 /* @author "Bohdan Mushkevych" */
 
-function render_empty_response(element, process_name) {
+function switchTab(evt, tab_id) {
+    if (evt.currentTarget.className.includes(" active")) {
+        // tab is currently active. avoid re-rendering it
+        return;
+    }
+
+    var i;
+    var tabcontent = document.getElementsByClassName("tabcontent");
+    for (i = 0; i < tabcontent.length; i++) {
+        // hide all elements with class="tabcontent"
+        tabcontent[i].style.display = "none";
+    }
+
+    var tablinks = document.getElementsByClassName("tablinks");
+    for (i = 0; i < tablinks.length; i++) {
+        // remove class "active" from all elements with class="tablinks"
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+
+    // show the tab, and add an "active" class to the button that opened the tab
+    document.getElementById(tab_id).style.display = "block";
+    evt.currentTarget.className += " active";
+}
+
+
+function renderEmptyResponse(element, process_name) {
     element.append('<b>no workflow was found for process ' + process_name + '</b>');
 }
 
 
-function render_flow_header(element, mx_flow, process_name, active_run_mode, uow_type, uow_process_name) {
+function enlistTabs(element, name) {
+    var tab_id = 'tab_' + name;
+    var button = $('<button id="tab_button_' + name + '" class="tablinks" onclick="switchTab(event, ' + tab_id + ')">' + name + '</button>');
+    element.append(button);
 }
 
 
-function render_flow_header(element, mx_flow, process_name, active_run_mode, uow_type, uow_process_name) {
+function enlistTabContent(element, mx_flow, process_name, entry_name, uow_type, active_run_mode) {
     var is_run_mode_nominal = ('run_mode_nominal' == active_run_mode) ? 'selected' : '';
     var is_run_mode_recovery = ('run_mode_recovery' == active_run_mode) ? 'selected' : '';
+    var endpoint_type = ('type_freerun' == uow_type) ? 'freerun' : 'managed';
 
     var change_run_mode_form = '<form method="POST" action="/flow/run/mode/" onsubmit="xmlhttp.send(); return false;">'
         + '<input type="hidden" name="process_name" value="' + process_name + '" />'
         + '<input type="hidden" name="flow_name" value="' + mx_flow.flow_name + '" />'
+        + '<input type="hidden" name="timeperiod" value="' + mx_flow.timeperiod + '" />'
         + '<input type="hidden" name="timeperiod" value="' + mx_flow.timeperiod + '" />'
         + '<select name="run_mode">'
         + '<option value="run_mode_nominal" ' + is_run_mode_nominal +  '>Start from beginning</option>'
@@ -31,20 +61,20 @@ function render_flow_header(element, mx_flow, process_name, active_run_mode, uow
         + '</div>';
 
     var uow_button = $('<button class="action_button"><i class="fa fa-file-code-o"></i>&nbsp;Uow</button>').click(function (e) {
-        var params = {action: uow_type + '/uow', timeperiod: mx_flow.timeperiod, process_name: process_name};
+        var params = {action: endpoint_type + '/uow', timeperiod: mx_flow.timeperiod, process_name: process_name, entry_name: entry_name};
         var viewer_url = '/viewer/object/?' + $.param(params);
         window.open(viewer_url, 'Object Viewer', 'width=450,height=400,screenX=400,screenY=200,scrollbars=1');
     });
     var event_log_button = $('<button class="action_button"><i class="fa fa-th-list"></i>&nbsp;Event&nbsp;Log</button>').click(function (e) {
-        var params = {action: 'managed/log/event', timeperiod: mx_flow.timeperiod, process_name: process_name};
+        var params = {action: endpoint_type + '/log/event', timeperiod: mx_flow.timeperiod, process_name: process_name, entry_name: entry_name};
         var viewer_url = '/viewer/object/?' + $.param(params);
         window.open(viewer_url, 'Object Viewer', 'width=800,height=480,screenX=400,screenY=200,scrollbars=1');
     });
     var reprocess_button = $('<button class="action_button"><i class="fa fa-repeat"></i>&nbsp;Reprocess</button>').click(function (e) {
-        process_job('tree/node/reprocess', null, process_name, mx_flow.timeperiod, mx_flow.flow_name, null);
+        processJob('tree/node/reprocess', null, process_name, mx_flow.timeperiod, mx_flow.flow_name, null);
     });
     var uow_log_button = $('<button class="action_button"><i class="fa fa-file-text-o"></i>&nbsp;Uow&nbsp;Log</button>').click(function (e) {
-        var params = {action: 'managed/log/uow', timeperiod: mx_flow.timeperiod, process_name: process_name};
+        var params = {action: endpoint_type + '/log/uow', timeperiod: mx_flow.timeperiod, process_name: process_name, entry_name: entry_name};
         var viewer_url = '/viewer/object/?' + $.param(params);
         window.open(viewer_url, 'Object Viewer', 'width=800,height=480,screenX=400,screenY=200,scrollbars=1');
     });
@@ -72,13 +102,16 @@ function render_flow_header(element, mx_flow, process_name, active_run_mode, uow
         .append($('<div></div>').append(uow_button))
         .append($('<div></div>').append(reprocess_button)));
 
-    element.append(container);
-    element.append($('<div class="step_container"></div>').append(run_mode_block));
-    element.append('<div class="clear"></div>');
+    var tab_content = $('<div id="tab_' + entry_name + '" class="tabcontent"></div>');
+    tab_content.append(container);
+    tab_content.append($('<div class="step_container"></div>').append(run_mode_block));
+    tab_content.append('<div class="clear"></div>');
+
+    element.append(tab_content);
 }
 
 
-function render_flow_graph(steps, element) {
+function renderFlowGraph(steps) {
 
     // Set up zoom support
     var svg = d3.select('svg'),
@@ -186,10 +219,10 @@ function render_flow_graph(steps, element) {
                 window.open(viewer_url, 'Object Viewer', 'width=800,height=480,screenX=400,screenY=200,scrollbars=1');
             });
             var run_one = $('<button class="action_mini_button" title="Rerun this step only"><i class="fa fa-play-circle-o"></i></button>').click(function (e) {
-                process_job('flow/run/one_step', null, process_name, mx_flow.timeperiod, mx_flow.flow_name, step_name);
+                processJob('flow/run/one_step', null, process_name, mx_flow.timeperiod, mx_flow.flow_name, step_name);
             });
             var run_from = $('<button class="action_mini_button" title="Rerun flow from this step"><i class="fa fa-forward"></i></button>').click(function (e) {
-                process_job('flow/run/from_step', null, process_name, mx_flow.timeperiod, mx_flow.flow_name, step_name);
+                processJob('flow/run/from_step', null, process_name, mx_flow.timeperiod, mx_flow.flow_name, step_name);
             });
 
             $('#step_' + step_index + '_title').append('<span class="text">' + step_name + '</span>');
