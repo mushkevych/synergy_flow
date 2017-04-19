@@ -50,7 +50,8 @@ class FlowGraph(ContextDriven):
     def next(self):
         """ heart of the Flow: traverses the graph and returns next available FlowGraphNode.name for processing
             in case all nodes are blocked - blocks by sleeping
-            in case all nodes have been yielded for processing - throws a StopIteration exception
+            in case all nodes have been yielded for processing - throws StopIteration exception
+            in case any node has failed - throw StopIteration exception
         """
 
         def _next_iteration():

@@ -261,6 +261,10 @@ class FlowActionHandler(BaseRequestHandler):
             return RESPONSE_NOT_OK
 
         uow = self.managed_uow_record
+        if not uow:
+            # for skipped job that has no UOW associated with it
+            return RESPONSE_NOT_OK
+
         flow_request = FlowRequest(self.process_name, self.flow_name, self.step_name,
                                    run_mode,
                                    self.timeperiod, uow.start_timeperiod, uow.end_timeperiod)
