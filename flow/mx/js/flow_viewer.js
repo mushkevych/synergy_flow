@@ -26,13 +26,14 @@ function switchTab(evt, tab_id) {
 
 
 function renderEmptyResponse(element, process_name) {
+    element[0].style.display = "block";
     element.append('<b>no workflow was found for process ' + process_name + '</b>');
 }
 
 
 function enlistTabs(element, name) {
     var tab_id = 'tab_' + name;
-    var button = $('<button id="tab_button_' + name + '" class="tablinks" onclick="switchTab(event, ' + tab_id + ')">' + name + '</button>');
+    var button = $('<button id="tab_button_' + name + '" class="tablinks" onclick="switchTab(event, \'' + tab_id + '\')">' + name + '</button>');
     element.append(button);
 }
 
@@ -104,8 +105,8 @@ function enlistTabContent(element, mx_flow, process_name, entry_name, uow_type, 
 
     var tab_content = $('<div id="tab_' + entry_name + '" class="tabcontent"></div>');
     tab_content.append(container);
-    tab_content.append($('<div class="step_container"></div>').append(run_mode_block));
     tab_content.append('<div class="clear"></div>');
+    tab_content.append($('<div class="step_container"></div>').append(run_mode_block));
 
     element.append(tab_content);
 }

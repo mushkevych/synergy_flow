@@ -130,6 +130,7 @@ svg {
 }
 
 .user_message {
+    display: none;
     margin-top: 150px;
     text-align: center;
     float: none;
@@ -165,7 +166,6 @@ div.tab {
     background-color: #f1f1f1;
 }
 
-/* buttons inside the tab */
 div.tab button {
     background-color: inherit;
     float: left;
@@ -180,7 +180,6 @@ div.tab button:hover {
     background-color: #ddd;
 }
 
-/* active/current tablink class */
 div.tab button.active {
     background-color: #ccc;
 }
