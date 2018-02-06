@@ -150,6 +150,13 @@ Dependencies
 1. linux/unix
 1. Synergy Scheduler 1.18+
 1. python 2.7+ / 3.4+
+
 1. google-cloud-python for Google Computing Platform 
 1. boto for AWS 
 1. azure-storage-blob for Azure
+
+1. google-cloud-dataproc for Google Cloud Dataproc
+`https://cloud.google.com/dataproc/docs/tutorials/python-library-example`
+`https://cloud.google.com/compute/docs/tutorials/python-guide`
+
+1. qds_sdk for Qubole 
