@@ -152,4 +152,4 @@ Dependencies
 1. python 2.7+ / 3.4+
 1. google-cloud-python for Google Computing Platform 
 1. boto for AWS 
-1. azure-storage-blob for AWS 
+1. azure-storage-blob for Azure

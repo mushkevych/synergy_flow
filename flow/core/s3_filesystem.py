@@ -63,12 +63,12 @@ class S3Filesystem(AbstractFilesystem):
 
     def copyToLocal(self, uri_source, uri_target, bucket_name_source=None, **kwargs):
         s3_bucket_source = self._s3_bucket(bucket_name_source)
-        with open(uri_target) as file_pointer:
+        with open(uri_target, 'wb') as file_pointer:
             s3_bucket_source.get_file(file_pointer)
 
     def copyFromLocal(self, uri_source, uri_target, bucket_name_target=None, **kwargs):
         s3_bucket_target = self._s3_bucket(bucket_name_target)
-        with open(uri_source) as file_pointer:
+        with open(uri_source, 'rb') as file_pointer:
             s3_key = boto.s3.key.Key(s3_bucket_target)
             s3_key.key = uri_target
             s3_key.set_contents_from_file(fp=file_pointer, rewind=True)

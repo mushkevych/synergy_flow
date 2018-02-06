@@ -16,14 +16,14 @@ class GcpFilesystem(AbstractFilesystem):
             # TODO: complete credentials
             credentials = Credentials()
             self.gcp_client = storage.Client(project=context.settings['gcp_project_name'], credentials=credentials)
-        except SomeGcpError as e:
+        except EnvironmentError as e:
             self.logger.error('Google Cloud Credentials are NOT valid. Terminating.', exc_info=True)
             raise ValueError(e)
 
     def __del__(self):
         pass
 
-    def _gcp_bucket(self, bucket_name) -> Bucket:
+    def _gcp_bucket(self, bucket_name):
         if not bucket_name:
             bucket_name = self.context.settings['gcp_bucket']
         gcp_bucket = self.gcp_client.get_bucket(bucket_name)
@@ -62,11 +62,11 @@ class GcpFilesystem(AbstractFilesystem):
     def copyToLocal(self, uri_source, uri_target, bucket_name_source=None, **kwargs):
         gcp_bucket_source = self._gcp_bucket(bucket_name_source)
         blob = Blob(uri_source, gcp_bucket_source)
-        with open(uri_target) as file_pointer:
+        with open(uri_target, 'wb') as file_pointer:
             blob.download_to_file(file_pointer)
 
     def copyFromLocal(self, uri_source, uri_target, bucket_name_target=None, **kwargs):
         gcp_bucket_target = self._gcp_bucket(bucket_name_target)
         blob = Blob(uri_target, gcp_bucket_target)
-        with open(uri_source) as file_pointer:
+        with open(uri_source, 'rb') as file_pointer:
             blob.upload_from_file(file_pointer)
