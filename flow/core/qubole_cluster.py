@@ -3,7 +3,6 @@ __author__ = 'Bohdan Mushkevych'
 from qds_sdk.qubole import Qubole
 from qds_sdk.commands import SparkCommand, PigCommand, ShellCommand
 
-from synergy.conf import settings
 from flow.core.abstract_cluster import AbstractCluster
 from flow.core.s3_filesystem import S3Filesystem
 
@@ -20,7 +19,7 @@ class QuboleCluster(AbstractCluster):
     def __init__(self, name, context, **kwargs):
         super(QuboleCluster, self).__init__(name, context, kwargs=kwargs)
         self._filesystem = S3Filesystem(self.logger, context, **kwargs)
-        Qubole.configure(api_token=settings.settings['qds_api_token'])
+        Qubole.configure(api_token=context.settings['qds_api_token'])
 
     @property
     def filesystem(self):

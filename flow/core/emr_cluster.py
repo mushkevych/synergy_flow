@@ -200,14 +200,15 @@ class EmrCluster(AbstractCluster):
             self.logger.info('No EMR Cluster to stop')
             return
 
-        self.logger.info('EMR Cluster termination {')
+        self.logger.info('Terminating EMR Cluster {')
         try:
             self.logger.info('Initiating termination procedure...')
             # Disable cluster termination protection
             self.conn.set_termination_protection(self.jobflow_id, False)
 
             self.conn.terminate_jobflow(self.jobflow_id)
-            self.logger.info('termination request send successfully')
+            self.jobflow_id = None
+            self.logger.info('Termination request successful')
         except Exception as e:
             self.logger.error('Unexpected Exception: {0}'.format(e), exc_info=True)
         finally:
