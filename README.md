@@ -151,11 +151,21 @@ Dependencies
 1. Synergy Scheduler 1.18+
 1. python 2.7+ / 3.4+
 
-1. google-cloud-python for Google Computing Platform 
+== Google Computing Platform  
+`https://cloud.google.com/dataproc/docs/tutorials/python-library-example`  
+
+1. google-api-python-client
+1. google-cloud-storage for Google Cloud Dataproc
+1. google-cloud-dataproc for Google Cloud Dataproc
+
+== Amazon Web Services ==
 1. boto for AWS 
-1. azure-storage-blob for Azure
 
-1. google-api-python-client, google-cloud-dataproc for Google Cloud Dataproc
-`https://cloud.google.com/dataproc/docs/tutorials/python-library-example`
-
+== Qubole
 1. qds_sdk for Qubole 
+
+== Azure ==
+1. azure-storage-blob for Azure  
+1. no python API for HD Insight 
+`https://docs.microsoft.com/en-us/azure/hdinsight/hadoop/submit-apache-hadoop-jobs-programmatically` 
+
