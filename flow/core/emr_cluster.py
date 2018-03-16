@@ -8,6 +8,9 @@ from boto.emr.emrobject import ClusterStatus, StepId, JobFlow, JobFlowStepList
 from boto.emr.step import InstallPigStep
 from boto.emr.step import PigStep
 
+import boto3
+# `https://stackoverflow.com/questions/36706512/how-do-you-automate-pyspark-jobs-on-emr-using-boto3-or-otherwise`_
+
 from flow.core.abstract_cluster import AbstractCluster, ClusterError
 from flow.core.s3_filesystem import S3Filesystem
 
@@ -33,6 +36,7 @@ STEP_STATE_INTERRUPTED = 'INTERRUPTED'
 
 class EmrCluster(AbstractCluster):
     """ implementation of the abstract API for the case of AWS EMR """
+
     def __init__(self, name, context, **kwargs):
         super(EmrCluster, self).__init__(name, context, **kwargs)
         self._filesystem = S3Filesystem(self.logger, context, **kwargs)
@@ -43,6 +47,7 @@ class EmrCluster(AbstractCluster):
         self.conn = boto.emr.connect_to_region(region_name=context.settings['aws_region'],
                                                aws_access_key_id=context.settings['aws_access_key_id'],
                                                aws_secret_access_key=context.settings['aws_secret_access_key'])
+        self.client_b3 = boto3.client('emr')
 
     @property
     def filesystem(self):
@@ -54,6 +59,8 @@ class EmrCluster(AbstractCluster):
         :raise EmrLauncherError: in case the cluster is not launched
         :return: step state or None if the step failed
         """
+
+        # `https://docs.aws.amazon.com/emr/latest/ReleaseGuide/emr-commandrunner.html`_
         if not self.jobflow_id:
             raise ClusterError('EMR Cluster {0} is not launched'.format(self.name))
 
@@ -88,7 +95,26 @@ class EmrCluster(AbstractCluster):
             self.logger.info('}')
 
     def run_spark_step(self, uri_script, language, **kwargs):
-        pass
+        step_args = list()
+        for k, v in kwargs.items():
+            step_args.extend([k, v])
+
+        step = {
+            'Name': 'SynergyPysparkStep',
+            'ActionOnFailure': 'CONTINUE',
+            'HadoopJarStep': {
+                'Jar': 'command-runner.jar',
+                'Args': step_args
+            }
+        }
+        step_response = self.client_b3.add_job_flow_steps(JobFlowId=self.jobflow_id, Steps=[step])
+        step_ids = step_response['StepIds']
+
+        assert len(step_ids) == 1
+
+        step_id = step_ids[0]
+        assert isinstance(step_id, StepId)
+        return self._poll_step(step_id.value)
 
     def run_hadoop_step(self, uri_script, **kwargs):
         pass
