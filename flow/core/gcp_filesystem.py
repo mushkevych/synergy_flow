@@ -3,7 +3,7 @@ __author__ = 'Bohdan Mushkevych'
 from os import path
 
 from google.cloud import storage
-from google.auth.credentials import Credentials
+from google.auth import compute_engine
 from google.cloud.storage import Bucket, Blob
 from flow.core.abstract_filesystem import AbstractFilesystem
 
@@ -13,9 +13,15 @@ class GcpFilesystem(AbstractFilesystem):
     def __init__(self, logger, context, **kwargs):
         super(GcpFilesystem, self).__init__(logger, context, **kwargs)
         try:
-            # TODO: complete credentials
-            credentials = Credentials()
-            self.gcp_client = storage.Client(project=context.settings['gcp_project_name'], credentials=credentials)
+            service_account_file = self.context.setting.get('gcp_service_account_file')
+            if service_account_file:
+                # Explicitly use service account credentials by specifying the private key file.
+                self.gcp_client = storage.Client.from_service_account_json(service_account_file)
+            else:
+                # Explicitly use Compute Engine credentials. These credentials are
+                # available on Compute Engine, App Engine Flexible, and Container Engine.
+                credentials = compute_engine.Credentials()
+                self.gcp_client = storage.Client(project=context.settings['gcp_project_name'], credentials=credentials)
         except EnvironmentError as e:
             self.logger.error('Google Cloud Credentials are NOT valid. Terminating.', exc_info=True)
             raise ValueError(e)
