@@ -18,7 +18,7 @@ class EphemeralFilesystem(AbstractFilesystem):
         os.makedirs(uri_path)
 
     def rmdir(self, uri_path, **kwargs):
-        shutil.rmtree(uri_path)
+        shutil.rmtree(uri_path, **kwargs)
 
     def rm(self, uri_path, **kwargs):
         if os.path.isdir(uri_path):
@@ -40,3 +40,6 @@ class EphemeralFilesystem(AbstractFilesystem):
 
     def copyFromLocal(self, uri_source, uri_target, **kwargs):
         return self.cp(uri_source, uri_target, **kwargs)
+
+    def exists(self, uri_path, **kwargs):
+        return os.path.exists(uri_path)

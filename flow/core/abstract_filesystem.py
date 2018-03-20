@@ -31,3 +31,6 @@ class AbstractFilesystem(object):
 
     def copyFromLocal(self, uri_source, uri_target, **kwargs):
         pass
+
+    def exists(self, uri_path, **kwargs):
+        pass
