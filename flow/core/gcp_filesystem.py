@@ -13,7 +13,7 @@ class GcpFilesystem(AbstractFilesystem):
     def __init__(self, logger, context, **kwargs):
         super(GcpFilesystem, self).__init__(logger, context, **kwargs)
         try:
-            service_account_file = self.context.setting.get('gcp_service_account_file')
+            service_account_file = self.context.settings.get('gcp_service_account_file')
             if service_account_file:
                 # Explicitly use service account credentials by specifying the private key file.
                 self.gcp_client = storage.Client.from_service_account_json(service_account_file)
@@ -37,7 +37,8 @@ class GcpFilesystem(AbstractFilesystem):
 
     def mkdir(self, uri_path, bucket_name=None, **kwargs):
         gcp_bucket = self._gcp_bucket(bucket_name)
-        folder_key = path.join(uri_path, '{0}_$folder$'.format(uri_path))
+        folder_file = '{0}_$folder$'.format(path.basename(uri_path))
+        folder_key = path.join(uri_path, folder_file)
         blob = Blob(folder_key, gcp_bucket)
         if not blob.exists():
             blob.upload_from_string(data='')
@@ -76,3 +77,8 @@ class GcpFilesystem(AbstractFilesystem):
         blob = Blob(uri_target, gcp_bucket_target)
         with open(uri_source, 'rb') as file_pointer:
             blob.upload_from_file(file_pointer)
+
+    def exists(self, uri_path, bucket_name=None,  **kwargs):
+        gcp_bucket = self._gcp_bucket(bucket_name)
+        blob = Blob(uri_path, gcp_bucket)
+        return blob.exists()

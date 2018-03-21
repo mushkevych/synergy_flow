@@ -31,7 +31,8 @@ class S3Filesystem(AbstractFilesystem):
 
     def mkdir(self, uri_path, bucket_name=None, **kwargs):
         s3_bucket = self._s3_bucket(bucket_name)
-        folder_key = path.join(uri_path, '{0}_$folder$'.format(uri_path))
+        folder_file = '{0}_$folder$'.format(path.basename(uri_path))
+        folder_key = path.join(uri_path, folder_file)
         if not s3_bucket.get_key(folder_key):
             s3_key = s3_bucket.new_key(folder_key)
             s3_key.set_contents_from_string('')
