@@ -32,5 +32,17 @@ class GcpFilesystemTest(EphemeralFilesystemTest):
         self.filesystem = GcpFilesystem('unit test cluster', self.context)
 
 
+@unittest.skip('Automated testing will fail due to lack of credentials')
+class S3FilesystemTest(EphemeralFilesystemTest):
+    def setUp(self):
+        flow_name = 'ut_flow_name'
+        settings.settings['gcp_service_account_file'] = '../CloudProto-6a433c176b31.json'
+        settings.settings['gcp_project_name'] = 'CloudProto'
+        settings.settings['gcp_bucket'] = 'bucket-connect-proto'
+        self.context = ExecutionContext(flow_name, TEST_PRESET_TIMEPERIOD, TEST_START_TIMEPERIOD, TEST_END_TIMEPERIOD,
+                                        settings.settings)
+        self.filesystem = GcpFilesystem('unit test cluster', self.context)
+
+
 if __name__ == '__main__':
     unittest.main()

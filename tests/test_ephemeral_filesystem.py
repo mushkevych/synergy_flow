@@ -40,67 +40,67 @@ class EphemeralFilesystemTest(unittest.TestCase):
         self.filesystem.rmdir(uri_path)
         self.assertFalse(self.filesystem.exists(uri_path))
 
-    # def _upload_files(self, uri_source):
-    #     list_uploaded_uri = list()
-    #     for i in range(10):
-    #         with tempfile.NamedTemporaryFile() as temp_file:
-    #             temp_file.write(TEMP_CONTENT)
-    #             temp_file.flush()
-    #
-    #             upload_file_uri = path.join(uri_source, TEMP_FILE_NAME.format(i))
-    #             list_uploaded_uri.append(upload_file_uri)
-    #
-    #             self.filesystem.copyFromLocal(temp_file.name, upload_file_uri)
-    #             self.assertTrue(self.filesystem.exists(upload_file_uri))
-    #     return list_uploaded_uri
-    #
-    # def test_dir_with_files(self):
-    #     uri_path = path.join(TEST_ROOT_NAME, TEST_FOLDER_NAME)
-    #     self.filesystem.mkdir(uri_path)
-    #
-    #     for i in range(10):
-    #         with tempfile.NamedTemporaryFile() as temp_file:
-    #             temp_file.write(TEMP_CONTENT)
-    #             upload_file_uri = path.join(uri_path, TEMP_FILE_NAME.format(i))
-    #             self.filesystem.copyFromLocal(temp_file.name, upload_file_uri)
-    #             self.assertTrue(self.filesystem.exists(upload_file_uri))
-    #
-    # def test_cp(self):
-    #     uri_source = path.join(TEST_ROOT_NAME, TEST_FOLDER_NAME)
-    #     uri_target = path.join(TEST_ROOT_NAME, TEST_FOLDER_DEST)
-    #     self.filesystem.mkdir(uri_source)
-    #     self._upload_files(uri_source)
-    #
-    #     self.filesystem.cp(uri_source, uri_target)
-    #     for i in range(10):
-    #         temp_file_uri = path.join(uri_target, TEMP_FILE_NAME.format(i))
-    #         self.assertTrue(self.filesystem.exists(temp_file_uri))
-    #
-    # def test_mv(self):
-    #     uri_source = path.join(TEST_ROOT_NAME, TEST_FOLDER_NAME)
-    #     uri_target = path.join(TEST_ROOT_NAME, TEST_FOLDER_DEST)
-    #     self.filesystem.mkdir(uri_source)
-    #     self._upload_files(uri_source)
-    #
-    #     self.filesystem.mv(uri_source, uri_target)
-    #     for i in range(10):
-    #         temp_file_uri = path.join(uri_target, TEMP_FILE_NAME.format(i))
-    #         self.assertTrue(self.filesystem.exists(temp_file_uri))
-    #         temp_file_uri = path.join(uri_source, TEMP_FILE_NAME.format(i))
-    #         self.assertFalse(self.filesystem.exists(temp_file_uri))
-    #
-    # def test_copyToLocal(self):
-    #     uri_path = path.join(TEST_ROOT_NAME, TEST_FOLDER_NAME)
-    #     self.filesystem.mkdir(uri_path)
-    #     list_uploaded_uri = self._upload_files(uri_path)
-    #
-    #     for i, upload_file_uri in enumerate(list_uploaded_uri):
-    #         downloaded_file_uri = path.join(tempfile.gettempdir(), TEMP_FILE_NAME.format(i))
-    #         self.filesystem.copyToLocal(upload_file_uri, downloaded_file_uri)
-    #         self.assertTrue(path.exists(downloaded_file_uri))
-    #
-    #         with open(downloaded_file_uri) as downloaded_file:
-    #             self.assertEqual(downloaded_file.read().encode(), TEMP_CONTENT)
+    def _upload_files(self, uri_source):
+        list_uploaded_uri = list()
+        for i in range(10):
+            with tempfile.NamedTemporaryFile() as temp_file:
+                temp_file.write(TEMP_CONTENT)
+                temp_file.flush()
+
+                upload_file_uri = path.join(uri_source, TEMP_FILE_NAME.format(i))
+                list_uploaded_uri.append(upload_file_uri)
+
+                self.filesystem.copyFromLocal(temp_file.name, upload_file_uri)
+                self.assertTrue(self.filesystem.exists(upload_file_uri))
+        return list_uploaded_uri
+
+    def test_dir_with_files(self):
+        uri_path = path.join(TEST_ROOT_NAME, TEST_FOLDER_NAME)
+        self.filesystem.mkdir(uri_path)
+
+        for i in range(10):
+            with tempfile.NamedTemporaryFile() as temp_file:
+                temp_file.write(TEMP_CONTENT)
+                upload_file_uri = path.join(uri_path, TEMP_FILE_NAME.format(i))
+                self.filesystem.copyFromLocal(temp_file.name, upload_file_uri)
+                self.assertTrue(self.filesystem.exists(upload_file_uri))
+
+    def test_cp(self):
+        uri_source = path.join(TEST_ROOT_NAME, TEST_FOLDER_NAME)
+        uri_target = path.join(TEST_ROOT_NAME, TEST_FOLDER_DEST)
+        self.filesystem.mkdir(uri_source)
+        self._upload_files(uri_source)
+
+        self.filesystem.cp(uri_source, uri_target)
+        for i in range(10):
+            temp_file_uri = path.join(uri_target, TEMP_FILE_NAME.format(i))
+            self.assertTrue(self.filesystem.exists(temp_file_uri))
+
+    def test_mv(self):
+        uri_source = path.join(TEST_ROOT_NAME, TEST_FOLDER_NAME)
+        uri_target = path.join(TEST_ROOT_NAME, TEST_FOLDER_DEST)
+        self.filesystem.mkdir(uri_source)
+        self._upload_files(uri_source)
+
+        self.filesystem.mv(uri_source, uri_target)
+        for i in range(10):
+            temp_file_uri = path.join(uri_target, TEMP_FILE_NAME.format(i))
+            self.assertTrue(self.filesystem.exists(temp_file_uri))
+            temp_file_uri = path.join(uri_source, TEMP_FILE_NAME.format(i))
+            self.assertFalse(self.filesystem.exists(temp_file_uri))
+
+    def test_copyToLocal(self):
+        uri_path = path.join(TEST_ROOT_NAME, TEST_FOLDER_NAME)
+        self.filesystem.mkdir(uri_path)
+        list_uploaded_uri = self._upload_files(uri_path)
+
+        for i, upload_file_uri in enumerate(list_uploaded_uri):
+            downloaded_file_uri = path.join(tempfile.gettempdir(), TEMP_FILE_NAME.format(i))
+            self.filesystem.copyToLocal(upload_file_uri, downloaded_file_uri)
+            self.assertTrue(path.exists(downloaded_file_uri))
+
+            with open(downloaded_file_uri) as downloaded_file:
+                self.assertEqual(downloaded_file.read().encode(), TEMP_CONTENT)
 
 
 if __name__ == '__main__':

@@ -5,7 +5,7 @@ from os import path
 from google.cloud import storage
 from google.auth import compute_engine
 from google.cloud.storage import Bucket, Blob
-from flow.core.abstract_filesystem import AbstractFilesystem
+from flow.core.abstract_filesystem import AbstractFilesystem, splitpath
 
 
 class GcpFilesystem(AbstractFilesystem):
@@ -36,31 +36,33 @@ class GcpFilesystem(AbstractFilesystem):
         return gcp_bucket
 
     def mkdir(self, uri_path, bucket_name=None, **kwargs):
+        def _create_folder_file():
+            folder_key = path.join(root, '{0}_$folder$'.format(folder_name))
+            blob = Blob(folder_key, gcp_bucket)
+            if not blob.exists():
+                blob.upload_from_string(data='')
+
         gcp_bucket = self._gcp_bucket(bucket_name)
-        folder_file = '{0}_$folder$'.format(path.basename(uri_path))
-        folder_key = path.join(uri_path, folder_file)
-        blob = Blob(folder_key, gcp_bucket)
-        if not blob.exists():
-            blob.upload_from_string(data='')
+        root = ''
+        for folder_name in splitpath(uri_path):
+            root = path.join(root, folder_name)
+            _create_folder_file()
 
     def rmdir(self, uri_path, bucket_name=None, **kwargs):
         gcp_bucket = self._gcp_bucket(bucket_name)
-
         for key in gcp_bucket.list_blobs(prefix='{0}/'.format(uri_path)):
             key.delete()
 
     def rm(self, uri_path, bucket_name=None, **kwargs):
-        gcp_bucket = self._gcp_bucket(bucket_name)
-        blob = Blob(uri_path, gcp_bucket)
-        blob.delete()
+        self.rmdir(uri_path, bucket_name, **kwargs)
 
     def cp(self, uri_source, uri_target, bucket_name_source=None, bucket_name_target=None, **kwargs):
         gcp_bucket_source = self._gcp_bucket(bucket_name_source)
         gcp_bucket_target = self._gcp_bucket(bucket_name_target)
 
-        blob_source = Blob(uri_source, gcp_bucket_source)
-        blob_target = Blob(uri_target, gcp_bucket_target)
-        blob_target.rewrite(source=blob_source)
+        for blob_source in gcp_bucket_source.list_blobs(prefix='{0}/'.format(uri_source)):
+            key_target = path.join(uri_target, blob_source.name.replace(uri_source, '').lstrip('/'))
+            Blob(key_target, gcp_bucket_target).rewrite(source=blob_source)
 
     def mv(self, uri_source, uri_target, bucket_name_source=None, bucket_name_target=None, **kwargs):
         self.cp(uri_source, uri_target, bucket_name_source, bucket_name_target, **kwargs)
@@ -78,7 +80,11 @@ class GcpFilesystem(AbstractFilesystem):
         with open(uri_source, 'rb') as file_pointer:
             blob.upload_from_file(file_pointer)
 
-    def exists(self, uri_path, bucket_name=None,  **kwargs):
+    def exists(self, uri_path, bucket_name=None, exact=False, **kwargs):
         gcp_bucket = self._gcp_bucket(bucket_name)
         blob = Blob(uri_path, gcp_bucket)
+        if exact is False and blob.exists() is False:
+            folder_name = '{0}_$folder$'.format(path.basename(uri_path))
+            folder_file = path.join(uri_path, folder_name)
+            blob = Blob(folder_file, gcp_bucket)
         return blob.exists()

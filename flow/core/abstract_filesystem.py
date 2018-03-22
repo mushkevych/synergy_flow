@@ -1,10 +1,18 @@
+import os
+
 __author__ = 'Bohdan Mushkevych'
 
 from flow.core.execution_context import ExecutionContext
 
 
+def splitpath(uri_path):
+    head, tail = os.path.split(uri_path)
+    return splitpath(head) + [tail] if head and head != uri_path else [head or tail]
+
+
 class AbstractFilesystem(object):
     """ abstraction for filesystem """
+
     def __init__(self, logger, context, **kwargs):
         assert isinstance(context, ExecutionContext)
         self.context = context
