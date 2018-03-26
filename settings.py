@@ -8,3 +8,10 @@ settings = dict(
                                # if True, a console handler for STDOUT and STDERR are appended to the logger.
                                # Otherwise STDOUT and STDERR are redirected to .log files
 )
+
+# Update current dict with the environment-specific settings
+try:
+    overrides = __import__('settings_secrets')
+except:
+    overrides = dict()
+settings.update(overrides.settings)

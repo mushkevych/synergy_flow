@@ -23,7 +23,7 @@ class EphemeralClusterTest(unittest.TestCase):
         flow_name = 'ut_flow_name'
         self.context = ExecutionContext(flow_name, TEST_PRESET_TIMEPERIOD, TEST_START_TIMEPERIOD, TEST_END_TIMEPERIOD,
                                         settings.settings)
-        self.ephemeral_cluster = EphemeralCluster('unit test cluster', self.context)
+        self.cluster = EphemeralCluster('unit test cluster', self.context)
 
     def tearDown(self):
         pass
@@ -33,17 +33,17 @@ class EphemeralClusterTest(unittest.TestCase):
         if not path.curdir.endswith('tests'):
             command = 'cd tests; ' + command
 
-        ls = self.ephemeral_cluster.run_shell_command(command)
+        ls = self.cluster.run_shell_command(command)
         for f in ['test_ephemeral_cluster.py', 'test_flow_graph.py', 'ut_flows.py']:
             self.assertTrue(any(f in s for s in ls))
 
     def test_silent_command(self):
-        ls = self.ephemeral_cluster.run_shell_command('mkdir -p /tmp/logs/synergy-flow/')
+        ls = self.cluster.run_shell_command('mkdir -p /tmp/logs/synergy-flow/')
         self.assertIsNotNone(ls)
 
     def test_non_existent_command(self):
         try:
-            self.ephemeral_cluster.run_shell_command('tratata -p /tmp/logs/synergy-flow/')
+            self.cluster.run_shell_command('tratata -p /tmp/logs/synergy-flow/')
             self.assertTrue(False, 'exception should have been thrown since command *tratata* is unknown')
         except subprocess.CalledProcessError as e:
             self.assertTrue(True, 'expected exception, as command *tratata* is unknown')

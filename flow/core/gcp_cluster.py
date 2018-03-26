@@ -1,9 +1,11 @@
 __author__ = 'Bohdan Mushkevych'
 
+import time
 import googleapiclient.discovery
 
 from flow.core.abstract_cluster import AbstractCluster, ClusterError
 from flow.core.gcp_filesystem import GcpFilesystem
+from flow.core.gcp_credentials import gcp_credentials
 
 # `https://cloud.google.com/dataproc/docs/reference/rest/v1/projects.regions.clusters#ClusterStatus`_
 CLUSTER_STATE_UNKNOWN = 'UNKNOWN'
@@ -13,6 +15,8 @@ CLUSTER_STATE_ERROR = 'ERROR'
 CLUSTER_STATE_DELETING = 'DELETING'
 CLUSTER_STATE_UPDATING = 'UPDATING'
 
+OPERATION_STATE_PENDING = 'PENDING'
+OPERATION_STATE_SETUP_DONE = 'SETUP_DONE'
 
 # `https://cloud.google.com/dataproc/docs/concepts/jobs/life-of-a-job`_
 JOB_STATE_PENDING = 'PENDING'
@@ -28,7 +32,9 @@ class GcpCluster(AbstractCluster):
     def __init__(self, name, context, **kwargs):
         super(GcpCluster, self).__init__(name, context, kwargs=kwargs)
         self._filesystem = GcpFilesystem(self.logger, context, **kwargs)
-        self.dataproc = googleapiclient.discovery.build('dataproc', 'v1')
+        service_account_file_uri = self.context.settings.get('gcp_service_account_file')
+        credentials = gcp_credentials(service_account_file_uri)
+        self.dataproc = googleapiclient.discovery.build('dataproc', 'v1', credentials=credentials)
 
         self.cluster_details = None
         self.project_id = context.settings['gcp_project_id']
@@ -56,13 +62,14 @@ class GcpCluster(AbstractCluster):
     def _poll_step(self, job_id):
         details = 'NA'
         state = JOB_STATE_PENDING
-        while state in [JOB_STATE_PENDING, JOB_STATE_RUNNING, JOB_STATE_QUEUED]:
+        while state in [OPERATION_STATE_SETUP_DONE, JOB_STATE_PENDING, JOB_STATE_RUNNING, JOB_STATE_QUEUED]:
             result = self.dataproc.projects().regions().jobs().get(
                 projectId=self.project_id,
                 region=self.cluster_region,
                 jobId=job_id).execute()
             state = result['status']['state']
-            details = result['status']['details']
+            if 'details' in result['status']:
+                details = result['status']['details']
 
         if state == JOB_STATE_ERROR:
             raise ClusterError('Gcp Job {0} failed: {1}'.format(job_id, details))
@@ -70,6 +77,7 @@ class GcpCluster(AbstractCluster):
             self.logger.info('Gcp Job {0} has completed.')
         else:
             self.logger.warning('Unknown state {0} during Gcp Job {1} execution'.format(state, job_id))
+        return state, details
 
     def run_pig_step(self, uri_script, libs=None, **kwargs):
         # `https://cloud.google.com/dataproc/docs/reference/rest/v1beta2/PigJob`_
@@ -92,27 +100,27 @@ class GcpCluster(AbstractCluster):
                 }
             }
         }
-        self._run_step(job_details)
+        return self._run_step(job_details)
 
     def run_spark_step(self, uri_script, language, libs=None, **kwargs):
         # `https://cloud.google.com/dataproc/docs/reference/rest/v1beta2/PySparkJob`_
-        if not libs:
-            libs = list()
-        gs_libs = ['gs://{}/{}'.format(self.context.settings['gcp_code_bucket'], x) for x in libs]
-
         job_details = {
             'projectId': self.project_id,
             'job': {
                 'placement': {
                     'clusterName': self.cluster_name
                 },
-                'pigJob': {
-                    'mainPythonFileUri': 'gs://{}/{}'.format(self.context.settings['gcp_code_bucket'], uri_script),
-                    'pythonFileUris': '{}'.format(gs_libs),
+                'pysparkJob': {
+                    'mainPythonFileUri': 'gs://{}/{}'.format(self.context.settings['gcp_code_bucket'], uri_script)
                 }
             }
         }
-        self._run_step(job_details)
+
+        if libs:
+            gs_libs = ['gs://{}/{}'.format(self.context.settings['gcp_code_bucket'], x) for x in libs]
+            job_details['job']['pysparkJob']['pythonFileUris'] = '{}'.format(gs_libs)
+
+        return self._run_step(job_details)
 
     def run_hadoop_step(self, uri_script, **kwargs):
         # `https://cloud.google.com/dataproc/docs/reference/rest/v1beta2/HadoopJob`_
@@ -121,9 +129,7 @@ class GcpCluster(AbstractCluster):
     def run_shell_command(self, uri_script, **kwargs):
         raise NotImplementedError('TODO: implement shell command')
 
-    def launch(self):
-        self.logger.info('Launching Gcp Cluster: {0} {{'.format(self.cluster_name))
-
+    def _launch(self):
         zone_uri = \
             'https://www.googleapis.com/compute/v1/projects/{}/zones/{}'.format(self.project_id, self.cluster_zone)
         cluster_data = {
@@ -132,6 +138,14 @@ class GcpCluster(AbstractCluster):
             'config': {
                 'gceClusterConfig': {
                     'zoneUri': zone_uri
+                },
+                'masterConfig': {
+                    'numInstances': 1,
+                    'machineTypeUri': 'n1-standard-1'
+                },
+                'workerConfig': {
+                    'numInstances': 2,
+                    'machineTypeUri': 'n1-standard-1'
                 }
             }
         }
@@ -139,14 +153,46 @@ class GcpCluster(AbstractCluster):
             projectId=self.project_id,
             region=self.cluster_region,
             body=cluster_data).execute()
-        self.cluster_details = result
 
-        if result['status']['state'] in [CLUSTER_STATE_CREATING, CLUSTER_STATE_RUNNING, CLUSTER_STATE_UPDATING]:
-            self.cluster_details = None
+        if result['metadata']['status']['state'] in [CLUSTER_STATE_CREATING, CLUSTER_STATE_RUNNING,
+                                                     CLUSTER_STATE_UPDATING, OPERATION_STATE_PENDING]:
             self.logger.info('Launch request successful')
         else:
             self.logger.warning('Cluster {0} entered unknown state {1}'.
-                                format(self.cluster_name, result['status']['state']))
+                                format(self.cluster_name, result['metadata']['status']['state']))
+
+    def _get_cluster(self):
+        try:
+            result = self.dataproc.projects().regions().clusters().get(
+                projectId=self.project_id,
+                region=self.cluster_region,
+                clusterName=self.cluster_name).execute()
+            return result
+        except:
+            return None
+
+    def _wait_for_cluster(self):
+        cluster = self._get_cluster()
+        while cluster:
+            if cluster['status']['state'] == 'ERROR':
+                raise ClusterError('Cluster {0} creation error: {1}'.
+                                   format(self.cluster_name, cluster['status']['details']))
+            if cluster['status']['state'] == 'RUNNING':
+                self.logger.info('Cluster {0} is running'.format(self.cluster_name))
+                break
+            else:
+                time.sleep(5)
+                cluster = self._get_cluster()
+        return cluster
+
+    def launch(self):
+        self.logger.info('Launching Gcp Cluster: {0} {{'.format(self.cluster_name))
+
+        self.cluster_details = self._get_cluster()
+        if not self.cluster_details:
+            self._launch()
+            self.cluster_details = self._wait_for_cluster()
+
         self.logger.info('}')
 
     def terminate(self):
@@ -156,10 +202,11 @@ class GcpCluster(AbstractCluster):
             region=self.cluster_region,
             clusterName=self.cluster_name).execute()
 
-        if result['status']['state'] in [CLUSTER_STATE_DELETING, CLUSTER_STATE_UNKNOWN]:
+        if result['metadata']['status']['state'] in [CLUSTER_STATE_DELETING, CLUSTER_STATE_UNKNOWN,
+                                                     OPERATION_STATE_PENDING]:
             self.cluster_details = None
             self.logger.info('Termination request successful')
         else:
             self.logger.warning('Cluster {0} entered unknown state {1}'.
-                                format(self.cluster_name, result['status']['state']))
+                                format(self.cluster_name, result['metadata']['status']['state']))
         self.logger.info('}')

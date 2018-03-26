@@ -24,7 +24,7 @@ class AzureBlobFilesystem(AbstractFilesystem):
 
     def _azure_bucket(self, bucket_name):
         if not bucket_name:
-            bucket_name = self.context.settings['azure_bucket_name']
+            bucket_name = self.context.settings['azure_bucket']
         return bucket_name
 
     def mkdir(self, uri_path, bucket_name=None, **kwargs):
