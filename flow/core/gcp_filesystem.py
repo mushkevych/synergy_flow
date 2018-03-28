@@ -54,8 +54,9 @@ class GcpFilesystem(AbstractFilesystem):
         gcp_bucket_source = self._gcp_bucket(bucket_name_source)
         gcp_bucket_target = self._gcp_bucket(bucket_name_target)
 
-        for blob_source in gcp_bucket_source.list_blobs(prefix='{0}/'.format(uri_source)):
-            key_target = path.join(uri_target, blob_source.name.replace(uri_source, '').lstrip('/'))
+        prefix = uri_source if self.exists(uri_source, exact=True) else '{0}/'.format(uri_source)
+        for blob_source in gcp_bucket_source.list_blobs(prefix=prefix):
+            key_target = blob_source.name.replace(uri_source, uri_target)
             Blob(key_target, gcp_bucket_target).rewrite(source=blob_source)
 
     def mv(self, uri_source, uri_target, bucket_name_source=None, bucket_name_target=None, **kwargs):
@@ -76,9 +77,9 @@ class GcpFilesystem(AbstractFilesystem):
 
     def exists(self, uri_path, bucket_name=None, exact=False, **kwargs):
         gcp_bucket = self._gcp_bucket(bucket_name)
-        blob = Blob(uri_path, gcp_bucket)
-        if exact is False and blob.exists() is False:
+        is_found = Blob(uri_path, gcp_bucket).exists()
+        if exact is False and is_found is False:
             folder_name = '{0}_$folder$'.format(path.basename(uri_path))
-            folder_file = path.join(uri_path, folder_name)
-            blob = Blob(folder_file, gcp_bucket)
-        return blob.exists()
+            folder_key = path.join(uri_path, folder_name)
+            is_found = Blob(folder_key, gcp_bucket).exists()
+        return is_found

@@ -4,7 +4,7 @@ from os import path
 
 from azure.storage.blob import BlockBlobService
 
-from flow.core.abstract_filesystem import AbstractFilesystem
+from flow.core.abstract_filesystem import AbstractFilesystem, splitpath
 
 
 class AzureBlobFilesystem(AbstractFilesystem):
@@ -28,10 +28,16 @@ class AzureBlobFilesystem(AbstractFilesystem):
         return bucket_name
 
     def mkdir(self, uri_path, bucket_name=None, **kwargs):
+        def _create_folder_file():
+            folder_key = path.join(root, '{0}_$folder$'.format(folder_name))
+            if not self.block_blob_service.exists(azure_bucket, folder_key):
+                self.block_blob_service.create_blob_from_text(azure_bucket, folder_key, '')
+
         azure_bucket = self._azure_bucket(bucket_name)
-        folder_key = path.join(uri_path, '{0}_$folder$'.format(uri_path))
-        if not self.block_blob_service.exists(azure_bucket, folder_key):
-            self.block_blob_service.create_blob_from_text(azure_bucket, folder_key, '')
+        root = ''
+        for folder_name in splitpath(uri_path):
+            root = path.join(root, folder_name)
+            _create_folder_file()
 
     def rmdir(self, uri_path, bucket_name=None, **kwargs):
         azure_bucket = self._azure_bucket(bucket_name)
@@ -61,3 +67,12 @@ class AzureBlobFilesystem(AbstractFilesystem):
         azure_bucket_target = self._azure_bucket(bucket_name_target)
         with open(uri_source, 'rb') as file_pointer:
             self.block_blob_service.create_blob_from_stream(azure_bucket_target, uri_target, file_pointer)
+
+    def exists(self, uri_path, bucket_name=None, exact=False, **kwargs):
+        azure_bucket = self._azure_bucket(bucket_name)
+        is_found = self.block_blob_service.exists(azure_bucket, uri_path)
+        if exact is False and is_found is False:
+            folder_name = '{0}_$folder$'.format(path.basename(uri_path))
+            folder_key = path.join(uri_path, folder_name)
+            is_found = self.block_blob_service.exists(azure_bucket, folder_key)
+        return is_found
