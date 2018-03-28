@@ -2,21 +2,25 @@ __author__ = 'Bohdan Mushkevych'
 
 from os import path
 
-import boto
-import boto.s3
-import boto.s3.key
-from boto.exception import S3ResponseError
+import boto3
+import boto3.s3
+from boto3.exceptions import Boto3Error
+from botocore.exceptions import ClientError
+
 from flow.core.abstract_filesystem import AbstractFilesystem
 
 
 class S3Filesystem(AbstractFilesystem):
     """ implementation of AWS S3 filesystem """
+
     def __init__(self, logger, context, **kwargs):
         super(S3Filesystem, self).__init__(logger, context, **kwargs)
         try:
-            self.s3_connection = boto.connect_s3(context.settings['aws_access_key_id'],
-                                                 context.settings['aws_secret_access_key'])
-        except S3ResponseError as e:
+            self.s3_resource = boto3.resource(service_name='s3',
+                                              aws_access_key_id=context.settings['aws_access_key_id'],
+                                              aws_secret_access_key=context.settings['aws_secret_access_key'])
+            self.s3_client = self.s3_resource.meta.client
+        except (Boto3Error, ClientError) as e:
             self.logger.error('AWS Credentials are NOT valid. Terminating.', exc_info=True)
             raise ValueError(e)
 
@@ -26,25 +30,31 @@ class S3Filesystem(AbstractFilesystem):
     def _s3_bucket(self, bucket_name):
         if not bucket_name:
             bucket_name = self.context.settings['aws_s3_bucket']
-        s3_bucket = self.s3_connection.get_bucket(bucket_name)
+        s3_bucket = self.s3_resource.Bucket(bucket_name)
         return s3_bucket
 
     def mkdir(self, uri_path, bucket_name=None, **kwargs):
         s3_bucket = self._s3_bucket(bucket_name)
-        folder_file = '{0}_$folder$'.format(path.basename(uri_path))
-        folder_key = path.join(uri_path, folder_file)
-        if not s3_bucket.get_key(folder_key):
-            s3_key = s3_bucket.new_key(folder_key)
-            s3_key.set_contents_from_string('')
+        folder_key = path.join(uri_path, '{0}_$folder$'.format(uri_path))
+        try:
+            self.s3_client.head_object(Bucket=s3_bucket.name, Key=folder_key)
+        except ClientError:
+            # Key not found
+            s3_key = s3_bucket.Object(folder_key)
+            s3_key.put(Body='')
 
     def rmdir(self, uri_path, bucket_name=None, **kwargs):
         s3_bucket = self._s3_bucket(bucket_name)
 
-        for key in s3_bucket.list(prefix='{0}/'.format(uri_path)):
-            key.delete()
+        objects_to_delete = [{'Key': uri_path}]
+        for obj in s3_bucket.objects.filter(Prefix='{0}/'.format(uri_path)):
+            objects_to_delete.append({'Key': obj.key})
 
-        if s3_bucket.get_key(uri_path):
-            s3_bucket.delete_key(uri_path)
+        s3_bucket.delete_objects(
+            Delete={
+                'Objects': objects_to_delete
+            }
+        )
 
     def rm(self, uri_path, bucket_name=None, **kwargs):
         s3_bucket = self._s3_bucket(bucket_name)
@@ -64,12 +74,27 @@ class S3Filesystem(AbstractFilesystem):
 
     def copyToLocal(self, uri_source, uri_target, bucket_name_source=None, **kwargs):
         s3_bucket_source = self._s3_bucket(bucket_name_source)
-        with open(uri_target, 'wb') as file_pointer:
-            s3_bucket_source.get_file(file_pointer)
+        try:
+            s3_bucket_source.download_file(uri_source, uri_target)
+        except ClientError as e:
+            self.logger.error('AWS CopyToLocal Error:.', exc_info=True)
+            raise ValueError(e)
 
     def copyFromLocal(self, uri_source, uri_target, bucket_name_target=None, **kwargs):
         s3_bucket_target = self._s3_bucket(bucket_name_target)
-        with open(uri_source, 'rb') as file_pointer:
-            s3_key = boto.s3.key.Key(s3_bucket_target)
-            s3_key.key = uri_target
-            s3_key.set_contents_from_file(fp=file_pointer, rewind=True)
+        try:
+            s3_bucket_target.upload_file(uri_source, uri_target)
+        except ClientError as e:
+            self.logger.error('AWS CopyFromLocal Error:.', exc_info=True)
+            raise ValueError(e)
+
+    def exists(self, uri_path, bucket_name=None, **kwargs):
+        s3_bucket = self._s3_bucket(bucket_name)
+        folder_key = path.join(uri_path, '{0}_$folder$'.format(uri_path))
+        for key in [uri_path, folder_key]:
+            try:
+                self.s3_client.head_object(Bucket=s3_bucket.name, Key=key)
+                return True
+            except ClientError:
+                pass
+        return False
