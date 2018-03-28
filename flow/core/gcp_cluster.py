@@ -77,13 +77,10 @@ class GcpCluster(AbstractCluster):
             self.logger.info('Gcp Job {0} has completed.')
         else:
             self.logger.warning('Unknown state {0} during Gcp Job {1} execution'.format(state, job_id))
-        return state, details
+        return state
 
     def run_pig_step(self, uri_script, libs=None, **kwargs):
         # `https://cloud.google.com/dataproc/docs/reference/rest/v1beta2/PigJob`_
-        if not libs:
-            libs = list()
-        gs_libs = ['gs://{}/{}'.format(self.context.settings['gcp_code_bucket'], x) for x in libs]
 
         job_details = {
             'projectId': self.project_id,
@@ -95,11 +92,15 @@ class GcpCluster(AbstractCluster):
                     'scriptVariables': {
                         **kwargs
                     },
-                    'queryFileUri': 'gs://{}/{}'.format(self.context.settings['gcp_code_bucket'], uri_script),
-                    'jarFileUris': '{}'.format(gs_libs)
+                    'queryFileUri': 'gs://{}/{}'.format(self.context.settings['gcp_code_bucket'], uri_script)
                 }
             }
         }
+
+        if libs:
+            gs_libs = ['gs://{}/{}'.format(self.context.settings['gcp_code_bucket'], x) for x in libs]
+            job_details['job']['pigJob']['jarFileUris'] = '{}'.format(gs_libs)
+
         return self._run_step(job_details)
 
     def run_spark_step(self, uri_script, language, libs=None, **kwargs):
