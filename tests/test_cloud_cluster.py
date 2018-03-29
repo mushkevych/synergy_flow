@@ -83,7 +83,7 @@ class EmrClusterTest(unittest.TestCase):
         except ClusterError as e:
             self.assertTrue(True, 'Cluster not started exception caught')
 
-    # @unittest.skip('skip basics')
+    @unittest.skip('skip basics')
     def test_cluster_basics(self):
         self.cluster.launch()
         self.assertIsNotNone(self.cluster.jobflow_id)
@@ -95,7 +95,8 @@ class EmrClusterTest(unittest.TestCase):
     def test_spark_job(self):
         self.cluster.filesystem.copyFromLocal('pyspark_sort.py', 'code/pyspark_sort.py')
         self.cluster.launch()
-        state = self.cluster.run_spark_step('code/pyspark_sort.py', 'python')
+        script_uri = 's3a://{0}/code/pyspark_sort.py'.format(self.context.settings['aws_s3_bucket'])
+        state = self.cluster.run_spark_step(script_uri, 'python')
         self.assertEqual(state, STEP_STATE_COMPLETED)
 
     @unittest.skip('skip pig step')
@@ -105,9 +106,11 @@ class EmrClusterTest(unittest.TestCase):
         self.cluster.filesystem.copyFromLocal('truck_event_text_partition.csv', 'code/truck_event_text_partition.csv')
         self.cluster.launch()
 
-        data_trucks = 's3a://{}/{}'.format(self.context.settings['gcp_bucket'], 'code/truck_event_text_partition.csv')
-        data_drivers = 's3a://{}/{}'.format(self.context.settings['gcp_bucket'], 'code/drivers.csv')
-        state = self.cluster.run_pig_step('code/pig_sample.pig', TRUCKS_CSV=data_trucks, DRIVERS_CSV=data_drivers)
+        data_trucks = 's3a://{}/{}'.format(self.context.settings['aws_s3_bucket'], 'code/truck_event_text_partition.csv')
+        data_drivers = 's3a://{}/{}'.format(self.context.settings['aws_s3_bucket'], 'code/drivers.csv')
+
+        script_uri = 's3a://{0}/code/pig_sample.pig'.format(self.context.settings['aws_s3_bucket'])
+        state = self.cluster.run_pig_step(script_uri, TRUCKS_CSV=data_trucks, DRIVERS_CSV=data_drivers)
         self.assertEqual(state, STEP_STATE_COMPLETED)
 
 
