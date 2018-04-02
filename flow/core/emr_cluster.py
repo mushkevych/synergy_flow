@@ -113,9 +113,6 @@ class EmrCluster(AbstractCluster):
             self.logger.info('}')
 
     def run_spark_step(self, uri_script, language, **kwargs):
-        # TODO: copy .py files from S3 to HDFS, as described:
-        # https://stackoverflow.com/questions/38191129/amazon-emr-spark-submission-from-s3-not-working
-
         # `https://docs.aws.amazon.com/emr/latest/ReleaseGuide/emr-commandrunner.html`_
         # `http://boto3.readthedocs.io/en/latest/reference/services/emr.html#EMR.Client.add_job_flow_steps`_
         if not self.jobflow_id:
@@ -128,7 +125,7 @@ class EmrCluster(AbstractCluster):
                 'ActionOnFailure': 'CONTINUE',
                 'HadoopJarStep': {
                     'Jar': 'command-runner.jar',
-                    'Args': ['spark-submit', uri_script]
+                    'Args': ['spark-submit', '--deploy-mode', 'cluster', uri_script]
                 }
             }
             if kwargs:
