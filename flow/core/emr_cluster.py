@@ -81,11 +81,11 @@ class EmrCluster(AbstractCluster):
         self.logger.info('Pig Script Step {')
         try:
             step = {
-                'Name': 'SynergyPysparkStep',
+                'Name': 'SynergyPigStep',
                 'ActionOnFailure': 'CONTINUE',
                 'HadoopJarStep': {
                     'Jar': 'command-runner.jar',
-                    'Args': ['pig-script', uri_script]
+                    'Args': ['pig-script', '--run-pig-script', '--args', '-f', uri_script]
                 }
             }
             if kwargs:
@@ -113,6 +113,7 @@ class EmrCluster(AbstractCluster):
             self.logger.info('}')
 
     def run_spark_step(self, uri_script, language, **kwargs):
+        # `https://github.com/dev-86/aws-cli/blob/29756ea294aebc7c854b3d9a2b1a56df28637e11/tests/unit/customizations/emr/test_create_cluster_release_label.py`_
         # `https://docs.aws.amazon.com/emr/latest/ReleaseGuide/emr-commandrunner.html`_
         # `http://boto3.readthedocs.io/en/latest/reference/services/emr.html#EMR.Client.add_job_flow_steps`_
         if not self.jobflow_id:
@@ -147,16 +148,18 @@ class EmrCluster(AbstractCluster):
             self.logger.info('}')
 
     def run_hadoop_step(self, uri_script, **kwargs):
+        # `https://github.com/dev-86/aws-cli/blob/29756ea294aebc7c854b3d9a2b1a56df28637e11/tests/unit/customizations/emr/test_create_cluster_release_label.py`_
         pass
 
     def run_shell_command(self, uri_script, **kwargs):
+        # `https://github.com/dev-86/aws-cli/blob/29756ea294aebc7c854b3d9a2b1a56df28637e11/tests/unit/customizations/emr/test_create_cluster_release_label.py`_
         pass
 
     def _launch(self):
         """
         method launches the cluster and returns when the cluster is fully operational
         and ready to accept business steps
-        :see: `http://docs.aws.amazon.com/ElasticMapReduce/latest/DeveloperGuide/emr-plan-bootstrap.html/`_
+        :see: `http://boto3.readthedocs.io/en/latest/reference/services/emr.html#EMR.Client.add_job_flow_steps`_
         """
         self.logger.info('Launching EMR Cluster {0} {{'.format(self.name))
         try:
@@ -169,6 +172,7 @@ class EmrCluster(AbstractCluster):
                     'InstanceCount': 3,
                     'KeepJobFlowAliveWhenNoSteps': True,
                     'TerminationProtected': True,
+                    'Ec2KeyName': self.context.settings.get('aws_key_name', ''),
                 },
                 BootstrapActions=[
                     {
@@ -249,7 +253,7 @@ class EmrCluster(AbstractCluster):
             self.logger.info('Reusing existing EMR Cluster: {0} {{'.format(cluster_id))
         else:
             cluster_id = self._launch()
-            self._wait_for_cluster(cluster_id)
+        self._wait_for_cluster(cluster_id)
         self.jobflow_id = cluster_id
 
         self.logger.info('}')

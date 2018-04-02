@@ -72,8 +72,8 @@ class EmrClusterTest(unittest.TestCase):
         self.cluster = EmrCluster('unit test cluster', self.context)
 
     def tearDown(self):
-        # self.cluster.terminate()
-        pass
+        self.cluster.terminate()
+        # pass
 
     @unittest.skip('simply skip')
     def test_non_running_cluster(self):
