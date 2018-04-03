@@ -5,7 +5,7 @@
 
 Simple Workflow Engine advocates "write once, run everywhere" approach in regard to workflow and clusters. 
 It features separate concepts for Action, Step, Workflow and Execution Cluster.  
-Framework supports local desktop environment (for testing at least), multiple concurrent EMR clusters, Qubole cluster.
+Framework supports local desktop environment (for testing at least), multiple concurrent AWS EMR, GCP Dataproc, Qubole clusters.
 
 Concepts:
 ---------
@@ -154,12 +154,12 @@ Dependencies
 == Google Computing Platform  
 `https://cloud.google.com/dataproc/docs/tutorials/python-library-example`  
 
-1. google-api-python-client
-1. google-cloud-storage for Google Cloud Dataproc
+1. google-api-python-client, google-auth-httplib2
+1. google-cloud-storage for Google Cloud Filesystem
 1. google-cloud-dataproc for Google Cloud Dataproc
 
 == Amazon Web Services ==
-1. boto for AWS 
+1. boto3 for AWS 
 
 == Qubole
 1. qds_sdk for Qubole 
@@ -168,4 +168,3 @@ Dependencies
 1. azure-storage-blob for Azure  
 1. no python API for HD Insight 
 `https://docs.microsoft.com/en-us/azure/hdinsight/hadoop/submit-apache-hadoop-jobs-programmatically` 
-

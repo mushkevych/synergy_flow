@@ -11,7 +11,7 @@ setup(name='synergy_flow',
       package_data={'flow.mx': ['css/*', 'js/*', '*.html']},
       long_description='Synergy Flow is a workflow engine with separate concepts for Action, Step, Workflow '
                        'and Execution Cluster. Framework supports local desktop environment (for testing at least), '
-                       'multiple concurrent AWS EMR clusters, Qubole cluster.',
+                       'multiple concurrent AWS EMR, GCP Dataproc, Qubole clusters.',
       license='BSD 3-Clause License',
       classifiers=[
           'Development Status :: 4 - Beta',
@@ -25,5 +25,5 @@ setup(name='synergy_flow',
       ],
       provides='synergy_flow',
       requires=['synergy_scheduler', 'synergy_odm', 'mock', 'pymongo', 'boto3', 'psycopg2', 'subprocess32',
-                'google-auth-httplib2', 'google-api-python-client']
+                'google-auth-httplib2', 'google-api-python-client', 'google-cloud-dataproc', 'google-cloud-storage']
       )
