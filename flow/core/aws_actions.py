@@ -63,4 +63,5 @@ class ExportAction(AbstractAction):
         if not file_uri:
             raise UserWarning('Table {0} was not exported. Aborting the action'.format(self.table_name))
         target_file_uri = '{0}/{1}.csv'.format(self.timeperiod, self.table_name)
+        execution_cluster.filesystem.mkdir(self.timeperiod)
         execution_cluster.filesystem.copyFromLocal(file_uri, target_file_uri)
