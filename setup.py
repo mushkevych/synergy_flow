@@ -24,6 +24,6 @@ setup(name='synergy_flow',
           'Programming Language :: Python :: 3.6',
       ],
       provides='synergy_flow',
-      requires=['synergy_scheduler', 'synergy_odm', 'mock', 'pymongo', 'boto', 'boto3', 'psycopg2', 'subprocess32', 'google-auth-httplib2',
-                'google-api-python-client']
+      requires=['synergy_scheduler', 'synergy_odm', 'mock', 'pymongo', 'boto3', 'psycopg2', 'subprocess32',
+                'google-auth-httplib2', 'google-api-python-client']
       )

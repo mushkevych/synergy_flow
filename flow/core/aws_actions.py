@@ -4,11 +4,7 @@ import os
 import shutil
 import tempfile
 
-import boto
-import boto.s3
-import boto.s3.key
 import psycopg2
-from boto.exception import S3ResponseError
 
 from flow.core.execution_context import valid_context
 from flow.core.abstract_action import AbstractAction
@@ -22,19 +18,9 @@ class ExportAction(AbstractAction):
 
         self.table_name = table_name
         self.tempdir_copying = tempfile.mkdtemp()
-        self.s3_connection = None
-        self.s3_bucket = None
 
     def set_context(self, context, step_name=None, **kwargs):
         super(ExportAction, self).set_context(context, step_name, **kwargs)
-        try:
-            self.s3_connection = boto.connect_s3(self.settings['aws_access_key_id'],
-                                                 self.settings['aws_secret_access_key'])
-            self.s3_bucket = self.s3_connection.get_bucket(self.settings['aws_s3_bucket'])
-        except S3ResponseError as e:
-            self.logger.error('AWS Credentials are NOT valid. Terminating.', exc_info=True)
-            self.__del__()
-            raise ValueError(e)
 
     def cleanup(self):
         """ method verifies if temporary folder exists and removes it (and nested content) """
@@ -71,18 +57,10 @@ class ExportAction(AbstractAction):
                                       .format(self.settings['aws_redshift_db'], self.table_name), exc_info=True)
                     return None
 
-    def file_to_s3(self, file_uri):
-        """ moves exported file into the S3 """
-        self.logger.info('--> Processing table export file %s' % file_uri.name)
-
-        # copy file to S3
-        s3_key = boto.s3.key.Key(self.s3_bucket)
-        s3_key.key = self.timeperiod + '/' + self.table_name + '.csv'
-        s3_key.set_contents_from_file(fp=file_uri, rewind=True)
-
     @valid_context
     def run(self, execution_cluster):
         file_uri = self.table_to_file()
         if not file_uri:
             raise UserWarning('Table {0} was not exported. Aborting the action'.format(self.table_name))
-        self.file_to_s3(file_uri)
+        target_file_uri = '{0}/{1}.csv'.format(self.timeperiod, self.table_name)
+        execution_cluster.filesystem.copyFromLocal(file_uri, target_file_uri)

@@ -175,10 +175,10 @@ class GcpCluster(AbstractCluster):
     def _wait_for_cluster(self):
         cluster = self._get_cluster()
         while cluster:
-            if cluster['status']['state'] == 'ERROR':
+            if cluster['status']['state'] == CLUSTER_STATE_ERROR:
                 raise ClusterError('Cluster {0} creation error: {1}'.
                                    format(self.cluster_name, cluster['status']['details']))
-            if cluster['status']['state'] == 'RUNNING':
+            if cluster['status']['state'] == CLUSTER_STATE_RUNNING:
                 self.logger.info('Cluster {0} is running'.format(self.cluster_name))
                 break
             else:
@@ -189,10 +189,9 @@ class GcpCluster(AbstractCluster):
     def launch(self):
         self.logger.info('Launching Gcp Cluster: {0} {{'.format(self.cluster_name))
 
-        self.cluster_details = self._get_cluster()
-        if not self.cluster_details:
+        if not self._get_cluster():
             self._launch()
-            self.cluster_details = self._wait_for_cluster()
+        self.cluster_details = self._wait_for_cluster()
 
         self.logger.info('}')
 
