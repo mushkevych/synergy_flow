@@ -89,14 +89,13 @@ class GcpCluster(AbstractCluster):
                     'clusterName': self.cluster_name
                 },
                 'pigJob': {
-                    'scriptVariables': {
-                        **kwargs
-                    },
                     'queryFileUri': 'gs://{}/{}'.format(self.context.settings['gcp_code_bucket'], uri_script)
                 }
             }
         }
 
+        if kwargs:
+            job_details['job']['pigJob']['scriptVariables'] = '{}'.format(kwargs)
         if libs:
             gs_libs = ['gs://{}/{}'.format(self.context.settings['gcp_code_bucket'], x) for x in libs]
             job_details['job']['pigJob']['jarFileUris'] = '{}'.format(gs_libs)
