@@ -20,7 +20,9 @@ install:
   - pip install pymongo
   - pip install synergy_scheduler
   - pip install synergy_odm
-  - pip install boto
+  - pip install boto3
+  - pip install google-auth-httplib2 google-api-python-client google-cloud-dataproc google-cloud-storage
+  - pip install azure-storage-blob
 
 script:
   - python -m unittest discover tests
