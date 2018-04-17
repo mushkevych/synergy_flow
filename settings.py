@@ -12,6 +12,6 @@ settings = dict(
 # Update current dict with the environment-specific settings
 try:
     overrides = __import__('settings_secrets')
+    settings.update(overrides.settings)
 except:
-    overrides = dict()
-settings.update(overrides.settings)
+    pass
