@@ -23,7 +23,10 @@ setup(name='synergy_flow',
           'Programming Language :: Python :: 3.7',
       ],
       provides='synergy_flow',
-      install_requires=['synergy_scheduler', 'synergy_odm', 'mock', 'pymongo', 'boto3', 'psycopg2', 'subprocess32',
-                        'google-auth-httplib2', 'google-api-python-client', 'google-cloud-dataproc',
-                        'google-cloud-storage']
+      install_requires=['synergy_scheduler', 'mock', 'subprocess32'],
+      extras_require={'postgresql': ['psycopg2'],
+                      'aws': ['boto3'],
+                      'gcp': ['google-auth-httplib2', 'google-api-python-client', 'google-cloud-dataproc',
+                              'google-cloud-storage']
+                      }
       )
