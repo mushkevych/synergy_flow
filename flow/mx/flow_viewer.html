@@ -6,13 +6,13 @@
     <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
     <link rel="stylesheet" type="text/css" href="{{ url_for('flow/static', file='css/flow_viewer.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ url_for('flow/static', file='css/jquery.tipsy.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', file='css/mx_page.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', file='css/index.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', file='css/font-awesome.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', file='css/alertify.css') }}">
-    <script type="text/javascript" src="{{ url_for('flow/static', file='js/d3-4.12.2.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('flow/static', file='js/d3-5.12.0.min.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('flow/static', file='js/dagre-d3-0.5.0.min.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('flow/static', file='js/flow_viewer.js') }}"></script>
-    <script type="text/javascript" src="{{ url_for('static', file='js/jquery-3.2.1.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', file='js/jquery-3.4.1.min.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('flow/static', file='js/jquery.tipsy.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', file='js/mx_utils.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', file='js/alertify-0.3.17.trunk.js') }}"></script>
@@ -37,15 +37,16 @@
     </svg>
 </div>
 
-<form style="text-align: center">
-    <input type="button" class="action_button fa-input" value="&#xf00d;&nbsp;Close" onclick="window.close()"/>
+<form class="justify-space-around">
+    <button type="button" class="action_button btn-center" onclick="window.close()">
+        <i class="fa fa-remove"></i><span>Close</span></button>
 </form>
 
 <script type="text/javascript">
-    var mx_flow = {{ flow_details|jsonify|safe }};
-    var process_name = "{{ process_name|safe }}";
-    var active_run_mode = "{{ active_run_mode|safe }}";
-    var freerun_uows = {{ freerun_uows|jsonify|safe }};
+    const mx_flow = {{ flow_details|jsonify|safe }};
+    const process_name = "{{ process_name|safe }}";
+    const active_run_mode = "{{ active_run_mode|safe }}";
+    const freerun_uows = {{ freerun_uows|jsonify|safe }};
 
     // if the mx_flow is not available for this process
     if (Object.keys(mx_flow).length === 0) {
@@ -56,8 +57,8 @@
         enlistTabs($("#tabs"), "managed");
         enlistTabContent($("#flow_header"), mx_flow, process_name, "managed", "type_managed", active_run_mode);
 
-        var entry_name;
-        for (var freerun_uow in freerun_uows) {
+        let entry_name;
+        for (let freerun_uow in freerun_uows) {
             entry_name = freerun_uow.process_name.substring(process_name.length + 2);  // +2 is to include divider "::"
             enlistTabs($("#tabs"), entry_name);
             enlistTabContent($("#flow_header"), mx_flow, process_name, entry_name, uow.unit_of_work_type, active_run_mode);

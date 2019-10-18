@@ -148,8 +148,8 @@ Roadmap:
 Dependencies
 ---------
 1. linux/unix
-1. Synergy Scheduler 1.18+
-1. python 2.7+ / 3.4+
+1. Synergy Scheduler 2.1+
+1. python 3.7+
 
 == Google Computing Platform  
 `https://cloud.google.com/dataproc/docs/tutorials/python-library-example`  

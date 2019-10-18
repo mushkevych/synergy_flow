@@ -1,5 +1,5 @@
 // tipsy, facebook style tooltips for jquery
-// version 1.0.2
+// version 1.0.3+
 // (c) 2008-2010 jason frame [jason@onehackoranother.com]
 // released under the MIT license
 
@@ -63,7 +63,7 @@
                 var pos = $.extend({}, this.$element.offset());
 
                 // If the element is contained in a SVG object, use getBBox
-                if (this.$element.parents('svg').size() > 0) {
+                if (this.$element.parents('svg').length > 0) {
                     pos = $.extend(pos, this.$element[0].getBBox());
                 } else {
                     pos = $.extend(pos, {
