@@ -22,9 +22,9 @@
     </head>
 
     <body>
-        <div class="container-fluid">
+        <div class="container-fluid" style="display: flex; flex-wrap: wrap">
 
-            <div id="flow_header">
+            <div id="flow_header" class="flow-header">
                 <div id="tabs" class="tab">
                     <!-- buttons are added by the enlist_tab() function -->
                 </div>
@@ -39,10 +39,12 @@
                 </svg>
             </div>
 
-            <form class="justify-space-around flex-bottom">
-                <button type="button" class="action_button btn-center" onclick="window.close()">
-                    <i class="fa fa-remove"></i><span>Close</span></button>
-            </form>
+            <div class="flex-bottom container-close justify-center">
+                <form class="my-1">
+                    <button type="button" class="action_button btn-center" onclick="window.close()">
+                        <i class="fa fa-remove"></i><span>Close</span></button>
+                </form>
+            </div>
         </div>
 
         <script type="text/javascript">
