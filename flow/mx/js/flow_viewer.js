@@ -6,15 +6,14 @@ function switchTab(evt, tab_id) {
         return;
     }
 
-    let i;
     const tabcontent = document.getElementsByClassName("tabcontent");
-    for (i = 0; i < tabcontent.length; i++) {
+    for (let i = 0; i < tabcontent.length; i++) {
         // hide all elements with class="tabcontent"
         tabcontent[i].style.display = "none";
     }
 
     const tablinks = document.getElementsByClassName("tablinks");
-    for (i = 0; i < tablinks.length; i++) {
+    for (let i = 0; i < tablinks.length; i++) {
         // remove class "active" from all elements with class="tablinks"
         tablinks[i].className = tablinks[i].className.replace(" active", "");
     }
@@ -27,13 +26,13 @@ function switchTab(evt, tab_id) {
 
 function renderEmptyResponse(element, process_name) {
     element[0].style.display = "block";
-    element.append('<b>no workflow was found for process ' + process_name + '</b>');
+    element.append(`<b>no workflow was found for process ${process_name}</b>`);
 }
 
 
 function enlistTabs(element, name) {
-    const tab_id = 'tab_' + name;
-    const button = $('<button id="tab_button_' + name + '" class="tablinks" onclick="switchTab(event, \'' + tab_id + '\')">' + name + '</button>');
+    const tab_id = `tab_${name}`;
+    const button = $(`<button id="tab_button_${name}" class="tablinks" onclick="switchTab(event, '${tab_id}')">${name}</button>`);
     element.append(button);
 }
 
@@ -43,30 +42,32 @@ function enlistTabContent(element, mx_flow, process_name, entry_name, uow_type, 
     const is_run_mode_recovery = ('run_mode_recovery' === active_run_mode) ? 'selected' : '';
     const endpoint_type = ('type_freerun' === uow_type) ? 'freerun' : 'managed';
 
-    const change_run_mode_form = '<form method="POST" action="/flow/run/mode/" onsubmit="xmlhttp.send(); return false;">'
-        + '<input type="hidden" name="process_name" value="' + process_name + '" />'
-        + '<input type="hidden" name="flow_name" value="' + mx_flow.flow_name + '" />'
-        + '<input type="hidden" name="timeperiod" value="' + mx_flow.timeperiod + '" />'
-        + '<input type="hidden" name="timeperiod" value="' + mx_flow.timeperiod + '" />'
-        + '<select name="run_mode">'
-        + '<option value="run_mode_nominal" ' + is_run_mode_nominal + '>Start from beginning</option>'
-        + '<option value="run_mode_recovery" ' + is_run_mode_recovery + '>Continue from last successful step</option>'
-        + '</select>'
-        + '<button type="submit" class="action_button btn-icons btn-center" title="Apply">'
-        + '<i class="fa fa-check"></i>'
-        + '</button>'
-        + '</form>';
+    const change_run_mode_form = `
+        <form method="POST" style="margin-bottom: 0" action="/flow/run/mode/" onsubmit="xmlhttp.send(); return false;">
+            <input type="hidden" name="process_name" value="${process_name}" />
+            <input type="hidden" name="flow_name" value="${mx_flow.flow_name}" />
+            <input type="hidden" name="timeperiod" value="${mx_flow.timeperiod}" />
+            <input type="hidden" name="timeperiod" value="${mx_flow.timeperiod}" />
+            <select name="run_mode">
+                <option value="run_mode_nominal" ${is_run_mode_nominal}>Start from beginning</option>
+                <option value="run_mode_recovery" ${is_run_mode_recovery}>Continue from last successful step</option>
+            </select>
+            <button type="submit" class="action_button btn-icons btn-center" title="Apply">
+            <i class="fa fa-check"></i>
+            </button>
+        </form>`;
 
 
-    const run_mode_block = '<div class="header_layout">'
-        + '<div class="header_layout_element ">On failure:</div>'
-        + '<div class="header_layout_element ">&nbsp;</div>'
-        + '<div class="header_layout_element ">' + change_run_mode_form + '</div>'
-        + '</div>';
+    const run_mode_block = `
+        <div class="header_layout">
+            <div class="header_layout_element ">On failure:</div>
+            <div class="header_layout_element ">&nbsp;</div>
+            <div class="header_layout_element ">${change_run_mode_form}</div>
+        </div>`;
 
-    const uow_button = $('<button class="action_button"><i class="fa fa-file-code-o"></i>&nbsp;Uow</button>').click(function (e) {
+    const uow_button = $('<button class="action_button auto_width"><i class="fa fa-file-code-o"></i>&nbsp;Uow</button>').click(function (e) {
         const params = {
-            action: endpoint_type + '/uow',
+            action: `${endpoint_type}/uow`,
             timeperiod: mx_flow.timeperiod,
             process_name: process_name,
             entry_name: entry_name
@@ -74,7 +75,7 @@ function enlistTabContent(element, mx_flow, process_name, entry_name, uow_type, 
         const viewer_url = '/viewer/object/?' + $.param(params);
         window.open(viewer_url, 'Object Viewer', 'width=450,height=400,screenX=400,screenY=200,scrollbars=1');
     });
-    const event_log_button = $('<button class="action_button"><i class="fa fa-th-list"></i>&nbsp;Event&nbsp;Log</button>').click(function (e) {
+    const event_log_button = $('<button class="action_button auto_width"><i class="fa fa-th-list"></i>&nbsp;Event&nbsp;Log</button>').click(function (e) {
         const params = {
             action: endpoint_type + '/log/event',
             timeperiod: mx_flow.timeperiod,
@@ -84,12 +85,12 @@ function enlistTabContent(element, mx_flow, process_name, entry_name, uow_type, 
         const viewer_url = '/viewer/object/?' + $.param(params);
         window.open(viewer_url, 'Object Viewer', 'width=800,height=480,screenX=400,screenY=200,scrollbars=1');
     });
-    const reprocess_button = $('<button class="action_button"><i class="fa fa-repeat"></i>&nbsp;Reprocess</button>').click(function (e) {
+    const reprocess_button = $('<button class="action_button auto_width"><i class="fa fa-repeat"></i>&nbsp;Reprocess</button>').click(function (e) {
         processJob('tree/node/reprocess', null, process_name, mx_flow.timeperiod, mx_flow.flow_name, null);
     });
-    const uow_log_button = $('<button class="action_button"><i class="fa fa-file-text-o"></i>&nbsp;Uow&nbsp;Log</button>').click(function (e) {
+    const uow_log_button = $('<button class="action_button auto_width"><i class="fa fa-file-text-o"></i>&nbsp;Uow&nbsp;Log</button>').click(function (e) {
         const params = {
-            action: endpoint_type + '/log/uow',
+            action: `${endpoint_type}/log/uow`,
             timeperiod: mx_flow.timeperiod,
             process_name: process_name,
             entry_name: entry_name
@@ -97,7 +98,7 @@ function enlistTabContent(element, mx_flow, process_name, entry_name, uow_type, 
         const viewer_url = '/viewer/object/?' + $.param(params);
         window.open(viewer_url, 'Object Viewer', 'width=800,height=480,screenX=400,screenY=200,scrollbars=1');
     });
-    const flow_log_button = $('<button class="action_button"><i class="fa fa-file-text-o"></i>&nbsp;Flow&nbsp;Log</button>').click(function (e) {
+    const flow_log_button = $('<button class="action_button auto_width"><i class="fa fa-file-text-o"></i>&nbsp;Flow&nbsp;Log</button>').click(function (e) {
         const params = {
             action: 'flow/flow/log',
             timeperiod: mx_flow.timeperiod,
@@ -110,23 +111,39 @@ function enlistTabContent(element, mx_flow, process_name, entry_name, uow_type, 
 
     const container = $('<div class="step_container"></div>');
 
-    container.append($('<div class="step_section right_margin"></div>').append('<ul class="fa-ul">'
-        + '<li title="Process Name"><i class="fa-li fa fa-terminal"></i>' + process_name + '</li>'
-        + '<li title="Workflow Name"><i class="fa-li fa fa-random"></i>' + mx_flow.flow_name + '</li>'
-        + '<li title="Timeperiod"><i class="fa-li fa fa-clock-o"></i>' + mx_flow.timeperiod + '</li>'
-        + '<li title="State"><i class="fa-li fa fa-flag-o"></i>' + mx_flow.state + '</li>'
-        + '</ul>'));
+    container.append(`<ul class="fa-ul">
+        <li title="Process Name">
+            <i class="fa-li fa fa-terminal"></i>${process_name}
+        </li>
+        <li title="Workflow Name">
+            <i class="fa-li fa fa-random"></i>${mx_flow.flow_name}
+        </li>
+        <li title="Timeperiod">
+            <i class="fa-li fa fa-clock-o"></i>${mx_flow.timeperiod}
+        </li>
+        <li title="State">
+            <i class="fa-li fa fa-flag-o"></i>${mx_flow.state}
+        </li>
+    </ul>`);
 
-    container.append($('<div class="step_section">&nbsp;</div>'));
+    // container.append($('<div class="step_section">&nbsp;</div>'));
     container.append($('<div class="step_section"></div>')
-        .append($('<div></div>').append(uow_log_button))
-        .append($('<div></div>').append(flow_log_button))
-        .append($('<div></div>').append(event_log_button)));
-    container.append($('<div class="step_section"></div>')
-        .append($('<div></div>').append(uow_button))
-        .append($('<div></div>').append(reprocess_button)));
+        .append($('<div class="btn-container"></div>')
+            .append(uow_log_button)
+            .append(flow_log_button)
+            .append(event_log_button)
+            .append(uow_button)
+            .append(reprocess_button)
+    ));
+    // container.append($('<div class="step_section"></div>')
+    //     .append($('<div></div>').append(uow_log_button))
+    //     .append($('<div></div>').append(flow_log_button))
+    //     .append($('<div></div>').append(event_log_button)));
+    // container.append($('<div class="step_section"></div>')
+    //     .append($('<div></div>').append(uow_button))
+    //     .append($('<div></div>').append(reprocess_button)));
 
-    const tab_content = $('<div id="tab_' + entry_name + '" class="tabcontent"></div>');
+    const tab_content = $(`<div id="tab_${entry_name}" class="tabcontent"></div>`);
     tab_content.append(container);
     tab_content.append('<div class="clear"></div>');
     tab_content.append($('<div class="step_container"></div>').append(run_mode_block));

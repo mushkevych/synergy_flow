@@ -52,8 +52,10 @@ svg {
 }
 .step_section {
   height: 100%;
-  float: left;
   display: block;
+  width: min-content;
+  margin-right: 1rem;
+  margin-left: 1rem;
 }
 .step_detail {
   height: 30% !important;
@@ -63,9 +65,6 @@ svg {
 }
 .width_70pct {
   width: 70% !important;
-}
-.right_margin {
-  margin-left: 10px;
 }
 .actionset_failed {
   background-color: #f00;
@@ -104,8 +103,8 @@ svg {
 }
 .user_message {
   display: none;
-  margin-top: 3rem;
   text-align: center;
+  margin: 2rem auto 1rem auto;
 }
 .tipsy .name {
   font-size: 1.2em;
@@ -117,11 +116,8 @@ svg {
   font-size: 1.2em;
 }
 .header_layout {
-  display: table;
-}
-.header_layout_element {
-  display: table-cell;
-  vertical-align: middle;
+  display: flex;
+  align-items: center;
 }
 div.tab {
   display: flex;
