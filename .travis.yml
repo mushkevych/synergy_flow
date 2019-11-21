@@ -45,7 +45,7 @@ install:
   - pip install azure-storage-blob
 
 before_script:
-  - sudo mkdir --mode=777 -p /tmp/log/synergy-flow
+  - sudo mkdir --mode=777 -p /var/log/synergy-flow
 #  - ${PYTHON_BINARY} launch.py install
 #  - ${PYTHON_BINARY} launch.py db --reset
 
