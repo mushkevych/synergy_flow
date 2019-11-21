@@ -24,7 +24,7 @@ services:
 
 before_install:
   # deactivate Travis-CI Python3 VirtualEnv, as it conflicts with the launch.py one
-  - deactivate
+#  - deactivate
 
 install:
   # mongodb section
@@ -50,7 +50,7 @@ before_script:
 #  - ${PYTHON_BINARY} launch.py db --reset
 
 script:
-  - python -m unittest discover tests
+  - ${PYTHON_BINARY} -m unittest discover tests
 
 branches:
   only:
