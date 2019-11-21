@@ -1,20 +1,42 @@
 language: python
 
-# use container-based travis-ci infrastructure
-sudo: false
+# Ubuntu 18.04 (Bionic Beaver)
+dist: bionic
 
-# use legacy infrastructure
-#sudo: required
-
-python:
-  - "3.6"
-  - "3.7"
+matrix:
+  include:
+    - python: "3.7"
+      env: PYTHON_BINARY="python3.7"
+      addons:
+        hosts:
+          # hostnames will be enlisted in /etc/hosts and resolved to 127.0.0.1
+          - syn-rabbitmq
+          - syn-mongodb
+        apt:
+          packages:
+          - python3.7
+          - python3.7-dev
+          - python3.7-venv
+          - python3-setuptools
 
 services:
-  - mongodb
+  - docker
+
+before_install:
+  # deactivate Travis-CI Python3 VirtualEnv, as it conflicts with the launch.py one
+  - deactivate
 
 install:
-  - mkdir -p /tmp/logs/synergy-flow
+  # mongodb section
+  - docker pull mongo:3
+  - docker run -d --name syn-mongodb -p 27017:27017 mongo:3
+
+  # rabbit mq section
+  - docker pull rabbitmq:3
+  - docker run -d --hostname syn-rabbitmq --name syn-rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management
+  - scripts/rabbitmq_config.sh
+
+  # pip libraries
   - pip install six
   - pip install pymongo
   - pip install synergy_scheduler
@@ -22,6 +44,11 @@ install:
   - pip install boto3
   - pip install google-auth-httplib2 google-api-python-client google-cloud-dataproc google-cloud-storage
   - pip install azure-storage-blob
+
+before_script:
+  - sudo mkdir --mode=777 -p /tmp/log/synergy-flow
+#  - ${PYTHON_BINARY} launch.py install
+#  - ${PYTHON_BINARY} launch.py db --reset
 
 script:
   - python -m unittest discover tests
