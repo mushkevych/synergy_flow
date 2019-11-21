@@ -42,7 +42,7 @@ install:
   - pip install synergy_odm
   - pip install boto3
   - pip install google-auth-httplib2 google-api-python-client google-cloud-dataproc google-cloud-storage
-  - pip install azure-storage-blob
+  - pip install azure-storage azure-storage-blob
 
 before_script:
   - sudo mkdir --mode=777 -p /var/log/synergy-flow
