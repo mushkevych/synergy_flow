@@ -160,10 +160,10 @@ function renderFlowGraph(steps) {
 
     function draw() {
         let step_index = 0;
-        for (var step_name in steps) {
-            var step = steps[step_name];
+        for (const step_name in steps) {
+            const step = steps[step_name];
 
-            var html = '<div id=step_' + step_index + ' class="step_container">';
+            let html = '<div id=step_' + step_index + ' class="step_container">';
             html += '<div id=step_' + step_index + '_action_status class="step_section width_30pct">';
             if (step_name !== 'start' && step_name !== 'finish') {
                 html += '<span class="pre_actions action_status ' + step.pre_actionset.state + '"></span>';
@@ -236,7 +236,7 @@ function renderFlowGraph(steps) {
         // - step duration
         // - action buttons
         step_index = 0;
-        for (step_name in steps) {
+        for (const step_name in steps) {
             const step_log = $('<button class="action_mini_button" title="Get step log"><i class="fa fa-file-code-o"></i></button>').click(function (e) {
                 const params = {
                     action: 'flow/step/log',

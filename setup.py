@@ -1,7 +1,7 @@
 from distutils.core import setup
 
 setup(name='synergy_flow',
-      version='0.11',
+      version='0.13',
       description='Synergy Flow',
       author='Bohdan Mushkevych',
       author_email='mushkevych@gmail.com',
@@ -22,7 +22,6 @@ setup(name='synergy_flow',
           'Programming Language :: Python :: 3.6',
           'Programming Language :: Python :: 3.7',
       ],
-      provides='synergy_flow',
       install_requires=['synergy_scheduler', 'synergy_odm', 'mock', 'subprocess32'],
       # 'psycopg2', 'azure-storage-blob', 'boto3', 'google-auth-httplib2', 'google-api-python-client',
       # 'google-cloud-dataproc', 'google-cloud-storage'],
