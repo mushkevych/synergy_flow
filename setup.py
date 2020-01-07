@@ -1,7 +1,7 @@
 from distutils.core import setup
 
 setup(name='synergy_flow',
-      version='0.13',
+      version='0.14',
       description='Synergy Flow',
       author='Bohdan Mushkevych',
       author_email='mushkevych@gmail.com',
@@ -19,8 +19,8 @@ setup(name='synergy_flow',
           'Intended Audience :: Information Technology',
           'License :: OSI Approved :: BSD License',
           'Operating System :: POSIX',
-          'Programming Language :: Python :: 3.6',
           'Programming Language :: Python :: 3.7',
+          'Programming Language :: Python :: 3.8',
       ],
       install_requires=['synergy_scheduler', 'synergy_odm', 'mock', 'subprocess32'],
       # 'psycopg2', 'azure-storage-blob', 'boto3', 'google-auth-httplib2', 'google-api-python-client',
