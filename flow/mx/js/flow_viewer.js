@@ -71,7 +71,7 @@ function enlistTabContent(element, mx_flow, process_name, entry_name, uow_type, 
             process_name: process_name,
             entry_name: entry_name
         };
-        const viewer_url = '/viewer/object/?' + $.param(params);
+        const viewer_url = '/scheduler/viewer/object/?' + $.param(params);
         window.open(viewer_url, 'Object Viewer', 'width=450,height=400,screenX=400,screenY=200,scrollbars=1');
     });
     const event_log_button = $('<button class="action_button"><i class="fa fa-th-list"></i>&nbsp;Event&nbsp;Log</button>').click(function (e) {
@@ -81,7 +81,7 @@ function enlistTabContent(element, mx_flow, process_name, entry_name, uow_type, 
             process_name: process_name,
             entry_name: entry_name
         };
-        const viewer_url = '/viewer/object/?' + $.param(params);
+        const viewer_url = '/scheduler/viewer/object/?' + $.param(params);
         window.open(viewer_url, 'Object Viewer', 'width=800,height=480,screenX=400,screenY=200,scrollbars=1');
     });
     const reprocess_button = $('<button class="action_button"><i class="fa fa-repeat"></i>&nbsp;Reprocess</button>').click(function (e) {
@@ -94,7 +94,7 @@ function enlistTabContent(element, mx_flow, process_name, entry_name, uow_type, 
             process_name: process_name,
             entry_name: entry_name
         };
-        const viewer_url = '/viewer/object/?' + $.param(params);
+        const viewer_url = '/scheduler/viewer/object/?' + $.param(params);
         window.open(viewer_url, 'Object Viewer', 'width=800,height=480,screenX=400,screenY=200,scrollbars=1');
     });
     const flow_log_button = $('<button class="action_button"><i class="fa fa-file-text-o"></i>&nbsp;Flow&nbsp;Log</button>').click(function (e) {
@@ -104,7 +104,7 @@ function enlistTabContent(element, mx_flow, process_name, entry_name, uow_type, 
             process_name: process_name,
             flow_name: mx_flow.flow_name
         };
-        const viewer_url = '/viewer/object/?' + $.param(params);
+        const viewer_url = '/scheduler/viewer/object/?' + $.param(params);
         window.open(viewer_url, 'Object Viewer', 'width=800,height=480,screenX=400,screenY=200,scrollbars=1');
     });
 
@@ -244,7 +244,7 @@ function renderFlowGraph(steps) {
                     process_name: process_name,
                     flow_name: mx_flow.flow_name
                 };
-                const viewer_url = '/viewer/object/?' + $.param(params);
+                const viewer_url = '/scheduler/viewer/object/?' + $.param(params);
                 window.open(viewer_url, 'Object Viewer', 'width=800,height=480,screenX=400,screenY=200,scrollbars=1');
             });
             const run_one = $('<button class="action_mini_button" title="Rerun this step only"><i class="fa fa-play-circle-o"></i></button>').click(function (e) {

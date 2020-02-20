@@ -59,7 +59,7 @@ def get_flow_log(request, **values):
     return Response(response=json.dumps(handler.get_flow_log()), mimetype='application/json')
 
 
-@expose('/viewer/flow/')
+@expose('/flow/viewer/')
 def flow_viewer(request, **values):
     handler = FlowActionHandler(request, **values)
     return render_template('flow_viewer.html',
