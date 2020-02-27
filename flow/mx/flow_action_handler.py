@@ -133,7 +133,7 @@ class FlowActionHandler(BaseRequestHandler):
         valid_freerun_uow = list()
         records_list = find_all_flow_uows(self.uow_dao, self.process_name, self.flow_name, self.timeperiod)
         if len(records_list) == 0:
-            self.logger.warning('MX: no Freerun UOW records found for {0}@{1} -> {2}.'
+            self.logger.warning('MX: no Freerun UOW records found for {0}@{1} ~> {2}.'
                                 .format(self.process_name, self.timeperiod, self.flow_name))
             return valid_freerun_uow
 
@@ -235,7 +235,7 @@ class FlowActionHandler(BaseRequestHandler):
             return RESPONSE_NOT_OK
 
         try:
-            msg = 'MX: setting RUN MODE for {0}@{1} -> {2} to {3}' \
+            msg = 'MX: setting RUN MODE for {0}@{1} ~> {2} to {3}' \
                 .format(self.process_name, self.timeperiod, self.flow_name, self.run_mode)
             self.scheduler.timetable.add_log_entry(self.process_name, self.timeperiod, msg)
             self.logger.info(msg + ' {')

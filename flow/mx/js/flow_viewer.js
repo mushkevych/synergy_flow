@@ -27,13 +27,13 @@ function switchTab(evt, tab_id) {
 
 function renderEmptyResponse(element, process_name) {
     element[0].style.display = "block";
-    element.append('<b>no workflow was found for process ' + process_name + '</b>');
+    element.append(`<b>no workflow was found for process ${process_name}</b>`);
 }
 
 
 function enlistTabs(element, name) {
-    const tab_id = 'tab_' + name;
-    const button = $('<button id="tab_button_' + name + '" class="tablinks" onclick="switchTab(event, \'' + tab_id + '\')">' + name + '</button>');
+    const tab_id = `tab_${name}`;
+    const button = $(`<button id="tab_button_${name}" class="tablinks" onclick="switchTab(event, '${tab_id}')">${name}</button>`);
     element.append(button);
 }
 
@@ -43,59 +43,59 @@ function enlistTabContent(element, mx_flow, process_name, entry_name, uow_type, 
     const is_run_mode_recovery = ('run_mode_recovery' === active_run_mode) ? 'selected' : '';
     const endpoint_type = ('type_freerun' === uow_type) ? 'freerun' : 'managed';
 
-    const change_run_mode_form = '<form method="POST" action="/flow/run/mode/" onsubmit="xmlhttp.send(); return false;">'
-        + '<input type="hidden" name="process_name" value="' + process_name + '" />'
-        + '<input type="hidden" name="flow_name" value="' + mx_flow.flow_name + '" />'
-        + '<input type="hidden" name="timeperiod" value="' + mx_flow.timeperiod + '" />'
-        + '<input type="hidden" name="timeperiod" value="' + mx_flow.timeperiod + '" />'
-        + '<select name="run_mode">'
-        + '<option value="run_mode_nominal" ' + is_run_mode_nominal + '>Start from beginning</option>'
-        + '<option value="run_mode_recovery" ' + is_run_mode_recovery + '>Continue from last successful step</option>'
-        + '</select>'
-        + '<button type="submit" class="action_button btn-icons btn-center" title="Apply">'
-        + '<i class="fa fa-check"></i>'
-        + '</button>'
-        + '</form>';
+    const change_run_mode_form = `<form method="POST" action="/flow/run/mode/" onsubmit="submitHtmlForm(this); return false;">`
+        + `<input type="hidden" name="process_name" value="${process_name}" />`
+        + `<input type="hidden" name="flow_name" value="${mx_flow.flow_name}" />`
+        + `<input type="hidden" name="timeperiod" value="${mx_flow.timeperiod}" />`
+        + `<input type="hidden" name="timeperiod" value="${mx_flow.timeperiod}" />`
+        + `<select name="run_mode">`
+        + `<option value="run_mode_nominal" ${is_run_mode_nominal}>Start from beginning</option>`
+        + `<option value="run_mode_recovery" ${is_run_mode_recovery}>Continue from last successful step</option>`
+        + `</select>`
+        + `<button type="submit" class="action_button btn-icons btn-center" title="Apply">`
+        + `<i class="fa fa-check"></i>`
+        + `</button>`
+        + `</form>`;
 
 
-    const run_mode_block = '<div class="header_layout">'
-        + '<div class="header_layout_element ">On failure:</div>'
-        + '<div class="header_layout_element ">&nbsp;</div>'
-        + '<div class="header_layout_element ">' + change_run_mode_form + '</div>'
-        + '</div>';
+    const run_mode_block = `<div class="header_layout">`
+        + `<div class="header_layout_element ">On failure:</div>`
+        + `<div class="header_layout_element ">&nbsp;</div>`
+        + `<div class="header_layout_element ">${change_run_mode_form}</div>`
+        + `</div>`;
 
     const uow_button = $('<button class="action_button"><i class="fa fa-file-code-o"></i>&nbsp;Uow</button>').click(function (e) {
         const params = {
-            action: endpoint_type + '/uow',
+            action: `scheduler/${endpoint_type}/uow`,
             timeperiod: mx_flow.timeperiod,
             process_name: process_name,
             entry_name: entry_name
         };
-        const viewer_url = '/scheduler/viewer/object/?' + $.param(params);
-        window.open(viewer_url, 'Object Viewer', 'width=450,height=400,screenX=400,screenY=200,scrollbars=1');
+        const url = `/scheduler/viewer/object/?${$.param(params)}`;
+        window.open(url, 'Object Viewer', 'width=450,height=400,screenX=400,screenY=200,scrollbars=1');
     });
-    const event_log_button = $('<button class="action_button"><i class="fa fa-th-list"></i>&nbsp;Event&nbsp;Log</button>').click(function (e) {
+    const event_log_button = $('<button class="action_button"><i class="fa fa-history"></i>&nbsp;Timeline</button>').click(function (e) {
         const params = {
-            action: endpoint_type + '/log/event',
+            action: `scheduler/${endpoint_type}/timeline`,
             timeperiod: mx_flow.timeperiod,
             process_name: process_name,
             entry_name: entry_name
         };
-        const viewer_url = '/scheduler/viewer/object/?' + $.param(params);
-        window.open(viewer_url, 'Object Viewer', 'width=800,height=480,screenX=400,screenY=200,scrollbars=1');
+        const url = `/scheduler/viewer/object/?${$.param(params)}`;
+        window.open(url, 'Object Viewer', 'width=800,height=480,screenX=400,screenY=200,scrollbars=1');
     });
     const reprocess_button = $('<button class="action_button"><i class="fa fa-repeat"></i>&nbsp;Reprocess</button>').click(function (e) {
         processJob('tree/node/reprocess', null, process_name, mx_flow.timeperiod, mx_flow.flow_name, null);
     });
     const uow_log_button = $('<button class="action_button"><i class="fa fa-file-text-o"></i>&nbsp;Uow&nbsp;Log</button>').click(function (e) {
         const params = {
-            action: endpoint_type + '/log/uow',
+            action: `scheduler/${endpoint_type}/uow/log`,
             timeperiod: mx_flow.timeperiod,
             process_name: process_name,
             entry_name: entry_name
         };
-        const viewer_url = '/scheduler/viewer/object/?' + $.param(params);
-        window.open(viewer_url, 'Object Viewer', 'width=800,height=480,screenX=400,screenY=200,scrollbars=1');
+        const url = `/scheduler/viewer/object/?${$.param(params)}`;
+        window.open(url, 'Object Viewer', 'width=800,height=480,screenX=400,screenY=200,scrollbars=1');
     });
     const flow_log_button = $('<button class="action_button"><i class="fa fa-file-text-o"></i>&nbsp;Flow&nbsp;Log</button>').click(function (e) {
         const params = {
@@ -104,18 +104,18 @@ function enlistTabContent(element, mx_flow, process_name, entry_name, uow_type, 
             process_name: process_name,
             flow_name: mx_flow.flow_name
         };
-        const viewer_url = '/scheduler/viewer/object/?' + $.param(params);
+        const viewer_url = `/scheduler/viewer/object/?${$.param(params)}`;
         window.open(viewer_url, 'Object Viewer', 'width=800,height=480,screenX=400,screenY=200,scrollbars=1');
     });
 
     const container = $('<div class="step_container"></div>');
 
-    container.append($('<div class="step_section right_margin"></div>').append('<ul class="fa-ul">'
-        + '<li title="Process Name"><i class="fa-li fa fa-terminal"></i>' + process_name + '</li>'
-        + '<li title="Workflow Name"><i class="fa-li fa fa-random"></i>' + mx_flow.flow_name + '</li>'
-        + '<li title="Timeperiod"><i class="fa-li fa fa-clock-o"></i>' + mx_flow.timeperiod + '</li>'
-        + '<li title="State"><i class="fa-li fa fa-flag-o"></i>' + mx_flow.state + '</li>'
-        + '</ul>'));
+    container.append($(`<div class="step_section right_margin"></div>`).append(`<ul class="fa-ul">`
+        + `<li title="Process Name"><i class="fa-li fa fa-terminal"></i>${process_name}</li>`
+        + `<li title="Workflow Name"><i class="fa-li fa fa-random"></i>${mx_flow.flow_name}</li>`
+        + `<li title="Timeperiod"><i class="fa-li fa fa-clock-o"></i>${mx_flow.timeperiod}</li>`
+        + `<li title="State"><i class="fa-li fa fa-flag-o"></i>${mx_flow.state}</li>`
+        + `</ul>`));
 
     container.append($('<div class="step_section">&nbsp;</div>'));
     container.append($('<div class="step_section"></div>')
@@ -126,7 +126,7 @@ function enlistTabContent(element, mx_flow, process_name, entry_name, uow_type, 
         .append($('<div></div>').append(uow_button))
         .append($('<div></div>').append(reprocess_button)));
 
-    const tab_content = $('<div id="tab_' + entry_name + '" class="tabcontent"></div>');
+    const tab_content = $(`<div id="tab_${entry_name}" class="tabcontent"></div>`);
     tab_content.append(container);
     tab_content.append('<div class="clear"></div>');
     tab_content.append($('<div class="step_container"></div>').append(run_mode_block));
@@ -163,20 +163,20 @@ function renderFlowGraph(steps) {
         for (const step_name in steps) {
             const step = steps[step_name];
 
-            let html = '<div id=step_' + step_index + ' class="step_container">';
-            html += '<div id=step_' + step_index + '_action_status class="step_section width_30pct">';
+            let html = `<div id=step_${step_index} class="step_container">`;
+            html += `<div id=step_${step_index}_action_status class="step_section width_30pct">`;
             if (step_name !== 'start' && step_name !== 'finish') {
-                html += '<span class="pre_actions action_status ' + step.pre_actionset.state + '"></span>';
-                html += '<span class="action_status ' + step.main_actionset.state + '"></span>';
-                html += '<span class="action_status ' + step.post_actionset.state + '"></span>';
+                html += `<span class="pre_actions action_status ${step.pre_actionset.state}"></span>`;
+                html += `<span class="action_status ${step.main_actionset.state}"></span>`;
+                html += `<span class="action_status ${step.post_actionset.state}"></span>`;
             }
-            html += '</div>';
-            html += '<div class="step_section width_70pct">';
-            html += '<div id=step_' + step_index + '_title class="step_detail width_70pct"></div>';
-            html += '<div id=step_' + step_index + '_duration class="step_detail width_70pct"></div>';
-            html += '<div id=step_' + step_index + '_action_buttons class="step_detail width_70pct"></div>';
-            html += '</div>';
-            html += '</div>';
+            html += `</div>`;
+            html += `<div class="step_section width_70pct">`;
+            html += `<div id=step_${step_index}_title class="step_detail width_70pct"></div>`;
+            html += `<div id=step_${step_index}_duration class="step_detail width_70pct"></div>`;
+            html += `<div id=step_${step_index}_action_buttons class="step_detail width_70pct"></div>`;
+            html += `</div>`;
+            html += `</div>`;
             step_index += 1;
 
             // setNode(node_name, dict_value)
@@ -194,13 +194,13 @@ function renderFlowGraph(steps) {
                     const arrayLength = step.previous_nodes.length;
                     for (let i = 0; i < arrayLength; i++) {
                         g.setEdge(step.previous_nodes[i], step_name, {
-                            label: step.step_name + '/s',
+                            label: `${step.step_name}/s`,
                             width: 40
                         });
                     }
                 } else {
                     g.setEdge(step.previous_nodes, step_name, {
-                        label: step.step_name + '/s',
+                        label: `${step.step_name}/s`,
                         width: 40
                     });
                 }
@@ -222,10 +222,10 @@ function renderFlowGraph(steps) {
                     gravity: 'w', opacity: 1, html: true,
                     title: function () {
                         const step = steps[step_name];
-                        let html = '<p class="name">' + step_name + '</p>';
-                        html += '<p class="description">' + formatJSON(step.pre_actionset.actions) + '</p>';
-                        html += '<p class="description">' + formatJSON(step.main_actionset.actions) + '</p>';
-                        html += '<p class="description">' + formatJSON(step.post_actionset.actions) + '</p>';
+                        let html = `<p class="name">${step_name}</p>`;
+                        html += `<p class="description">${formatJSON(step.pre_actionset.actions)}</p>`;
+                        html += `<p class="description">${formatJSON(step.main_actionset.actions)}</p>`;
+                        html += `<p class="description">${formatJSON(step.post_actionset.actions)}</p>`;
                         return html;
                     }
                 });
@@ -244,7 +244,7 @@ function renderFlowGraph(steps) {
                     process_name: process_name,
                     flow_name: mx_flow.flow_name
                 };
-                const viewer_url = '/scheduler/viewer/object/?' + $.param(params);
+                const viewer_url = `/scheduler/viewer/object/?${$.param(params)}`;
                 window.open(viewer_url, 'Object Viewer', 'width=800,height=480,screenX=400,screenY=200,scrollbars=1');
             });
             const run_one = $('<button class="action_mini_button" title="Rerun this step only"><i class="fa fa-play-circle-o"></i></button>').click(function (e) {
@@ -254,10 +254,10 @@ function renderFlowGraph(steps) {
                 processJob('flow/run/from_step', null, process_name, mx_flow.timeperiod, mx_flow.flow_name, step_name);
             });
 
-            $('#step_' + step_index + '_title').append('<span class="text">' + step_name + '</span>');
+            $(`#step_${step_index}_title`).append(`<span class="text">${step_name}</span>`);
             if (step_name !== 'start' && step_name !== 'finish') {
-                $('#step_' + step_index + '_duration').append('<span class="text">' + steps[step_name].duration  + '</span>');
-                $('#step_' + step_index + '_action_buttons').append(step_log).append(run_one).append(run_from);
+                $(`#step_${step_index}_duration`).append(`<span class="text">${steps[step_name].duration}</span>`);
+                $(`#step_${step_index}_action_buttons`).append(step_log).append(run_one).append(run_from);
             }
             step_index += 1;
         }

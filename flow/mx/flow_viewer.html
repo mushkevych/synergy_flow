@@ -6,19 +6,19 @@
     <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
     <link rel="stylesheet" type="text/css" href="{{ url_for('flow/static', file='css/flow_viewer.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ url_for('flow/static', file='css/jquery.tipsy.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', file='css/skeleton-2.0.4.min.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', file='css/normalize-3.0.2.min.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', file='css/index.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', file='css/font-awesome.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', file='css/alertify.css') }}">
-    <script type="text/javascript" src="{{ url_for('static', file='js/d3-5.14.2.min.js') }}"></script>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('scheduler/static', file='css/skeleton-2.0.4.min.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('scheduler/static', file='css/normalize-3.0.2.min.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('scheduler/static', file='css/index.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('scheduler/static', file='css/font-awesome.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('scheduler/static', file='css/alertify.css') }}">
+    <script type="text/javascript" src="{{ url_for('scheduler/static', file='js/d3-5.14.2.min.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('flow/static', file='js/dagre-d3-0.6.3.min.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('flow/static', file='js/flow_viewer.js') }}"></script>
-    <script type="text/javascript" src="{{ url_for('static', file='js/jquery-3.4.1.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('scheduler/static', file='js/jquery-3.4.1.min.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('flow/static', file='js/jquery.tipsy.js') }}"></script>
-    <script type="text/javascript" src="{{ url_for('static', file='js/mx_utils.js') }}"></script>
-    <script type="text/javascript" src="{{ url_for('static', file='js/alertify-0.3.17.trunk.js') }}"></script>
-    <script type="text/javascript" src="{{ url_for('static', file='js/context_menu.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('scheduler/static', file='js/mx_utils.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('scheduler/static', file='js/alertify-0.3.17.trunk.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('scheduler/static', file='js/context_menu.js') }}"></script>
     <title>Workflow Viewer</title>
 </head>
 
@@ -55,7 +55,7 @@
         renderEmptyResponse($("#user_message"), process_name);
     }
 
-    $(function () {  // former $(document).ready(function () {...})
+    $(function () {
         enlistTabs($("#tabs"), "managed");
         enlistTabContent($("#flow_header"), mx_flow, process_name, "managed", "type_managed", active_run_mode);
 
