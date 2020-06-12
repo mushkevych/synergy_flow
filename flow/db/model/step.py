@@ -3,16 +3,6 @@ __author__ = 'Bohdan Mushkevych'
 from odm.document import BaseDocument
 from odm.fields import StringField, ObjectIdField, DateTimeField
 
-TIMEPERIOD = 'timeperiod'
-STATE = 'state'
-CREATED_AT = 'created_at'
-STARTED_AT = 'started_at'
-FINISHED_AT = 'finished_at'
-
-FLOW_NAME = 'flow_name'
-STEP_NAME = 'step_name'
-
-RELATED_FLOW = 'related_flow'
 
 # Step record created in the DB
 # Next valid states: STATE_IN_PROGRESS
@@ -38,21 +28,21 @@ STATE_NOOP = 'state_noop'
 class Step(BaseDocument):
     """ Module represents persistent Model for a single step in a flow """
 
-    db_id = ObjectIdField('_id', null=True)
-    flow_name = StringField(FLOW_NAME)
-    step_name = StringField(STEP_NAME)
-    timeperiod = StringField(TIMEPERIOD, null=True)
-    state = StringField(STATE, choices=[STATE_INVALID, STATE_EMBRYO, STATE_IN_PROGRESS,
-                                        STATE_PROCESSED, STATE_CANCELED, STATE_NOOP])
-    created_at = DateTimeField(CREATED_AT)
-    started_at = DateTimeField(STARTED_AT)
-    finished_at = DateTimeField(FINISHED_AT)
+    db_id = ObjectIdField(name='_id', null=True)
+    flow_name = StringField()
+    step_name = StringField()
+    timeperiod = StringField(null=True)
+    state = StringField(choices=[STATE_INVALID, STATE_EMBRYO, STATE_IN_PROGRESS,
+                                 STATE_PROCESSED, STATE_CANCELED, STATE_NOOP])
+    created_at = DateTimeField()
+    started_at = DateTimeField()
+    finished_at = DateTimeField()
 
-    related_flow = ObjectIdField(RELATED_FLOW)
+    related_flow = ObjectIdField()
 
-    @property
-    def key(self):
-        return self.flow_name, self.step_name, self.timeperiod
+    @classmethod
+    def key_fields(cls):
+        return cls.flow_name.name, cls.step_name.name, cls.timeperiod.name
 
     @property
     def is_failed(self):
@@ -65,3 +55,9 @@ class Step(BaseDocument):
     @property
     def is_in_progress(self):
         return self.state == STATE_IN_PROGRESS
+
+
+TIMEPERIOD = Step.timeperiod.name
+FLOW_NAME = Step.flow_name.name
+STEP_NAME = Step.step_name.name
+RELATED_FLOW = Step.related_flow.name

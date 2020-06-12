@@ -5,7 +5,7 @@ from synergy.system.decorator import thread_safe
 
 from synergy.db.dao.base_dao import BaseDao
 from flow.flow_constants import COLLECTION_STEP
-from flow.db.model.step import Step, FLOW_NAME, STEP_NAME, TIMEPERIOD, RELATED_FLOW
+from flow.db.model.step import Step, RELATED_FLOW
 
 
 class StepDao(BaseDao):
@@ -13,9 +13,8 @@ class StepDao(BaseDao):
 
     def __init__(self, logger):
         super(StepDao, self).__init__(logger=logger,
-                                      model_class=Step,
-                                      primary_key=[FLOW_NAME, STEP_NAME, TIMEPERIOD],
-                                      collection_name=COLLECTION_STEP)
+                                      collection_name=COLLECTION_STEP,
+                                      model_class=Step)
 
     @thread_safe
     def remove_by_flow_id(self, flow_id):

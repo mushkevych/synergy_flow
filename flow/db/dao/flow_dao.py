@@ -3,7 +3,7 @@ __author__ = 'Bohdan Mushkevych'
 from synergy.conf import context
 from synergy.db.dao.base_dao import BaseDao
 from flow.flow_constants import COLLECTION_FLOW, ARGUMENT_RUN_MODE
-from flow.db.model.flow import Flow, FLOW_NAME, TIMEPERIOD, RUN_MODE_NOMINAL
+from flow.db.model.flow import Flow, RUN_MODE_NOMINAL
 
 
 class FlowDao(BaseDao):
@@ -11,9 +11,8 @@ class FlowDao(BaseDao):
 
     def __init__(self, logger):
         super(FlowDao, self).__init__(logger=logger,
-                                      model_class=Flow,
-                                      primary_key=[FLOW_NAME, TIMEPERIOD],
-                                      collection_name=COLLECTION_FLOW)
+                                      collection_name=COLLECTION_FLOW,
+                                      model_class=Flow)
 
     def managed_run_mode(self, process_name, flow_name, timeperiod):
         """ managed `run mode` is defined globally at ProcessEntry.arguments['run_mode']
