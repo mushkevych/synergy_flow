@@ -207,14 +207,6 @@ class FlowActionHandler(BaseRequestHandler):
         return rest_model.document
 
     @cached_property
-    def process_name(self):
-        return self.process_name
-
-    @cached_property
-    def unit_of_work_type(self):
-        return self.unit_of_work_type
-
-    @cached_property
     def active_run_mode(self):
         return self.flow_dao.managed_run_mode(self.process_name, self.flow_name, self.timeperiod)
 
