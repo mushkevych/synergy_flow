@@ -148,7 +148,8 @@ Roadmap:
 Dependencies
 ---------
 1. linux/unix
-1. Synergy Scheduler 2.1+
+1. Synergy Scheduler 2.3+
+1. Synergy ODM 0.10+
 1. python 3.7+
 
 == Google Computing Platform  
